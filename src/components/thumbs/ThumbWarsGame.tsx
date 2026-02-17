@@ -115,12 +115,12 @@ function CriticRow({
   const actual = movie?.[criticKey];
   return (
     <div className="flex items-center justify-between animate-fadeIn">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-[11px] md:text-sm font-bold text-zinc-400">
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-xs md:text-base font-bold text-zinc-400">
           {initials}
         </div>
         <div>
-          <p className="text-sm md:text-base font-semibold text-zinc-200">{name}</p>
+          <p className="text-base md:text-lg font-semibold text-zinc-200">{name}</p>
           {revealed && (
             <p className={`text-[10px] md:text-xs font-bold tracking-wider animate-fadeIn ${result === "correct" ? "text-emerald-400" : "text-red-400"}`}>
               {result === "correct" ? "CORRECT" : `NOPE \u2014 ${actual === 1 ? "\u{1F44D}" : "\u{1F44E}"}`}
@@ -335,7 +335,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
     const grade = pct >= 90 ? "S" : pct >= 75 ? "A" : pct >= 60 ? "B" : pct >= 40 ? "C" : "D";
     const gradeColor = pct >= 90 ? "text-amber-300" : pct >= 75 ? "text-emerald-300" : pct >= 60 ? "text-blue-300" : pct >= 40 ? "text-zinc-300" : "text-red-300";
     const flavorText = pct >= 90 ? "You belong in the balcony." : pct >= 75 ? "Two thumbs up for you." : pct >= 60 ? "Not bad \u2014 you know your critics." : pct >= 40 ? "Ebert would be gentle. Siskel\u2026 less so." : "Maybe stick to reading the reviews.";
-    const shareText = `\u{1F3AC} MovieGames Thumb Wars${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join(" ")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AC} MovieGames Thumb Wars${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">
@@ -384,7 +384,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
                 <div key={i} className="flex items-center gap-2 text-xs">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
                   <span className="text-zinc-400 truncate flex-1">{m.title}</span>
-                  <span className="text-zinc-600 shrink-0">S:{m.siskel === 1 ? "\u{1F44D}" : "\u{1F44E}"} E:{m.ebert === 1 ? "\u{1F44D}" : "\u{1F44E}"}</span>
+                  <span className="text-zinc-400 shrink-0">S:{m.siskel === 1 ? "\u{1F44D}" : "\u{1F44E}"} E:{m.ebert === 1 ? "\u{1F44D}" : "\u{1F44E}"}</span>
                 </div>
               );
             })}
@@ -471,7 +471,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
   );
 
   return (
-    <div className="h-screen bg-cinematic text-zinc-100 flex flex-col overflow-hidden">
+    <div className="h-dvh bg-cinematic text-zinc-100 flex flex-col overflow-hidden">
 
       {/* ── MOBILE LAYOUT ── */}
       <div className="flex flex-col h-full md:hidden">
