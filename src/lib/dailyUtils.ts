@@ -1,0 +1,71 @@
+import { RatingEntry } from "@/lib/types";
+
+const NY_TIMEZONE = "America/New_York";
+
+function getNyDateKey(date: Date): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: NY_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+
+  return formatter.format(date);
+}
+
+function stableHash(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+export function getDailyMovie(entries: RatingEntry[], now = new Date()): {
+  dateKey: string;
+  movie: RatingEntry | null;
+} {
+  const dateKey = getNyDateKey(now);
+
+  if (entries.length === 0) {
+    return { dateKey, movie: null };
+  }
+
+  const hash = stableHash(dateKey);
+  const index = hash % entries.length;
+  return {
+    dateKey,
+    movie: entries[index] ?? null
+  };
+}
+
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+export function getDailyMovies(
+  entries: RatingEntry[],
+  count: number,
+  now = new Date()
+): { dateKey: string; movies: RatingEntry[] } {
+  const dateKey = getNyDateKey(now);
+
+  if (entries.length === 0) {
+    return { dateKey, movies: [] };
+  }
+
+  const hash = stableHash(dateKey);
+  const rng = seededRandom(hash);
+
+  const shuffled = [...entries];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return { dateKey, movies: shuffled.slice(0, count) };
+}
