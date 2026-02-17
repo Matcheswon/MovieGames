@@ -69,7 +69,7 @@ export default function Home() {
         {/* Featured Game */}
         <div className="mb-6 animate-slideUp" style={{ animationDelay: "0.1s" }}>
           <Link
-            href="/games/thumb-wars"
+            href="/games/thumb-wars/daily"
             className="group relative block overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/50 hover:border-amber-500/40 transition-all duration-300"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(245,158,11,0.1),transparent_55%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
