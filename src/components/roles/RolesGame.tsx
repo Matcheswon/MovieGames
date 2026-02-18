@@ -165,14 +165,20 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     rand.current = rng(puzzleNumber + Date.now());
     const seq: typeof CALL_SHEET = [];
     for (let i = 0; i < MAX_ROUNDS; i++) {
-      const loseTurnsSoFar = seq.filter(e => e.type === "lose_turn").length;
-      const prevIsLose = i > 0 && seq[i - 1].type === "lose_turn";
+      const counts: Record<string, number> = {};
+      for (const e of seq) counts[e.type] = (counts[e.type] ?? 0) + 1;
+      const prev = i > 0 ? seq[i - 1].type : null;
+      // Each bad effect backs off as it accumulates: lose_turn ≤2, kb_lock ≤1, half_time ≤2; none consecutive
+      const isRejected = (t: string) =>
+        (t === "lose_turn" && (prev === "lose_turn" || (counts["lose_turn"] ?? 0) >= 2)) ||
+        (t === "kb_lock"   && (prev === "kb_lock"   || (counts["kb_lock"]   ?? 0) >= 1)) ||
+        (t === "half_time" && (prev === "half_time" || (counts["half_time"] ?? 0) >= 2));
       let eff: typeof CALL_SHEET[number];
       let tries = 0;
       do {
         eff = CALL_SHEET[Math.floor(rand.current() * CALL_SHEET.length)];
         tries++;
-      } while (eff.type === "lose_turn" && (prevIsLose || loseTurnsSoFar >= 2) && tries < 20);
+      } while (isRejected(eff.type) && tries < 20);
       seq.push(eff);
     }
     rollSeqRef.current = seq;
@@ -594,10 +600,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
               Uncover the <span className="text-amber-400 font-semibold">Actor</span> and <span className="text-amber-400 font-semibold">Character</span> they played.
             </p>
             <div className="space-y-2.5 text-sm mb-4">
-              <div className="flex gap-3 items-center">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center text-xs">{"\u{1F524}"}</span>
-                <div><span className="text-zinc-200 font-medium">Pick 3 letters</span> <span className="text-zinc-500">to start &mdash; hits reveal, misses eliminate</span></div>
-              </div>
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs">{"\u{1F3AC}"}</span>
                 <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500">auto-spins each round for an effect</span></div>
