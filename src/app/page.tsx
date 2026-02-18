@@ -69,7 +69,7 @@ export default function Home() {
         {/* Featured Game */}
         <div className="mb-6 animate-slideUp" style={{ animationDelay: "0.1s" }}>
           <Link
-            href="/games/thumb-wars/daily"
+            href="/games/thumbs/daily"
             className="group relative block overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/50 hover:border-amber-500/40 transition-all duration-300"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(245,158,11,0.1),transparent_55%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -77,7 +77,7 @@ export default function Home() {
               <div className="flex-1">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-500/70">Featured</span>
                 <h2 className="mt-2 font-display text-3xl md:text-5xl font-extrabold text-zinc-100 leading-none">
-                  Thumb Wars
+                  Thumbs
                 </h2>
                 <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-lg leading-relaxed">
                   Ten movies. Two critics. Lightning speed. Guess whether Siskel &amp; Ebert gave each film a thumbs up or down &mdash; before time runs out.
@@ -99,7 +99,7 @@ export default function Home() {
 
         {/* Other Games Grid */}
         <div className="grid gap-4 md:grid-cols-2 animate-slideUp" style={{ animationDelay: "0.2s" }}>
-          {games.filter(g => g.slug !== "thumb-wars").map((game) => (
+          {games.filter(g => g.slug !== "thumbs").map((game) => (
             <GameCard key={game.slug} game={game} />
           ))}
         </div>

@@ -1,5 +1,27 @@
 import { RatingEntry } from "@/lib/types";
 
+export type RolesPuzzle = {
+  actor: string;
+  character: string;
+  movie: string;
+  year: number;
+};
+
+const ROLES_EPOCH = "2026-02-17";
+
+export function getDailyRolesPuzzle(
+  puzzles: RolesPuzzle[],
+  now = new Date()
+): { dateKey: string; puzzle: RolesPuzzle | null; puzzleNumber: number } {
+  const dateKey = getNyDateKey(now);
+  if (puzzles.length === 0) return { dateKey, puzzle: null, puzzleNumber: 0 };
+  const epoch = new Date(ROLES_EPOCH + "T12:00:00");
+  const today = new Date(dateKey + "T12:00:00");
+  const daysSinceEpoch = Math.round((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+  const index = ((daysSinceEpoch % puzzles.length) + puzzles.length) % puzzles.length;
+  return { dateKey, puzzle: puzzles[index] ?? null, puzzleNumber: index + 1 };
+}
+
 const NY_TIMEZONE = "America/New_York";
 
 function getNyDateKey(date: Date): string {

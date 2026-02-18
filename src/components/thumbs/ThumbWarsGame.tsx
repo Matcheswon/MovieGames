@@ -84,6 +84,29 @@ function ThumbBtn({
   );
 }
 
+function ShareButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {}
+    }
+    await navigator.clipboard?.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button onClick={handleShare}
+      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
+      {copied ? "Copied!" : "Share"}
+    </button>
+  );
+}
+
 function ScorePip({ status }: { status: "perfect" | "half" | "miss" | "upcoming" }) {
   const color =
     status === "perfect" ? "bg-emerald-400" :
@@ -279,18 +302,21 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
             <div className="w-2 h-2 rounded-full bg-amber-500/60" />
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
-          <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight mb-1">
-            <span className="text-amber-400">Movie</span><span className="text-zinc-300">Games</span>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-2">
+            <span className="text-amber-400/70">Movie</span>Games
+          </p>
+          <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-1 text-zinc-100">
+            THUMBS
           </h1>
-          <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-500 mb-2">
-            {mode === "daily" ? `Daily Challenge \u00B7 ${dateKey ?? ""}` : "Thumb Wars"}
+          <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-600 mb-2">
+            {mode === "daily" ? `Daily Challenge \u00B7 ${dateKey ?? ""}` : "Rate the Critics"}
           </p>
           {mode === "daily" && dailyStreak > 0 && (
             <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn">
               {"\u{1F525}"} {dailyStreak} day streak
             </p>
           )}
-          {mode !== "daily" && <div className="mb-6" />}
+          {!(mode === "daily" && dailyStreak > 0) && <div className="mb-6" />}
 
           <div className="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-6 mb-8 max-w-sm mx-auto text-left">
             <p className="text-sm text-zinc-300 leading-relaxed mb-4">
@@ -309,6 +335,13 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> One right</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400/60 inline-block" /> Both wrong</span>
           </div>
+
+          <a href="https://getpasstime.app" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-2 mb-6 hover:border-indigo-400/40 transition-all group">
+            <span className="text-sm font-bold text-indigo-400">Passtime</span>
+            <span className="text-[11px] text-indigo-300/50">All your events in one place · for iOS</span>
+            <span className="text-indigo-400/40 text-xs">↗</span>
+          </a>
 
           <button onClick={startGame}
             className="w-full max-w-xs py-4 rounded-2xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-widest uppercase hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
@@ -335,7 +368,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
     const grade = pct >= 90 ? "S" : pct >= 75 ? "A" : pct >= 60 ? "B" : pct >= 40 ? "C" : "D";
     const gradeColor = pct >= 90 ? "text-amber-300" : pct >= 75 ? "text-emerald-300" : pct >= 60 ? "text-blue-300" : pct >= 40 ? "text-zinc-300" : "text-red-300";
     const flavorText = pct >= 90 ? "You belong in the balcony." : pct >= 75 ? "Two thumbs up for you." : pct >= 60 ? "Not bad \u2014 you know your critics." : pct >= 40 ? "Ebert would be gentle. Siskel\u2026 less so." : "Maybe stick to reading the reviews.";
-    const shareText = `\u{1F3AC} MovieGames Thumb Wars${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AC} MovieGames THUMBS${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">
@@ -395,11 +428,15 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
               className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
               Play Again
             </button>
-            <button onClick={() => navigator.clipboard?.writeText(shareText)}
-              className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
-              Copy Result
-            </button>
+            <ShareButton text={shareText} />
           </div>
+
+          <Link href="/games/roles/daily"
+            className="block mt-5 bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-4 hover:border-amber-500/30 transition-all group text-center">
+            <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1">Try another game</p>
+            <p className="text-sm font-bold text-zinc-200 group-hover:text-amber-300 transition-colors">{"\u{1F3AD}"} ROLES</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Uncover the actor and character &mdash; a daily movie puzzle</p>
+          </Link>
 
           <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
             &larr; Back to Dashboard
@@ -549,7 +586,8 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
             <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600 mb-1">
               {index + 1} of {ROUND_SIZE}
             </p>
-            <p className="text-sm text-zinc-400 mb-8">What were their thumbs?</p>
+            <h2 className="font-display text-2xl font-bold text-zinc-100 leading-tight animate-fadeIn">{movie.title}</h2>
+            <p className="text-sm text-zinc-500 mb-8">{movie.year} &middot; {movie.director}</p>
             <div className="space-y-7">
               <CriticRow name="Siskel" initials="GS" pick={siskelPick} setPick={setSiskelPick}
                 revealed={revealed} result={siskelResult} movie={movie} criticKey="siskel" />

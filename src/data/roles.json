@@ -1,0 +1,422 @@
+[
+  {
+    "actor": "JODIE FOSTER",
+    "character": "CLARICE STARLING",
+    "movie": "The Silence of the Lambs",
+    "year": 1991
+  },
+  {
+    "actor": "TOM HANKS",
+    "character": "FORREST GUMP",
+    "movie": "Forrest Gump",
+    "year": 1994
+  },
+  {
+    "actor": "HEATH LEDGER",
+    "character": "THE JOKER",
+    "movie": "The Dark Knight",
+    "year": 2008
+  },
+  {
+    "actor": "BRAD PITT",
+    "character": "TYLER DURDEN",
+    "movie": "Fight Club",
+    "year": 1999
+  },
+  {
+    "actor": "JACK NICHOLSON",
+    "character": "JACK TORRANCE",
+    "movie": "The Shining",
+    "year": 1980
+  },
+  {
+    "actor": "SIGOURNEY WEAVER",
+    "character": "ELLEN RIPLEY",
+    "movie": "Alien",
+    "year": 1979
+  },
+  {
+    "actor": "MARLON BRANDO",
+    "character": "VITO CORLEONE",
+    "movie": "The Godfather",
+    "year": 1972
+  },
+  {
+    "actor": "AL PACINO",
+    "character": "TONY MONTANA",
+    "movie": "Scarface",
+    "year": 1983
+  },
+  {
+    "actor": "ROBERT DE NIRO",
+    "character": "TRAVIS BICKLE",
+    "movie": "Taxi Driver",
+    "year": 1976
+  },
+  {
+    "actor": "ANTHONY HOPKINS",
+    "character": "HANNIBAL LECTER",
+    "movie": "The Silence of the Lambs",
+    "year": 1991
+  },
+  {
+    "actor": "RUSSELL CROWE",
+    "character": "MAXIMUS",
+    "movie": "Gladiator",
+    "year": 2000
+  },
+  {
+    "actor": "BRUCE WILLIS",
+    "character": "JOHN MCCLANE",
+    "movie": "Die Hard",
+    "year": 1988
+  },
+  {
+    "actor": "SYLVESTER STALLONE",
+    "character": "ROCKY BALBOA",
+    "movie": "Rocky",
+    "year": 1976
+  },
+  {
+    "actor": "ARNOLD SCHWARZENEGGER",
+    "character": "THE TERMINATOR",
+    "movie": "The Terminator",
+    "year": 1984
+  },
+  {
+    "actor": "MERYL STREEP",
+    "character": "MIRANDA PRIESTLY",
+    "movie": "The Devil Wears Prada",
+    "year": 2006
+  },
+  {
+    "actor": "AUDREY HEPBURN",
+    "character": "HOLLY GOLIGHTLY",
+    "movie": "Breakfast at Tiffany's",
+    "year": 1961
+  },
+  {
+    "actor": "HUMPHREY BOGART",
+    "character": "RICK BLAINE",
+    "movie": "Casablanca",
+    "year": 1942
+  },
+  {
+    "actor": "MEG RYAN",
+    "character": "SALLY ALBRIGHT",
+    "movie": "When Harry Met Sally",
+    "year": 1989
+  },
+  {
+    "actor": "JULIA ROBERTS",
+    "character": "VIVIAN WARD",
+    "movie": "Pretty Woman",
+    "year": 1990
+  },
+  {
+    "actor": "DUSTIN HOFFMAN",
+    "character": "BENJAMIN BRADDOCK",
+    "movie": "The Graduate",
+    "year": 1967
+  },
+  {
+    "actor": "JAMES STEWART",
+    "character": "GEORGE BAILEY",
+    "movie": "It's a Wonderful Life",
+    "year": 1946
+  },
+  {
+    "actor": "DENZEL WASHINGTON",
+    "character": "ALONZO HARRIS",
+    "movie": "Training Day",
+    "year": 2001
+  },
+  {
+    "actor": "TOM CRUISE",
+    "character": "ETHAN HUNT",
+    "movie": "Mission: Impossible",
+    "year": 1996
+  },
+  {
+    "actor": "MEL GIBSON",
+    "character": "MARTIN RIGGS",
+    "movie": "Lethal Weapon",
+    "year": 1987
+  },
+  {
+    "actor": "CLINT EASTWOOD",
+    "character": "HARRY CALLAHAN",
+    "movie": "Dirty Harry",
+    "year": 1971
+  },
+  {
+    "actor": "TOBEY MAGUIRE",
+    "character": "PETER PARKER",
+    "movie": "Spider-Man",
+    "year": 2002
+  },
+  {
+    "actor": "ROBERT DOWNEY JR",
+    "character": "TONY STARK",
+    "movie": "Iron Man",
+    "year": 2008
+  },
+  {
+    "actor": "CHRISTIAN BALE",
+    "character": "PATRICK BATEMAN",
+    "movie": "American Psycho",
+    "year": 2000
+  },
+  {
+    "actor": "EDWARD NORTON",
+    "character": "DEREK VINYARD",
+    "movie": "American History X",
+    "year": 1998
+  },
+  {
+    "actor": "JOHN TRAVOLTA",
+    "character": "VINCENT VEGA",
+    "movie": "Pulp Fiction",
+    "year": 1994
+  },
+  {
+    "actor": "HARRISON FORD",
+    "character": "INDIANA JONES",
+    "movie": "Raiders of the Lost Ark",
+    "year": 1981
+  },
+  {
+    "actor": "JAMIE FOXX",
+    "character": "RAY CHARLES",
+    "movie": "Ray",
+    "year": 2004
+  },
+  {
+    "actor": "JOAQUIN PHOENIX",
+    "character": "JOHNNY CASH",
+    "movie": "Walk the Line",
+    "year": 2005
+  },
+  {
+    "actor": "CHARLIZE THERON",
+    "character": "AILEEN WUORNOS",
+    "movie": "Monster",
+    "year": 2003
+  },
+  {
+    "actor": "NATALIE PORTMAN",
+    "character": "MATHILDA",
+    "movie": "Leon: The Professional",
+    "year": 1994
+  },
+  {
+    "actor": "MICHAEL DOUGLAS",
+    "character": "GORDON GEKKO",
+    "movie": "Wall Street",
+    "year": 1987
+  },
+  {
+    "actor": "GENE WILDER",
+    "character": "WILLY WONKA",
+    "movie": "Willy Wonka & the Chocolate Factory",
+    "year": 1971
+  },
+  {
+    "actor": "PETER SELLERS",
+    "character": "INSPECTOR CLOUSEAU",
+    "movie": "The Pink Panther",
+    "year": 1963
+  },
+  {
+    "actor": "RYAN GOSLING",
+    "character": "SEBASTIAN WILDER",
+    "movie": "La La Land",
+    "year": 2016
+  },
+  {
+    "actor": "EMMA STONE",
+    "character": "MIA DOLAN",
+    "movie": "La La Land",
+    "year": 2016
+  },
+  {
+    "actor": "KATHARINE HEPBURN",
+    "character": "SUSAN VANCE",
+    "movie": "Bringing Up Baby",
+    "year": 1938
+  },
+  {
+    "actor": "CARY GRANT",
+    "character": "ROGER THORNHILL",
+    "movie": "North by Northwest",
+    "year": 1959
+  },
+  {
+    "actor": "GRACE KELLY",
+    "character": "LISA FREMONT",
+    "movie": "Rear Window",
+    "year": 1954
+  },
+  {
+    "actor": "CHARLTON HESTON",
+    "character": "MOSES",
+    "movie": "The Ten Commandments",
+    "year": 1956
+  },
+  {
+    "actor": "SEAN CONNERY",
+    "character": "JAMES BOND",
+    "movie": "Dr. No",
+    "year": 1962
+  },
+  {
+    "actor": "ELIZABETH TAYLOR",
+    "character": "CLEOPATRA",
+    "movie": "Cleopatra",
+    "year": 1963
+  },
+  {
+    "actor": "PETER O'TOOLE",
+    "character": "LAWRENCE OF ARABIA",
+    "movie": "Lawrence of Arabia",
+    "year": 1962
+  },
+  {
+    "actor": "JACK LEMMON",
+    "character": "C.C. BAXTER",
+    "movie": "The Apartment",
+    "year": 1960
+  },
+  {
+    "actor": "DEBBIE REYNOLDS",
+    "character": "LINA LAMONT",
+    "movie": "Singin' in the Rain",
+    "year": 1952
+  },
+  {
+    "actor": "STEVE REEVES",
+    "character": "HERCULES",
+    "movie": "Hercules",
+    "year": 1958
+  },
+  {
+    "actor": "RICHARD BURTON",
+    "character": "MARC ANTONY",
+    "movie": "Cleopatra",
+    "year": 1963
+  },
+  {
+    "actor": "INGRID BERGMAN",
+    "character": "JOAN OF ARC",
+    "movie": "Joan of Arc",
+    "year": 1948
+  },
+  {
+    "actor": "JOHN WAYNE",
+    "character": "ROOSTER COGBURN",
+    "movie": "True Grit",
+    "year": 1969
+  },
+  {
+    "actor": "DIANE KEATON",
+    "character": "ANNIE HALL",
+    "movie": "Annie Hall",
+    "year": 1977
+  },
+  {
+    "actor": "RICHARD GERE",
+    "character": "JULIAN KAY",
+    "movie": "American Gigolo",
+    "year": 1980
+  },
+  {
+    "actor": "JESSICA LANGE",
+    "character": "FRANCES FARMER",
+    "movie": "Frances",
+    "year": 1982
+  },
+  {
+    "actor": "HARRISON FORD",
+    "character": "RICK DECKARD",
+    "movie": "Blade Runner",
+    "year": 1982
+  },
+  {
+    "actor": "MERYL STREEP",
+    "character": "SOPHIE ZAWISTOWSKI",
+    "movie": "Sophie's Choice",
+    "year": 1982
+  },
+  {
+    "actor": "EDDIE MURPHY",
+    "character": "AXEL FOLEY",
+    "movie": "Beverly Hills Cop",
+    "year": 1984
+  },
+  {
+    "actor": "PATRICK SWAYZE",
+    "character": "JOHNNY CASTLE",
+    "movie": "Dirty Dancing",
+    "year": 1987
+  },
+  {
+    "actor": "MICHELLE PFEIFFER",
+    "character": "CATWOMAN",
+    "movie": "Batman Returns",
+    "year": 1992
+  },
+  {
+    "actor": "LEONARDO DICAPRIO",
+    "character": "JACK DAWSON",
+    "movie": "Titanic",
+    "year": 1997
+  },
+  {
+    "actor": "KATE WINSLET",
+    "character": "ROSE DEWITT",
+    "movie": "Titanic",
+    "year": 1997
+  },
+  {
+    "actor": "MATT DAMON",
+    "character": "JASON BOURNE",
+    "movie": "The Bourne Identity",
+    "year": 2002
+  },
+  {
+    "actor": "RENÉE ZELLWEGER",
+    "character": "BRIDGET JONES",
+    "movie": "Bridget Jones's Diary",
+    "year": 2001
+  },
+  {
+    "actor": "JOHNNY DEPP",
+    "character": "CAPTAIN JACK SPARROW",
+    "movie": "Pirates of the Caribbean: The Curse of the Black Pearl",
+    "year": 2003
+  },
+  {
+    "actor": "ORLANDO BLOOM",
+    "character": "WILL TURNER",
+    "movie": "Pirates of the Caribbean: The Curse of the Black Pearl",
+    "year": 2003
+  },
+  {
+    "actor": "SAOIRSE RONAN",
+    "character": "HANNAH CLOKE",
+    "movie": "Hanna",
+    "year": 2011
+  },
+  {
+    "actor": "TIMOTHÉE CHALAMET",
+    "character": "PAUL ATREIDES",
+    "movie": "Dune",
+    "year": 2021
+  },
+  {
+    "actor": "CATE BLANCHETT",
+    "character": "GALADRIEL",
+    "movie": "The Lord of the Rings: The Fellowship of the Ring",
+    "year": 2001
+  }
+]
