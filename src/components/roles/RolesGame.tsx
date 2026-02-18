@@ -1014,7 +1014,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden"
+    <div className="relative h-dvh bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden"
       style={{ fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #12110f 0%, #09090b 60%)" }}>
       <RolesStyles />
       <div className="film-grain" />
