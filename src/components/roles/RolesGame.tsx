@@ -146,6 +146,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   const guessRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dailyRecorded = useRef(false);
   const roundRef = useRef(0);
+  const lockoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const kbLocked = strikes >= MAX_STRIKES || roundKbLock;
   const allLetters = new Set([...puzzle.actor.split(""), ...puzzle.character.split("")].filter(c => c !== " " && c !== "-"));
@@ -458,12 +459,23 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     if (guessedLetters.has(u) || revealed.has(u)) return;
 
     const ng = new Set(guessedLetters); ng.add(u); setGuessedLetters(ng);
-    if (allLetters.has(u)) {
+    const isCorrect = allLetters.has(u);
+    const newStrikes = isCorrect ? strikes : strikes + 1;
+    if (isCorrect) {
       setRevealed(p => { const n = new Set(p); n.add(u); return n; });
       flash([u]); setLastGuess({ letter: u, correct: true });
     } else {
-      setStrikes(s => s + 1); setWrongGuesses(p => [...p, u]);
+      setStrikes(newStrikes); setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false });
+    }
+
+    // Keyboard lockout from strikes — auto-advance after a short delay
+    if (newStrikes >= MAX_STRIKES) {
+      if (guessRef.current) clearInterval(guessRef.current);
+      setLostRounds(prev => { const n = new Set(prev); n.add(roundRef.current); return n; });
+      setTurnWarning("\u{1F512} Locked out!");
+      lockoutTimer.current = setTimeout(() => { lockoutTimer.current = null; advance(); }, 2500);
+      return;
     }
 
     const remaining = guessesRemaining - 1;
@@ -481,6 +493,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   const enterSolveMode = () => {
     if (solveAttempts <= 0) return;
     if (guessRef.current) clearInterval(guessRef.current);
+    if (lockoutTimer.current) { clearTimeout(lockoutTimer.current); lockoutTimer.current = null; }
     setSolveMode(true); setSolveCursor(0); setSolveInputs({});
   };
 
@@ -601,8 +614,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   // ─── START ───
   if (screen === "start") {
     return (
-      <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">
-        <div className="text-center animate-slideUp max-w-sm">
+      <div className="h-dvh bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto">
+        <div className="text-center animate-slideUp max-w-sm my-auto">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-2 h-2 rounded-full bg-amber-500" />
             <div className="w-2 h-2 rounded-full bg-amber-500/60" />
@@ -785,12 +798,13 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                   </div>
                 );
               }
+              const blinkClass = turnsLeft === 1 ? "blink-fast" : turnsLeft === 2 ? "blink-med" : "blink-slow";
               return (
                 <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                   lostRounds.has(i) ? "bg-red-500/70" :
                   i < round ? "bg-amber-400" :
                   i === round ? "bg-amber-400/50" :
-                  isUrgent ? "bg-red-500/20" :
+                  isUrgent && i > round ? `bg-zinc-700 ${blinkClass}` :
                   "bg-zinc-800"}`} />
               );
             })}
@@ -803,8 +817,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           })()}
         </div>
 
-        {/* Content area — vertically centered between header and keyboard */}
-        <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
+        {/* Content area — top-aligned between header and keyboard */}
+        <div className="flex-1 flex flex-col justify-start min-h-0 overflow-hidden">
 
         {/* Board */}
         <div className={`shrink-0 px-4 py-2 transition-all duration-200 ${shakeBoard ? "animate-shake" : ""}`}>
@@ -1002,9 +1016,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
       {/* Turn warning popup */}
       {turnWarning && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-          <div className="pop-warning bg-zinc-900/95 border border-amber-500/40 rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50">
-            <p className="text-amber-400 font-extrabold text-xl tracking-wide">{turnWarning}</p>
-            <p className="text-zinc-500 text-xs mt-1">keep going!</p>
+          <div className={`pop-warning bg-zinc-900/95 border rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50 ${turnWarning.includes("Locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
+            <p className={`font-extrabold text-xl tracking-wide ${turnWarning.includes("Locked") ? "text-red-400" : "text-amber-400"}`}>{turnWarning}</p>
+            <p className="text-zinc-500 text-xs mt-1">{turnWarning.includes("Locked") ? "moving on..." : "keep going!"}</p>
           </div>
         </div>
       )}
@@ -1033,6 +1047,10 @@ function RolesStyles() {
       @keyframes wheelTick { 0% { opacity: 0.2; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
       @keyframes popWarn { 0% { opacity:0; transform:scale(0.75); } 15% { opacity:1; transform:scale(1.05); } 25% { transform:scale(1); } 70% { opacity:1; } 100% { opacity:0; transform:scale(0.95); } }
       .pop-warning { animation: popWarn 2s ease-out forwards; }
+      @keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+      .blink-slow { animation: blink 1.5s ease-in-out infinite; }
+      .blink-med { animation: blink 0.9s ease-in-out infinite; }
+      .blink-fast { animation: blink 0.45s ease-in-out infinite; }
       .animate-fadeIn { animation: fadeIn 0.3s ease-out both; }
       .animate-slideUp { animation: slideUp 0.4s ease-out both; }
       .animate-shake { animation: shake 0.4s ease-in-out; }

@@ -53,7 +53,7 @@ export default function Home() {
     <div className="min-h-screen bg-cinematic">
       <div className="mx-auto max-w-4xl px-5 md:px-8 py-12 md:py-20">
         {/* Header */}
-        <div className="text-center mb-12 md:mb-16 animate-slideUp">
+        <div className="text-center mb-12 md:mb-16 animate-fadeIn">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-2 h-2 rounded-full bg-amber-500" />
             <div className="w-2 h-2 rounded-full bg-amber-500/60" />
@@ -68,7 +68,7 @@ export default function Home() {
         </div>
 
         {/* Featured Game */}
-        <div className="mb-6 animate-slideUp" style={{ animationDelay: "0.1s" }}>
+        <div className="mb-6 animate-fadeIn" style={{ animationDelay: "0.1s" }}>
           <Link
             href="/games/thumbs/daily"
             className="group relative block overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/50 hover:border-amber-500/40 transition-all duration-300"
@@ -99,7 +99,7 @@ export default function Home() {
         </div>
 
         {/* Other Games Grid */}
-        <div className="grid gap-4 md:grid-cols-2 animate-slideUp" style={{ animationDelay: "0.2s" }}>
+        <div className="grid gap-4 md:grid-cols-2 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
           {games.filter(g => g.slug !== "thumbs").map((game) => (
             <GameCard key={game.slug} game={game} />
           ))}
