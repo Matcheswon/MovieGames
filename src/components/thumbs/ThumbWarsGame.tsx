@@ -12,18 +12,27 @@ type ThumbWarsGameProps = {
   movies: ThumbWarsMovie[];
   mode?: "random" | "daily";
   dateKey?: string;
+  puzzleNumber?: number;
 };
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:thumbwars:daily";
 
+type ThumbsHistoryEntry = {
+  dateKey: string;
+  score: number;
+  outOf: number;
+  timeSecs: number;
+};
+
 type DailyStreakData = {
   lastPlayedDate: string | null;
   dailyStreak: number;
   bestDailyStreak: number;
+  history: ThumbsHistoryEntry[];
 };
 
-const EMPTY_STREAK: DailyStreakData = { lastPlayedDate: null, dailyStreak: 0, bestDailyStreak: 0 };
+const EMPTY_STREAK: DailyStreakData = { lastPlayedDate: null, dailyStreak: 0, bestDailyStreak: 0, history: [] };
 
 function readDailyStreak(): DailyStreakData {
   if (typeof window === "undefined") return EMPTY_STREAK;
@@ -35,6 +44,7 @@ function readDailyStreak(): DailyStreakData {
       lastPlayedDate: parsed.lastPlayedDate ?? null,
       dailyStreak: parsed.dailyStreak ?? 0,
       bestDailyStreak: parsed.bestDailyStreak ?? 0,
+      history: parsed.history ?? [],
     };
   } catch {
     return EMPTY_STREAK;
@@ -146,7 +156,7 @@ function CriticRow({
           <p className="text-base md:text-lg font-semibold text-zinc-200">{name}</p>
           {revealed && (
             <p className={`text-[10px] md:text-xs font-bold tracking-wider animate-fadeIn ${result === "correct" ? "text-emerald-400" : "text-red-400"}`}>
-              {result === "correct" ? "CORRECT" : `NOPE \u2014 ${actual === 1 ? "\u{1F44D}" : "\u{1F44E}"}`}
+              {result === "correct" ? "CORRECT" : `SORRY \u2014 ${actual === 1 ? "\u{1F44D}" : "\u{1F44E}"}`}
             </p>
           )}
         </div>
@@ -161,7 +171,7 @@ function CriticRow({
   );
 }
 
-export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGameProps) {
+export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }: ThumbWarsGameProps) {
   const ROUND_SIZE = movies.length;
 
   const [screen, setScreen] = useState<Screen>("start");
@@ -240,10 +250,18 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
       ? data.dailyStreak + 1
       : 1;
     const newBest = Math.max(newStreak, data.bestDailyStreak);
-    writeDailyStreak({ lastPlayedDate: dateKey, dailyStreak: newStreak, bestDailyStreak: newBest });
+    const total = scores.reduce((s, r) => s + r.siskelOk + r.ebertOk, 0);
+    const entry: ThumbsHistoryEntry = { dateKey, score: total, outOf: scores.length * 2, timeSecs: timer };
+    const alreadyLogged = data.history.some(h => h.dateKey === dateKey);
+    writeDailyStreak({
+      lastPlayedDate: dateKey,
+      dailyStreak: newStreak,
+      bestDailyStreak: newBest,
+      history: alreadyLogged ? data.history : [...data.history, entry],
+    });
     setDailyStreak(newStreak);
     setBestDailyStreak(newBest);
-  }, [screen, mode, dateKey]);
+  }, [screen, mode, dateKey, scores, timer]);
 
   useEffect(() => {
     if (screen === "playing") {
@@ -309,7 +327,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
             THUMBS
           </h1>
           <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-600 mb-2">
-            {mode === "daily" ? `Daily Challenge \u00B7 ${dateKey ?? ""}` : "Rate the Critics"}
+            {mode === "daily" ? `Daily Challenge \u00B7 #${puzzleNumber ?? ""}` : "Rate the Critics"}
           </p>
           {mode === "daily" && dailyStreak > 0 && (
             <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn">
@@ -432,10 +450,16 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
           </div>
 
           <Link href="/games/roles/daily"
-            className="block mt-5 bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-4 hover:border-amber-500/30 transition-all group text-center">
-            <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1">Try another game</p>
-            <p className="text-sm font-bold text-zinc-200 group-hover:text-amber-300 transition-colors">{"\u{1F3AD}"} ROLES</p>
-            <p className="text-xs text-zinc-500 mt-0.5">Uncover the actor and character &mdash; a daily movie puzzle</p>
+            className="flex items-center gap-3 mt-5 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] uppercase tracking-[0.25em] text-teal-400/50 mb-1.5">Try another game</p>
+              <div className="flex items-center gap-2">
+                <span className="text-base">{"\u{1F3AD}"}</span>
+                <p className="text-base font-bold text-zinc-100 group-hover:text-teal-300 transition-colors">ROLES</p>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1">Uncover the actor and character</p>
+            </div>
+            <span className="text-teal-400/40 group-hover:text-teal-300/70 transition-colors text-2xl">&rsaquo;</span>
           </Link>
 
           <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
@@ -515,16 +539,17 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
         {/* Top bar */}
         <div className="shrink-0 px-4 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-600">
-              <span className="text-amber-400 font-semibold">Movie</span>Games
-            </p>
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">{"\u{1F44D}"}</span>
+              <h1 className="text-base font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>THUMBS</h1>
+            </div>
             <div className="flex items-center gap-3">
               {streak >= 2 && <span className="text-xs text-amber-400 font-bold animate-fadeIn">{"\u{1F525}"} {streak}</span>}
               <span className="text-xs text-zinc-500 font-mono tabular-nums">{formatTime(timer)}</span>
             </div>
           </div>
           {progressBar()}
-          <div className="flex justify-between mt-1 text-[10px] text-zinc-600">
+          <div className="flex justify-between mt-1.5 text-xs text-zinc-600">
             <span><span className="text-amber-400 font-bold">{index + 1}</span> of {ROUND_SIZE}</span>
             <span>{totalCorrect} correct</span>
           </div>
@@ -557,9 +582,10 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey }: ThumbWarsGam
         {/* Desktop top bar */}
         <div className="shrink-0 px-8 pt-5 pb-2 max-w-5xl mx-auto w-full">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs uppercase tracking-[0.3em] text-zinc-600">
-              <span className="text-amber-400 font-semibold">Movie</span>Games
-            </p>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">{"\u{1F44D}"}</span>
+              <h1 className="text-lg font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>THUMBS</h1>
+            </div>
             <div className="flex items-center gap-4">
               {streak >= 2 && <span className="text-sm text-amber-400 font-bold animate-fadeIn">{"\u{1F525}"} {streak}</span>}
               <span className="text-sm text-zinc-500 font-mono tabular-nums">{formatTime(timer)}</span>

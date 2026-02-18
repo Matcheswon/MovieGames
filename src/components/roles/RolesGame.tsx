@@ -7,13 +7,22 @@ import { RolesPuzzle } from "@/lib/dailyUtils";
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
 
+type RolesHistoryEntry = {
+  dateKey: string;
+  puzzleNumber: number;
+  solved: boolean;
+  strikes: number;
+  timeSecs: number;
+};
+
 type DailyStreakData = {
   lastPlayedDate: string | null;
   dailyStreak: number;
   bestDailyStreak: number;
+  history: RolesHistoryEntry[];
 };
 
-const EMPTY_STREAK: DailyStreakData = { lastPlayedDate: null, dailyStreak: 0, bestDailyStreak: 0 };
+const EMPTY_STREAK: DailyStreakData = { lastPlayedDate: null, dailyStreak: 0, bestDailyStreak: 0, history: [] };
 
 function readDailyStreak(): DailyStreakData {
   if (typeof window === "undefined") return EMPTY_STREAK;
@@ -25,6 +34,7 @@ function readDailyStreak(): DailyStreakData {
       lastPlayedDate: parsed.lastPlayedDate ?? null,
       dailyStreak: parsed.dailyStreak ?? 0,
       bestDailyStreak: parsed.bestDailyStreak ?? 0,
+      history: parsed.history ?? [],
     };
   } catch {
     return EMPTY_STREAK;
@@ -148,6 +158,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     const handler = (e: KeyboardEvent) => {
       if (isOver || screen !== "playing") return;
       const key = e.key.toUpperCase();
+      if (key === "BACKSPACE" && phase === "pick-letters" && pickedLetters.length > 0) { e.preventDefault(); handlePickBackspace(); return; }
       if (key === "BACKSPACE" && solveMode) { e.preventDefault(); handleSolveBackspace(); return; }
       if (key === "ENTER" && solveMode) { e.preventDefault(); handleSolveSubmit(); return; }
       if (key.length === 1 && key >= "A" && key <= "Z") {
@@ -269,9 +280,22 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
       ? data.dailyStreak + 1
       : 1;
     const newBest = Math.max(newStreak, data.bestDailyStreak);
-    writeDailyStreak({ lastPlayedDate: today, dailyStreak: newStreak, bestDailyStreak: newBest });
+    const entry: RolesHistoryEntry = {
+      dateKey: today,
+      puzzleNumber,
+      solved: screen === "solved",
+      strikes,
+      timeSecs: totalTime,
+    };
+    const alreadyLogged = data.history.some(h => h.dateKey === today);
+    writeDailyStreak({
+      lastPlayedDate: today,
+      dailyStreak: newStreak,
+      bestDailyStreak: newBest,
+      history: alreadyLogged ? data.history : [...data.history, entry],
+    });
     setDailyStreak(newStreak);
-  }, [screen]);
+  }, [screen, strikes, totalTime, puzzleNumber]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -327,6 +351,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     if (np.length >= 3) setTimeout(() => revealPicked(np), 400);
   };
 
+  const handlePickBackspace = () => {
+    if (phase !== "pick-letters" || pickedLetters.length === 0) return;
+    setPickedLetters(prev => prev.slice(0, -1));
+  };
+
   const revealPicked = (letters: string[]) => {
     setPhase("revealing-picks");
     let i = 0;
@@ -366,7 +395,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
         setRollAnimIdx(-1); setRollResult(eff); setPhase("reveal-flash");
         setTimeout(() => applyRollEffect(eff), 900);
       }
-    }, 190);
+    }, 220);
   };
 
   const applyRollEffect = (roll: typeof CALL_SHEET[number]) => {
@@ -548,14 +577,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
                 return (
                   <div key={i} onClick={() => clickable && handleTileClick(wordKey, i)}
-                    className={`w-7 h-9 rounded flex items-center justify-center text-sm font-bold transition-all duration-200 ${cls} ${clickable ? "cursor-pointer" : ""}`}
+                    className={`w-9 h-11 rounded flex items-center justify-center text-base font-bold transition-all duration-200 ${cls} ${clickable ? "cursor-pointer" : ""}`}
                     style={{ fontFamily: "'DM Mono', monospace" }}>
                     {show ? ch : isSolveTyped ? solveVal : ""}
                   </div>
                 );
               })}
             </div>
-            {si < segments.length - 1 && <div className="w-7" />}
+            {si < segments.length - 1 && <div className="w-4" />}
           </React.Fragment>
         ))}
       </div>
@@ -602,7 +631,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
             <div className="space-y-2.5 text-sm mb-4">
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs">{"\u{1F3AC}"}</span>
-                <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500">auto-spins each round for an effect</span></div>
+                <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500">effects auto-spins each round</span></div>
               </div>
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center text-xs">{"\u2328\uFE0F"}</span>
@@ -656,11 +685,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     return (
       <Shell>
         <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
-          <div className="text-center animate-slideUp w-full max-w-sm py-8">
-            <p className="text-4xl mb-3">{won ? "\u{1F3AC}" : "\u{1F3AD}"}</p>
-            <h2 className={`text-2xl font-extrabold mb-1 ${won ? "text-emerald-300" : "text-red-300"}`}
-              style={{ fontFamily: "'Playfair Display', serif" }}>{won ? "Solved!" : "Not this time"}</h2>
-            <p className="text-xs text-zinc-500 uppercase tracking-widest mb-5">#{puzzleNumber}</p>
+          <div className="animate-slideUp w-full max-w-sm py-8">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">{"\u{1F3AD}"}</span>
+                <h1 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-lg font-extrabold ${won ? "text-emerald-300" : "text-zinc-400"}`}
+                  style={{ fontFamily: "'Playfair Display', serif" }}>{won ? "Solved" : "Not this time"}</span>
+                <span className="text-sm text-zinc-500">#{puzzleNumber}</span>
+              </div>
+            </div>
             <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-4 text-left space-y-2">
               <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500">Actor</p>
               {renderTiles(puzzle.actor, "actor")}
@@ -693,10 +729,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
             </div>
 
             <Link href="/games/thumbs/daily"
-              className="block bg-zinc-900/40 border border-zinc-800/40 rounded-xl p-4 hover:border-amber-500/30 transition-all group">
-              <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1">Try another game</p>
-              <p className="text-sm font-bold text-zinc-200 group-hover:text-amber-300 transition-colors">{"\u{1F44D}"} THUMBS</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Guess Siskel &amp; Ebert&apos;s thumbs for 10 movies</p>
+              className="flex items-center gap-3 bg-sky-500/10 border border-sky-400/30 rounded-xl px-5 py-4 hover:border-sky-400/50 hover:bg-sky-500/15 transition-all group text-left">
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] uppercase tracking-[0.25em] text-sky-400/50 mb-1.5">Try another game</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{"\u{1F44D}"}</span>
+                  <p className="text-base font-bold text-zinc-100 group-hover:text-sky-300 transition-colors">THUMBS</p>
+                </div>
+                <p className="text-xs text-zinc-400 mt-1">Guess Siskel &amp; Ebert&apos;s thumbs for 10 movies</p>
+              </div>
+              <span className="text-sky-400/40 group-hover:text-sky-300/70 transition-colors text-2xl">&rsaquo;</span>
             </Link>
           </div>
         </div>
@@ -710,41 +752,41 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
   return (
     <Shell>
-      <div className="flex flex-col max-w-md mx-auto w-full">
+      <div className="flex flex-col max-w-md mx-auto w-full flex-1">
         {/* Header */}
         <div className="shrink-0 px-4 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">{"\u{1F3AD}"}</span>
-              <h1 className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
-              <span className="text-[10px] text-zinc-600">#{puzzleNumber}</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">{"\u{1F3AD}"}</span>
+              <h1 className="text-base font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
+              <span className="text-xs text-zinc-600">#{puzzleNumber}</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 {Array.from({ length: MAX_STRIKES }).map((_, i) => (
-                  <span key={i} className={`text-xs transition-all ${i < strikes ? "text-red-400" : "text-zinc-800"}`}>{"\u2715"}</span>
+                  <span key={i} className={`text-sm transition-all ${i < strikes ? "text-red-400" : "text-zinc-800"}`}>{"\u2715"}</span>
                 ))}
               </div>
               {phase !== "pick-letters" && phase !== "revealing-picks" && (
-                <span className="text-[10px] text-zinc-500 font-mono tabular-nums">{fmt(totalTime)}</span>
+                <span className="text-xs text-zinc-500 font-mono tabular-nums">{fmt(totalTime)}</span>
               )}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 mt-0.5">
             {Array.from({ length: MAX_ROUNDS }).map((_, i) => {
               const turnsLeft = MAX_ROUNDS - round;
               const isUrgent = turnsLeft <= 3;
               const isCounting = i === round && phase === "guessing" && !solveMode && !lostTurn;
               if (isCounting) {
                 return (
-                  <div key={i} className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden relative">
+                  <div key={i} className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden relative">
                     <div className={`absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-linear ${urgent ? "bg-red-400" : "bg-amber-400"}`}
                       style={{ width: `${timerPct}%` }} />
                   </div>
                 );
               }
               return (
-                <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                   lostRounds.has(i) ? "bg-red-500/70" :
                   i < round ? "bg-amber-400" :
                   i === round ? "bg-amber-400/50" :
@@ -755,11 +797,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           </div>
           {(() => {
             const turnsLeft = MAX_ROUNDS - round - 1;
-            if (turnsLeft <= 0) return <p className="text-[10px] text-red-400 font-bold mt-1">Last round!</p>;
-            if (turnsLeft <= 2) return <p className="text-[10px] text-amber-500/80 font-semibold mt-1">{turnsLeft + 1} rounds left</p>;
-            return <p className="text-[10px] text-zinc-600 mt-1">Round {round + 1} of {MAX_ROUNDS}</p>;
+            if (turnsLeft <= 0) return <p className="text-xs text-red-400 font-bold mt-1.5">Last round!</p>;
+            if (turnsLeft <= 2) return <p className="text-xs text-amber-500/80 font-semibold mt-1.5">{turnsLeft + 1} rounds left</p>;
+            return <p className="text-xs text-zinc-600 mt-1.5">Round {round + 1} of {MAX_ROUNDS}</p>;
           })()}
         </div>
+
+        {/* Content area — vertically centered between header and keyboard */}
+        <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
 
         {/* Board */}
         <div className={`shrink-0 px-4 py-2 transition-all duration-200 ${shakeBoard ? "animate-shake" : ""}`}>
@@ -880,7 +925,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                 const letter = pickedLetters[i];
                 const isHighlighted = phase === "revealing-picks" && revealingIdx >= i;
                 return (
-                  <div key={i} className={`w-7 h-9 rounded flex items-center justify-center text-sm font-bold border transition-all duration-300 ${
+                  <div key={i} className={`w-9 h-11 rounded flex items-center justify-center text-base font-bold border transition-all duration-300 ${
                     isHighlighted
                       ? "bg-amber-500/30 text-amber-200 border-amber-400/50 scale-110"
                       : letter
@@ -895,15 +940,24 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           </div>
         )}
 
-        {/* Keyboard — hidden while wheel is spinning/revealing */}
-        <div className={`shrink-0 px-2 pt-2 pb-3 transition-opacity duration-300 ${
-          phase === "rolling" || phase === "reveal-flash" || lostTurn ? "hidden" :
-          kbLocked && !solveMode ? "opacity-30" : "opacity-100"}`}>
+        </div>
+
+        {/* Keyboard — always visible, dimmed when inactive */}
+        <div className={`shrink-0 px-1.5 pt-1.5 pb-4 transition-opacity duration-300 ${
+          phase === "rolling" || phase === "reveal-flash" || lostTurn ? "opacity-20 pointer-events-none" :
+          kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
           {kbRows.map((row, ri) => (
             <div key={ri} className="flex justify-center gap-[5px] mb-[5px]">
-              {ri === 2 && solveMode && (
-                <button onClick={handleSolveBackspace}
-                  className="bg-zinc-700/60 text-zinc-300 border border-zinc-600/40 rounded-lg px-3 h-10 text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-zinc-600/60 active:scale-90">{"\u232B"}</button>
+              {ri === 2 && (
+                <button onClick={() => solveMode ? handleSolveSubmit() : undefined}
+                  disabled={solveMode && !allSolveFilled}
+                  className={`border rounded-lg flex-[1.5] h-[58px] text-[10px] font-bold tracking-wide flex items-center justify-center ${
+                    solveMode && allSolveFilled
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30"
+                      : solveMode
+                        ? "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                        : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                  }`}>ENTER</button>
               )}
               {row.map(letter => {
                 const isRev = revealed.has(letter);
@@ -918,7 +972,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                 let cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
                 if (phase === "pick-letters") cls = isPicked ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
                 else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
-                else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30 scale-95";
+                else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30";
                 else if (isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
                 else if (isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
                 else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60 active:bg-amber-500/20";
@@ -927,15 +981,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                   <button key={letter}
                     onClick={() => canTap && (phase === "pick-letters" ? handlePickLetter(letter) : handleLetter(letter))}
                     disabled={!canTap}
-                    className={`${cls} border rounded-lg w-8 h-10 text-xs font-bold transition-all duration-150 active:scale-90 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
+                    className={`${cls} border rounded-lg flex-1 h-[58px] text-[15px] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
                     {letter}
                   </button>
                 );
               })}
-              {ri === 2 && solveMode && (
-                <button onClick={handleSolveSubmit} disabled={!allSolveFilled}
-                  className={`rounded-lg px-3 h-10 text-[10px] font-bold flex items-center justify-center cursor-pointer active:scale-90 ${
-                    allSolveFilled ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-zinc-800/40 text-zinc-600 border border-zinc-800/30"}`}>{"\u2713"}</button>
+              {ri === 2 && (
+                <button onClick={() => solveMode ? handleSolveBackspace() : phase === "pick-letters" ? handlePickBackspace() : undefined}
+                  className={`border rounded-lg flex-[1.5] h-[58px] text-sm font-bold flex items-center justify-center ${
+                    solveMode || (phase === "pick-letters" && pickedLetters.length > 0)
+                      ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
+                      : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                  }`}>{"\u232B"}</button>
               )}
             </div>
           ))}

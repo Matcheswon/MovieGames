@@ -10,7 +10,7 @@ const ROUND_SIZE = 10;
 
 export default async function DailyThumbWarsPage() {
   const entries = getEligibleRatings();
-  const { dateKey, movies: selected } = getDailyMovies(entries, ROUND_SIZE);
+  const { dateKey, movies: selected, puzzleNumber } = getDailyMovies(entries, ROUND_SIZE);
 
   const movies: ThumbWarsMovie[] = await Promise.all(
     selected.map(async (entry) => {
@@ -33,5 +33,5 @@ export default async function DailyThumbWarsPage() {
     })
   );
 
-  return <ThumbWarsGame movies={movies} mode="daily" dateKey={dateKey} />;
+  return <ThumbWarsGame movies={movies} mode="daily" dateKey={dateKey} puzzleNumber={puzzleNumber} />;
 }

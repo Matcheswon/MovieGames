@@ -28,7 +28,8 @@ function GameCard({ game }: { game: GameDefinition }) {
             {isLive ? "Play Now" : isPreview ? "Preview" : "Coming Soon"}
           </span>
         </div>
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-zinc-100 leading-none">
+        <h2 className="font-display text-2xl md:text-3xl font-bold text-zinc-100 leading-none flex items-center gap-2">
+          {game.icon && <span>{game.icon}</span>}
           {game.title}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">
@@ -76,8 +77,8 @@ export default function Home() {
             <div className="relative p-8 md:p-10 md:flex md:items-center md:justify-between md:gap-8">
               <div className="flex-1">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-500/70">Featured</span>
-                <h2 className="mt-2 font-display text-3xl md:text-5xl font-extrabold text-zinc-100 leading-none">
-                  Thumbs
+                <h2 className="mt-2 font-display text-3xl md:text-5xl font-extrabold text-zinc-100 leading-none flex items-center gap-3">
+                  <span>{"\u{1F44D}"}</span> THUMBS
                 </h2>
                 <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-lg leading-relaxed">
                   Ten movies. Two critics. Lightning speed. Guess whether Siskel &amp; Ebert gave each film a thumbs up or down &mdash; before time runs out.

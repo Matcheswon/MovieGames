@@ -8,6 +8,7 @@ export type RolesPuzzle = {
 };
 
 const ROLES_EPOCH = "2026-02-17";
+const THUMBS_EPOCH = "2026-02-17";
 
 export function getDailyRolesPuzzle(
   puzzles: RolesPuzzle[],
@@ -73,11 +74,16 @@ export function getDailyMovies(
   entries: RatingEntry[],
   count: number,
   now = new Date()
-): { dateKey: string; movies: RatingEntry[] } {
+): { dateKey: string; movies: RatingEntry[]; puzzleNumber: number } {
   const dateKey = getNyDateKey(now);
 
+  const epoch = new Date(THUMBS_EPOCH + "T12:00:00");
+  const today = new Date(dateKey + "T12:00:00");
+  const daysSinceEpoch = Math.round((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+  const puzzleNumber = Math.max(1, daysSinceEpoch + 1);
+
   if (entries.length === 0) {
-    return { dateKey, movies: [] };
+    return { dateKey, movies: [], puzzleNumber };
   }
 
   const hash = stableHash(dateKey);
@@ -89,5 +95,5 @@ export function getDailyMovies(
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  return { dateKey, movies: shuffled.slice(0, count) };
+  return { dateKey, movies: shuffled.slice(0, count), puzzleNumber };
 }

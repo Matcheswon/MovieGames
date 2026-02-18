@@ -25,6 +25,7 @@ export type TmdbMovieMeta = {
 export type GameDefinition = {
   slug: string;
   title: string;
+  icon?: string;
   description: string;
   href: string;
   status: "live" | "preview" | "planned";
