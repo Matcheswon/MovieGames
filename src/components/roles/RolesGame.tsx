@@ -561,8 +561,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     ["A","S","D","F","G","H","J","K","L"],
     ["Z","X","C","V","B","N","M"],
   ];
-  const kbActive = (phase === "guessing" && !kbLocked && !solveMode) || solveMode || phase === "pick-letters";
-  const kbDimmed = !kbActive;
   const allSolveFilled = blankPositions.every(p => solveInputs[`${p.word}-${p.index}`]);
 
   // ─── START ───
@@ -774,82 +772,68 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
         {/* Action zone */}
         <div className="shrink-0 px-4 pt-1 pb-2">
-          {/* Role Call Wheel — always visible once round begins */}
-          {phase !== "pick-letters" && phase !== "revealing-picks" && (() => {
+
+          {/* Full wheel — spinning or revealing result */}
+          {(phase === "rolling" || phase === "reveal-flash" || lostTurn) && (() => {
             const isSpinning = phase === "rolling";
             const n = CALL_SHEET.length;
             const spinIdx = rollAnimIdx;
-
-            // During spin, show cycling CALL_SHEET items; when settled show the pre-planned sequence
-            const topEff    = isSpinning ? CALL_SHEET[(spinIdx + 1) % n]             : rollSeqRef.current[round + 1] ?? null;
+            const topEff    = isSpinning ? CALL_SHEET[(spinIdx + 1) % n]       : rollSeqRef.current[round + 1] ?? null;
             const centerEff = isSpinning ? (spinIdx >= 0 ? CALL_SHEET[spinIdx] : null) : rollResult;
-            const bottomEff = isSpinning ? CALL_SHEET[((spinIdx - 1) + n) % n]       : rollSeqRef.current[round - 1] ?? null;
-
-            const settled = phase === "reveal-flash" || phase === "guessing" || lostTurn || solveMode;
-            const centerColor = settled && rollResult
-              ? rollResult.good ? "text-emerald-300" : "text-red-400"
-              : "text-zinc-400";
-            const centerBg = settled && rollResult
-              ? rollResult.good ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"
-              : "bg-transparent border-transparent";
-
+            const bottomEff = isSpinning ? CALL_SHEET[((spinIdx - 1) + n) % n] : rollSeqRef.current[round - 1] ?? null;
+            const settled = !isSpinning;
+            const centerColor = settled && rollResult ? (rollResult.good ? "text-emerald-300" : "text-red-400") : "text-zinc-400";
+            const centerBg    = settled && rollResult ? (rollResult.good ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20") : "bg-transparent border-transparent";
             return (
               <div className="mb-2">
                 <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 text-center mb-1.5">Role Call</p>
                 <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-900/20 mx-auto max-w-[280px]">
-
-                  {/* Top slot — next */}
                   <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
-                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500"
-                      style={{ fontFamily: "'DM Mono', monospace" }}>
-                      {topEff ? topEff.label : "—"}
-                    </span>
+                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{topEff ? topEff.label : "—"}</span>
                     <span className="text-xs opacity-60">{topEff?.icon ?? ""}</span>
                   </div>
-
                   <div className="h-px bg-zinc-800/50" />
-
-                  {/* Center slot — fixed height via always-rendered desc line */}
                   <div key={isSpinning ? spinIdx : "settled"}
                     className={`px-4 py-2.5 flex items-center justify-between border-y border-transparent transition-colors duration-300 ${centerBg} ${isSpinning ? "wheel-tick" : ""}`}>
                     <div>
-                      <p className={`text-sm font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`}
-                        style={{ fontFamily: "'DM Mono', monospace" }}>
+                      <p className={`text-sm font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`} style={{ fontFamily: "'DM Mono', monospace" }}>
                         {centerEff ? centerEff.label : "·  ·  ·"}
                       </p>
                       <p className={`text-[10px] mt-0.5 transition-opacity duration-300 ${settled && rollResult ? "opacity-100" : "opacity-0"} ${rollResult?.good ? "text-emerald-500/50" : "text-red-500/50"}`}>
                         {rollResult?.desc ?? "\u00A0"}
                       </p>
                     </div>
-                    <span className={`text-base transition-opacity duration-200 ${isSpinning ? "opacity-25" : "opacity-75"}`}>
-                      {centerEff?.icon ?? ""}
-                    </span>
+                    <span className={`text-base transition-opacity duration-200 ${isSpinning ? "opacity-25" : "opacity-75"}`}>{centerEff?.icon ?? ""}</span>
                   </div>
-
                   <div className="h-px bg-zinc-800/50" />
-
-                  {/* Bottom slot — previous */}
                   <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
-                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500"
-                      style={{ fontFamily: "'DM Mono', monospace" }}>
-                      {bottomEff ? bottomEff.label : "—"}
-                    </span>
+                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{bottomEff ? bottomEff.label : "—"}</span>
                     <span className="text-xs opacity-60">{bottomEff?.icon ?? ""}</span>
                   </div>
-
                 </div>
+                {lostTurn && (
+                  <p className="text-center text-sm text-red-400 font-bold mt-2 animate-fadeIn">{"\u23ED\uFE0F"} Turn lost &mdash; moving on...</p>
+                )}
               </div>
             );
           })()}
+
+          {/* Compact result pill + controls — guessing or solving */}
+          {(phase === "guessing" || solveMode) && rollResult && (
+            <div className="mb-2 flex items-center justify-center gap-2 animate-fadeIn">
+              <span className="text-sm">{rollResult.icon}</span>
+              <span className={`text-xs font-bold tracking-widest uppercase ${rollResult.good ? "text-emerald-300/60" : "text-red-400/60"}`}
+                style={{ fontFamily: "'DM Mono', monospace" }}>{rollResult.label}</span>
+              <span className={`text-[10px] ${rollResult.good ? "text-emerald-500/35" : "text-red-500/35"}`}>— {rollResult.desc}</span>
+            </div>
+          )}
 
           {phase === "guessing" && !solveMode && !lostTurn && (
             <div className="animate-fadeIn space-y-2.5">
               <div className="flex items-center justify-center gap-3">
                 <span className={`font-mono text-sm font-bold tabular-nums w-6 text-right ${urgent ? "text-red-400 animate-pulse" : "text-zinc-600"}`}>{guessTimer}s</span>
                 {!kbLocked ? (
-                  <p className="text-sm text-zinc-400">
-                    Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"} or
-                  </p>
+                  <p className="text-sm text-zinc-400">Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"} or</p>
                 ) : (
                   <p className="text-sm text-zinc-500">Keyboard locked &mdash;</p>
                 )}
@@ -866,12 +850,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                   {guessesRemaining > 0 && <span className="text-zinc-500 font-normal"> &middot; {guessesRemaining} left</span>}</>
                 ) : "\u00A0"}
               </p>
-            </div>
-          )}
-
-          {lostTurn && (
-            <div className="text-center py-3 animate-fadeIn">
-              <p className="text-sm text-red-400 font-bold">{"\u23ED\uFE0F"} Turn lost &mdash; moving on...</p>
             </div>
           )}
 
@@ -915,8 +893,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           </div>
         )}
 
-        {/* Keyboard */}
-        <div className={`shrink-0 px-2 pt-2 pb-3 transition-opacity duration-300 ${kbDimmed ? "opacity-[0.08]" : "opacity-100"}`}>
+        {/* Keyboard — hidden while wheel is spinning/revealing */}
+        <div className={`shrink-0 px-2 pt-2 pb-3 transition-opacity duration-300 ${
+          phase === "rolling" || phase === "reveal-flash" || lostTurn ? "hidden" :
+          kbLocked && !solveMode ? "opacity-30" : "opacity-100"}`}>
           {kbRows.map((row, ri) => (
             <div key={ri} className="flex justify-center gap-[5px] mb-[5px]">
               {ri === 2 && solveMode && (
