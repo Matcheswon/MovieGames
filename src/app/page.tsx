@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { games } from "@/lib/games";
 import { GameDefinition } from "@/lib/types";
+import AuthButton from "@/components/AuthButton";
 
 function GameCard({ game }: { game: GameDefinition }) {
   const isLive = game.status === "live";
@@ -52,6 +53,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-cinematic">
       <div className="mx-auto max-w-4xl px-5 md:px-8 py-12 md:py-20">
+        {/* Auth */}
+        <div className="flex justify-end mb-6 animate-fadeIn">
+          <AuthButton />
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12 md:mb-16 animate-fadeIn">
           <div className="flex items-center justify-center gap-2 mb-3">

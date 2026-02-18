@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { RolesPuzzle } from "@/lib/dailyUtils";
+import { saveGameResult } from "@/lib/saveResult";
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
@@ -296,7 +297,19 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
       history: alreadyLogged ? data.history : [...data.history, entry],
     });
     setDailyStreak(newStreak);
-  }, [screen, strikes, totalTime, puzzleNumber]);
+
+    // Save to Supabase (if logged in)
+    const won = screen === "solved";
+    const roundsUsed = round + (won ? 1 : 0);
+    saveGameResult({
+      game: "roles",
+      dateKey: today,
+      solved: won,
+      strikes,
+      roundsUsed,
+      timeSecs: totalTime,
+    });
+  }, [screen, strikes, totalTime, puzzleNumber, round]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 

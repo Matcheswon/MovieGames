@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
+import { saveGameResult } from "@/lib/saveResult";
 
 type Screen = "start" | "playing" | "results";
 type ScoreEntry = { siskelOk: number; ebertOk: number };
@@ -261,6 +262,17 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
     });
     setDailyStreak(newStreak);
     setBestDailyStreak(newBest);
+
+    // Save to Supabase (if logged in)
+    if (dateKey) {
+      saveGameResult({
+        game: "thumbs",
+        dateKey,
+        score: total,
+        outOf: scores.length * 2,
+        timeSecs: timer,
+      });
+    }
   }, [screen, mode, dateKey, scores, timer]);
 
   useEffect(() => {
