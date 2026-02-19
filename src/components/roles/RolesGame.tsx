@@ -155,6 +155,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   const [solveCursor, setSolveCursor] = useState(0);
   const [solveInputs, setSolveInputs] = useState<Record<string, string>>({});
   const [solveAttempts, setSolveAttempts] = useState(2);
+  const [finalSolveMode, setFinalSolveMode] = useState(false);
   const [shakeBoard, setShakeBoard] = useState(false);
   const [roundKbLock, setRoundKbLock] = useState(false);
   const [lostTurn, setLostTurn] = useState(false);
@@ -178,6 +179,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   const guessesRemainingRef = useRef(1);
   const dailyRecorded = useRef(false);
   const roundRef = useRef(0);
+  const screenRef = useRef<"start" | "playing" | "solved" | "failed">("start");
   const lockoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const windUpRef = useRef(false);
   const fanfareKeyRef = useRef(0);
@@ -195,6 +197,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   useEffect(() => {
     guessesRemainingRef.current = guessesRemaining;
   }, [guessesRemaining]);
+
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
 
   // Desktop keyboard
   useEffect(() => {
@@ -245,7 +251,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     setRollResult(null); setRollAnimIdx(-1);
     setLastGuess(null); setPickedLetters([]); setRevealingIdx(-1);
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
-    setSolveAttempts(2); setShakeBoard(false);
+    setSolveAttempts(2); setFinalSolveMode(false); setShakeBoard(false);
     setRoundKbLock(false); setLostTurn(false);
     setGuessesThisRound(1); setGuessesRemaining(1);
     guessesRemainingRef.current = 1;
@@ -446,12 +452,23 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   };
 
   const advance =() => {
+    if (screenRef.current !== "playing") return;
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     setGuessResolving(false);
     setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false);
     setLastGuess(null); setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
     const next = roundRef.current + 1;
-    if (next >= MAX_ROUNDS) { if (totalRef.current) clearInterval(totalRef.current); setScreen("failed"); }
+    if (next >= MAX_ROUNDS) {
+      if (totalRef.current) clearInterval(totalRef.current);
+      if (guessRef.current) clearInterval(guessRef.current);
+      setFinalSolveMode(true);
+      setSolveAttempts(1);
+      setGuessesRemaining(0);
+      guessesRemainingRef.current = 0;
+      setPhase("guessing");
+      setSolveMode(true);
+      return;
+    }
     else {
       roundRef.current = next;
       setRound(next); setRollResult(null);
@@ -952,6 +969,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
     if (actorG === normalizePhrase(puzzle.actor) && charG === normalizePhrase(puzzle.character)) {
       if (totalRef.current) clearInterval(totalRef.current); setScreen("solved");
     } else {
+      if (finalSolveMode) {
+        const nextStrikes = strikes + 1;
+        setStrikes(nextStrikes);
+        setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
+        setSolveInputs({}); setSolveCursor(0);
+        if (nextStrikes >= MAX_STRIKES) { if (totalRef.current) clearInterval(totalRef.current); setScreen("failed"); }
+        return;
+      }
       const na = solveAttempts - 1; setSolveAttempts(na);
       setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
       setSolveInputs({}); setSolveCursor(0);
@@ -960,6 +985,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   };
 
   const cancelSolve = () => {
+    if (finalSolveMode) return;
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     if (phase === "guessing") {
       guessRef.current = setInterval(() => {
@@ -1039,6 +1065,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
   ];
   const allSolveFilled = blankPositions.every(p => solveInputs[`${p.word}-${p.index}`]);
   const mustUseLetterGuesses = guessesThisRound > 1 && guessesRemaining > 0;
+  const strikesLeft = Math.max(0, MAX_STRIKES - strikes);
 
   // ─── START ───
   if (screen === "start") {
@@ -1238,7 +1265,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
   return (
     <Shell>
-      <div className="flex flex-col max-w-md mx-auto w-full flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
+      <div className="relative flex flex-col max-w-md mx-auto w-full flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
         {/* Header */}
         <div className="shrink-0 px-4 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
@@ -1267,7 +1294,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                 return (
                   <div key={i} className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden relative">
                     <div className={`absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-linear ${urgent ? "bg-red-400" : "bg-amber-400"}`}
-                      style={{ width: `${timerPct}%` }} />
+                      style={{ width: `${timerPct}%`, transitionDuration: guessTimer === 0 ? "0ms" : "1000ms" }} />
                   </div>
                 );
               }
@@ -1302,217 +1329,259 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           {/* (fanfare toast moved to keyboard area) */}
         </div>
 
-        {/* Action zone — content-sized so wheel never clips behind board/keyboard */}
-        <div className="shrink-0 relative px-4 py-2 flex flex-col items-center justify-center min-h-[220px]">
+        {/* Action zone — dedicated middle lane so keyboard stays docked */}
+        <div className="relative flex-1 min-h-[120px] px-4 pb-2">
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-2">
+            {(() => {
+              const isPickStart = phase === "pick-letters" || phase === "revealing-picks";
+              const isPickDouble = phase === "pick-double";
+              const isPreRoll = phase === "pre-roll";
+              const isGuessing = phase === "guessing" && !solveMode && !lostTurn;
+              const isSolvePanel = solveMode;
+              const showWheel = !isPickStart && !isPickDouble && !isPreRoll && !finalSolveMode;
 
-          {/* Always-visible wheel */}
-          {(() => {
-            const isSpinning = phase === "rolling";
-            const wheelActive = phase === "rolling" || phase === "reveal-flash" || lostTurn || phase === "guessing" || solveMode;
-            const n = CALL_SHEET.length;
-            const spinIdx = rollAnimIdx;
-            const topEff    = isSpinning ? CALL_SHEET[(spinIdx + 1) % n] : rollResult ? (rollSeqRef.current[round + 1] ?? null) : null;
-            const centerEff = isSpinning ? (spinIdx >= 0 ? CALL_SHEET[spinIdx] : null) : rollResult;
-            const bottomEff = isSpinning ? CALL_SHEET[((spinIdx - 1) + n) % n] : rollResult ? (rollSeqRef.current[round - 1] ?? null) : null;
-            const settled = !isSpinning && !!rollResult;
-            const centerColor = settled ? (rollResult!.good ? "text-emerald-300" : "text-red-400") : "text-zinc-400";
-            const centerBg    = settled ? (rollResult!.good ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20") : "bg-transparent border-transparent";
-            const wheelDimmed = !wheelActive;
-            return (
-              <div className={`w-full transition-opacity duration-300 ${wheelDimmed ? "opacity-15" : "opacity-100"}`}>
-                <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400 text-center mb-1.5">Role Call</p>
-                <div className="rounded-xl border border-zinc-700/50 overflow-hidden bg-zinc-900/40 mx-auto max-w-[280px]">
-                  <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
-                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{topEff ? topEff.label : "\u2014"}</span>
-                    <span className="text-xs opacity-60">{topEff?.icon ?? ""}</span>
-                  </div>
-                  <div className="h-px bg-zinc-800/50" />
-                  <div key={isSpinning ? spinIdx : "settled"}
-                    className={`px-4 py-2.5 flex items-center justify-between border-y border-transparent transition-colors duration-300 ${centerBg} ${isSpinning ? (windUpRef.current ? "wheel-tick-up" : "wheel-tick") : ""}`}>
-                    <div>
-                      <p className={`text-base font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`} style={{ fontFamily: "'DM Mono', monospace" }}>
-                        {centerEff ? centerEff.label : "\u00B7  \u00B7  \u00B7"}
-                      </p>
-                      <p className={`text-sm mt-0.5 transition-opacity duration-300 ${settled ? "opacity-100" : "opacity-0"} ${rollResult?.good ? "text-emerald-400" : "text-red-400"}`}>
-                        {rollResult?.desc ?? "\u00A0"}
-                      </p>
+              const isSpinning = phase === "rolling";
+              const wheelActive = phase === "rolling" || phase === "reveal-flash" || lostTurn || phase === "guessing" || solveMode;
+              const n = CALL_SHEET.length;
+              const spinIdx = rollAnimIdx;
+              const topEff = isSpinning ? CALL_SHEET[(spinIdx + 1) % n] : rollResult ? (rollSeqRef.current[round + 1] ?? null) : null;
+              const centerEff = isSpinning ? (spinIdx >= 0 ? CALL_SHEET[spinIdx] : null) : rollResult;
+              const bottomEff = isSpinning ? CALL_SHEET[((spinIdx - 1) + n) % n] : rollResult ? (rollSeqRef.current[round - 1] ?? null) : null;
+              const settled = !isSpinning && !!rollResult;
+              const centerColor = settled ? (rollResult!.good ? "text-emerald-300" : "text-red-400") : "text-zinc-400";
+              const centerBg = settled ? (rollResult!.good ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20") : "bg-transparent border-transparent";
+              const wheelDimmed = !wheelActive;
+
+              return (
+                <div className="w-full max-w-[320px] flex flex-col items-center">
+                  {showWheel && (
+                    <div className={`w-full transition-opacity duration-300 ${wheelDimmed ? "opacity-15" : "opacity-100"}`}>
+                      <div className="rounded-xl border border-zinc-700/50 overflow-hidden bg-zinc-900/40 mx-auto max-w-[260px] sm:max-w-[280px]">
+                        <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
+                          <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{topEff ? topEff.label : "\u2014"}</span>
+                          <span className="text-xs opacity-60">{topEff?.icon ?? ""}</span>
+                        </div>
+                        <div className="h-px bg-zinc-800/50" />
+                        <div
+                          key={isSpinning ? spinIdx : "settled"}
+                          className={`px-4 py-2.5 flex items-center justify-between border-y border-transparent transition-colors duration-300 ${centerBg} ${isSpinning ? (windUpRef.current ? "wheel-tick-up" : "wheel-tick") : ""}`}
+                        >
+                          <div>
+                            <p className={`text-base font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`} style={{ fontFamily: "'DM Mono', monospace" }}>
+                              {centerEff ? centerEff.label : "\u00B7  \u00B7  \u00B7"}
+                            </p>
+                            <p className={`text-sm mt-0.5 transition-opacity duration-300 ${settled ? "opacity-100" : "opacity-0"} ${rollResult?.good ? "text-emerald-400" : "text-red-400"}`}>
+                              {rollResult?.desc ?? "\u00A0"}
+                            </p>
+                          </div>
+                          <span className={`text-base transition-opacity duration-200 ${isSpinning ? "opacity-25" : settled ? "opacity-75" : "opacity-15"}`}>{centerEff?.icon ?? ""}</span>
+                        </div>
+                        <div className="h-px bg-zinc-800/50" />
+                        <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
+                          <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{bottomEff ? bottomEff.label : "\u2014"}</span>
+                          <span className="text-xs opacity-60">{bottomEff?.icon ?? ""}</span>
+                        </div>
+                      </div>
+                      {lostTurn && (
+                        <p className="text-center text-sm text-red-400 font-bold mt-2 animate-fadeIn">{"\u23ED\uFE0F"} Turn lost &mdash; moving on...</p>
+                      )}
                     </div>
-                    <span className={`text-base transition-opacity duration-200 ${isSpinning ? "opacity-25" : settled ? "opacity-75" : "opacity-15"}`}>{centerEff?.icon ?? ""}</span>
-                  </div>
-                  <div className="h-px bg-zinc-800/50" />
-                  <div className="px-4 py-1.5 flex items-center justify-between opacity-35">
-                    <span className="text-[11px] font-semibold tracking-widest uppercase text-zinc-500" style={{ fontFamily: "'DM Mono', monospace" }}>{bottomEff ? bottomEff.label : "\u2014"}</span>
-                    <span className="text-xs opacity-60">{bottomEff?.icon ?? ""}</span>
-                  </div>
+                  )}
+
+                  {isGuessing && (
+                    <div className="animate-fadeIn mt-2 w-full pointer-events-auto">
+                      <div className="flex items-center justify-center gap-3">
+                        <span className={`font-mono text-base font-bold tabular-nums w-7 text-right ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
+                        {!kbLocked ? (
+                          <p className="text-base text-zinc-300">
+                            Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
+                            {!mustUseLetterGuesses ? " or" : ""}
+                          </p>
+                        ) : (
+                          <p className="text-base text-zinc-400">Keyboard locked &mdash;</p>
+                        )}
+                        <button
+                          onClick={enterSolveMode}
+                          disabled={solveAttempts <= 0 || mustUseLetterGuesses || guessResolving}
+                          className={`px-5 py-2 rounded-lg font-bold text-sm tracking-wide transition-all active:scale-[0.97] cursor-pointer ${
+                            solveAttempts > 0 && !mustUseLetterGuesses && !guessResolving
+                              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+                              : "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 cursor-not-allowed"
+                          }`}
+                        >
+                          Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isSolvePanel && (
+                    <div className={`animate-fadeIn w-full pointer-events-auto ${finalSolveMode ? "mt-0" : "space-y-2 mt-2"}`}>
+                      {finalSolveMode ? (
+                        <div className="mx-auto flex w-full max-w-[300px] flex-col items-center gap-3 text-center">
+                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-400/90">Solve or lose</p>
+                          <p className="text-sm text-zinc-300">
+                            Rounds over. Submit your final solve with ENTER. <span className="text-zinc-500">{strikesLeft} strike{strikesLeft === 1 ? "" : "s"} left</span>
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <button onClick={cancelSolve} className="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer">&larr; Back</button>
+                          <p className="text-[11px] text-zinc-400">
+                            Tap blanks to fill, then press ENTER{" \u00b7 "}
+                            <span className="text-zinc-600">{solveAttempts} left</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {isPreRoll && (
+                    <div className="mt-3 flex flex-col items-center animate-fadeIn pointer-events-auto">
+                      <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400 mb-2">Round {round + 1}</p>
+                      <button
+                        onClick={handleSpin}
+                        className="px-8 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer"
+                      >
+                        Spin the Wheel
+                      </button>
+                    </div>
+                  )}
+
+                  {isPickDouble && (
+                    <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
+                      <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-1">Pick {2 - pickedLetters.length} Letter{2 - pickedLetters.length !== 1 ? "s" : ""}</p>
+                      {pickedLetters.length > 0 && (
+                        <p className="text-sm text-zinc-400">{pickedLetters.join(", ")} selected</p>
+                      )}
+                    </div>
+                  )}
+
+                  {isPickStart && (
+                    <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
+                      <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-3">
+                        {phase === "revealing-picks" ? "Revealing..." : "Pick 3 Starting Letters"}
+                      </p>
+                      <div className="flex justify-center gap-3">
+                        {Array.from({ length: 3 }).map((_, i) => {
+                          const letter = pickedLetters[i];
+                          const isHighlighted = phase === "revealing-picks" && revealingIdx >= i;
+                          return (
+                            <div
+                              key={i}
+                              className={`w-12 h-14 rounded-lg flex items-center justify-center text-xl font-bold border-2 transition-all duration-300 ${
+                                isHighlighted
+                                  ? "bg-amber-500/30 text-amber-200 border-amber-400/50 scale-110"
+                                  : letter
+                                    ? "bg-zinc-800 text-zinc-200 border-zinc-500/60"
+                                    : "bg-zinc-800/30 border-zinc-500/40 border-dashed"
+                              }`}
+                              style={{ fontFamily: "'DM Mono', monospace" }}
+                            >
+                              {letter ?? ""}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {lostTurn && (
-                  <p className="text-center text-sm text-red-400 font-bold mt-2 animate-fadeIn">{"\u23ED\uFE0F"} Turn lost &mdash; moving on...</p>
-                )}
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
+        </div>
 
-          {/* Guess controls — below wheel */}
+        <div className="sticky bottom-0 z-30 bg-gradient-to-t from-zinc-950 via-zinc-950/96 to-transparent pt-2">
+          {/* Float-up toasts — above keyboard */}
+          <div className="shrink-0 relative h-0 overflow-visible z-20">
+            {fanfareLetter && (
+              <div key={fanfareKeyRef.current} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
+                <p className="animate-floatUp text-lg font-bold text-emerald-400 drop-shadow-lg">
+                  There {fanfareCount === 1 ? "is" : "are"} {fanfareCount} {fanfareLetter}{fanfareCount > 1 ? "\u2019s" : ""}!
+                </p>
+              </div>
+            )}
+            {lastGuess && !lastGuess.correct && (
+              <div key={lastGuess.letter} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
+                <p className="animate-floatUp text-lg font-bold drop-shadow-lg text-red-400">
+                  {lastGuess.fromSpin
+                    ? <>No &ldquo;{lastGuess.letter}&rdquo; in puzzle</>
+                    : <>&ldquo;{lastGuess.letter}&rdquo; &mdash; strike!</>}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Timer bar above keyboard */}
           {phase === "guessing" && !solveMode && !lostTurn && (
-            <div className="animate-fadeIn mt-2 w-full">
-              <div className="flex items-center justify-center gap-3">
-                <span className={`font-mono text-base font-bold tabular-nums w-7 text-right ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
-                {!kbLocked ? (
-                  <p className="text-base text-zinc-300">
-                    Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
-                    {!mustUseLetterGuesses ? " or" : ""}
-                  </p>
-                ) : (
-                  <p className="text-base text-zinc-400">Keyboard locked &mdash;</p>
+            <div className="shrink-0 px-3 pb-0.5 flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                <div className={`h-full rounded-full transition-all duration-1000 ease-linear ${urgent ? "bg-red-400" : "bg-amber-400"}`}
+                  style={{ width: `${timerPct}%`, transitionDuration: guessTimer === 0 ? "0ms" : "1000ms" }} />
+              </div>
+              <span className={`font-mono text-[11px] font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
+            </div>
+          )}
+
+          {/* Keyboard — always visible, dimmed when inactive */}
+          <div className={`shrink-0 px-1.5 pt-1.5 pb-4 transition-opacity duration-300 ${
+            phase === "rolling" || phase === "reveal-flash" || phase === "pre-roll" || phase === "round-ending" || lostTurn ? "opacity-20 pointer-events-none" :
+            guessResolving ? "opacity-30 pointer-events-none" :
+            fanfareLetter && phase !== "guessing" ? "opacity-30 pointer-events-none" :
+            kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}
+            style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+            {kbRows.map((row, ri) => (
+              <div key={ri} className="flex justify-center gap-[clamp(3px,0.7vh,6px)] mb-[clamp(3px,0.7vh,6px)]">
+                {ri === 2 && (
+                  <button onClick={() => solveMode ? handleSolveSubmit() : undefined}
+                    disabled={solveMode && !allSolveFilled}
+                    className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(9px,1.6vh,10px)] font-bold tracking-wide flex items-center justify-center ${
+                      solveMode && allSolveFilled
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30"
+                        : solveMode
+                          ? "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                          : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                    }`}>ENTER</button>
                 )}
-                <button onClick={enterSolveMode} disabled={solveAttempts <= 0 || mustUseLetterGuesses || guessResolving}
-                  className={`px-5 py-2 rounded-lg font-bold text-sm tracking-wide transition-all active:scale-[0.97] cursor-pointer ${
-                    solveAttempts > 0 && !mustUseLetterGuesses && !guessResolving
-                      ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
-                      : "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 cursor-not-allowed"
-                  }`}>Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}</button>
-              </div>
-            </div>
-          )}
+                {row.map(letter => {
+                  const isRev = revealed.has(letter);
+                  const isWrong = wrongGuesses.includes(letter);
+                  const isPicking = phase === "pick-letters" || phase === "pick-double";
+                  const isPicked = isPicking && pickedLetters.includes(letter);
+                  const isJustElim = justEliminated.has(letter);
+                  let canTap = false;
+                  if (isPicking) canTap = !isPicked && !(phase === "pick-double" && (guessedLetters.has(letter) || revealed.has(letter)));
+                  else if (solveMode) canTap = true;
+                  else if (phase === "guessing" && !kbLocked && !guessResolving) canTap = !isRev && !isWrong;
 
-          {solveMode && (
-            <div className="animate-fadeIn space-y-2 mt-2 w-full">
-              <div className="flex items-center justify-between">
-                <button onClick={cancelSolve} className="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer">&larr; Back</button>
-                <p className="text-[11px] text-zinc-400">Tap blanks to fill &middot; <span className="text-zinc-600">{solveAttempts} left</span></p>
-                <button onClick={handleSolveSubmit} disabled={!allSolveFilled}
-                  className={`px-4 py-2 rounded-lg font-bold text-xs transition-all active:scale-[0.97] cursor-pointer ${
-                    allSolveFilled ? "bg-emerald-500/15 border border-emerald-500/40 text-emerald-300" : "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 cursor-not-allowed"
-                  }`}>Submit</button>
-              </div>
-            </div>
-          )}
+                  let cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                  if (isPicking) cls = isPicked ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : canTap ? "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60" : "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                  else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
+                  else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30";
+                  else if (isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
+                  else if (isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
+                  else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60 active:bg-amber-500/20";
 
-          {/* Overlays — centered on top of dimmed wheel */}
-          {phase === "pre-roll" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 animate-fadeIn">
-              <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400 mb-2">Round {round + 1}</p>
-              <button onClick={handleSpin}
-                className="px-8 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
-                Spin the Wheel
-              </button>
-            </div>
-          )}
-
-          {phase === "pick-double" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-              <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-1">Pick {2 - pickedLetters.length} Letter{2 - pickedLetters.length !== 1 ? "s" : ""}</p>
-              {pickedLetters.length > 0 && (
-                <p className="text-sm text-zinc-400">{pickedLetters.join(", ")} selected</p>
-              )}
-            </div>
-          )}
-
-          {(phase === "pick-letters" || phase === "revealing-picks") && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-              <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-3">
-                {phase === "revealing-picks" ? "Revealing..." : "Pick 3 Starting Letters"}
-              </p>
-              <div className="flex justify-center gap-3">
-                {Array.from({ length: 3 }).map((_, i) => {
-                  const letter = pickedLetters[i];
-                  const isHighlighted = phase === "revealing-picks" && revealingIdx >= i;
                   return (
-                    <div key={i} className={`w-12 h-14 rounded-lg flex items-center justify-center text-xl font-bold border-2 transition-all duration-300 ${
-                      isHighlighted
-                        ? "bg-amber-500/30 text-amber-200 border-amber-400/50 scale-110"
-                        : letter
-                          ? "bg-zinc-800 text-zinc-200 border-zinc-500/60"
-                          : "bg-zinc-800/30 border-zinc-500/40 border-dashed"
-                    }`} style={{ fontFamily: "'DM Mono', monospace" }}>
-                      {letter ?? ""}
-                    </div>
+                    <button key={letter}
+                      onClick={() => canTap && (isPicking ? handlePickLetter(letter) : handleLetter(letter))}
+                      disabled={!canTap}
+                      className={`${cls} border rounded-lg flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(13px,2.1vh,15px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
+                      {letter}
+                    </button>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* Float-up toasts — above keyboard */}
-        <div className="shrink-0 relative h-0 overflow-visible z-20">
-          {fanfareLetter && (
-            <div key={fanfareKeyRef.current} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
-              <p className="animate-floatUp text-lg font-bold text-emerald-400 drop-shadow-lg">
-                There {fanfareCount === 1 ? "is" : "are"} {fanfareCount} {fanfareLetter}{fanfareCount > 1 ? "\u2019s" : ""}!
-              </p>
-            </div>
-          )}
-          {lastGuess && !lastGuess.correct && (
-            <div key={lastGuess.letter} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
-              <p className="animate-floatUp text-lg font-bold drop-shadow-lg text-red-400">
-                {lastGuess.fromSpin
-                  ? <>No &ldquo;{lastGuess.letter}&rdquo; in puzzle</>
-                  : <>&ldquo;{lastGuess.letter}&rdquo; &mdash; strike!</>}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Keyboard — always visible, dimmed when inactive */}
-        <div className={`shrink-0 px-1.5 pt-1.5 pb-4 transition-opacity duration-300 ${
-          phase === "rolling" || phase === "reveal-flash" || phase === "pre-roll" || phase === "round-ending" || lostTurn ? "opacity-20 pointer-events-none" :
-          guessResolving ? "opacity-30 pointer-events-none" :
-          fanfareLetter && phase !== "guessing" ? "opacity-30 pointer-events-none" :
-          kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
-          {kbRows.map((row, ri) => (
-            <div key={ri} className="flex justify-center gap-[clamp(3px,0.7vh,6px)] mb-[clamp(3px,0.7vh,6px)]">
-              {ri === 2 && (
-                <button onClick={() => solveMode ? handleSolveSubmit() : undefined}
-                  disabled={solveMode && !allSolveFilled}
-                  className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(9px,1.6vh,10px)] font-bold tracking-wide flex items-center justify-center ${
-                    solveMode && allSolveFilled
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30"
-                      : solveMode
-                        ? "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                {ri === 2 && (
+                  <button onClick={() => solveMode ? handleSolveBackspace() : (phase === "pick-letters" || phase === "pick-double") ? handlePickBackspace() : undefined}
+                    className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-sm font-bold flex items-center justify-center ${
+                      solveMode || ((phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0)
+                        ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
                         : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
-                  }`}>ENTER</button>
-              )}
-              {row.map(letter => {
-                const isRev = revealed.has(letter);
-                const isWrong = wrongGuesses.includes(letter);
-                const isPicking = phase === "pick-letters" || phase === "pick-double";
-                const isPicked = isPicking && pickedLetters.includes(letter);
-                const isJustElim = justEliminated.has(letter);
-                let canTap = false;
-                if (isPicking) canTap = !isPicked && !(phase === "pick-double" && (guessedLetters.has(letter) || revealed.has(letter)));
-                else if (solveMode) canTap = true;
-                else if (phase === "guessing" && !kbLocked && !guessResolving) canTap = !isRev && !isWrong;
-
-                let cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
-                if (isPicking) cls = isPicked ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : canTap ? "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60" : "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
-                else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
-                else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30";
-                else if (isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
-                else if (isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
-                else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60 active:bg-amber-500/20";
-
-                return (
-                  <button key={letter}
-                    onClick={() => canTap && (isPicking ? handlePickLetter(letter) : handleLetter(letter))}
-                    disabled={!canTap}
-                    className={`${cls} border rounded-lg flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(13px,2.1vh,15px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
-                    {letter}
-                  </button>
-                );
-              })}
-              {ri === 2 && (
-                <button onClick={() => solveMode ? handleSolveBackspace() : (phase === "pick-letters" || phase === "pick-double") ? handlePickBackspace() : undefined}
-                  className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-sm font-bold flex items-center justify-center ${
-                    solveMode || ((phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0)
-                      ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
-                      : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
-                  }`}>{"\u232B"}</button>
-              )}
-            </div>
-          ))}
+                    }`}>{"\u232B"}</button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
