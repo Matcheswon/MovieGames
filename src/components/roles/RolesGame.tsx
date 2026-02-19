@@ -1238,7 +1238,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 
   return (
     <Shell>
-      <div className="flex flex-col max-w-md mx-auto w-full flex-1">
+      <div className="flex flex-col max-w-md mx-auto w-full flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
         {/* Header */}
         <div className="shrink-0 px-4 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
@@ -1455,29 +1455,19 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           )}
         </div>
 
-        {/* Timer bar above keyboard */}
-        {phase === "guessing" && !solveMode && !lostTurn && (
-          <div className="shrink-0 px-4 pb-1 flex items-center gap-2">
-            <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-1000 ease-linear ${urgent ? "bg-red-400" : "bg-amber-400"}`}
-                style={{ width: `${timerPct}%` }} />
-            </div>
-            <span className={`font-mono text-xs font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
-          </div>
-        )}
-
         {/* Keyboard — always visible, dimmed when inactive */}
         <div className={`shrink-0 px-1.5 pt-1.5 pb-4 transition-opacity duration-300 ${
           phase === "rolling" || phase === "reveal-flash" || phase === "pre-roll" || phase === "round-ending" || lostTurn ? "opacity-20 pointer-events-none" :
           guessResolving ? "opacity-30 pointer-events-none" :
           fanfareLetter && phase !== "guessing" ? "opacity-30 pointer-events-none" :
-          kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
+          kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
           {kbRows.map((row, ri) => (
-            <div key={ri} className="flex justify-center gap-[5px] mb-[5px]">
+            <div key={ri} className="flex justify-center gap-[clamp(3px,0.7vh,6px)] mb-[clamp(3px,0.7vh,6px)]">
               {ri === 2 && (
                 <button onClick={() => solveMode ? handleSolveSubmit() : undefined}
                   disabled={solveMode && !allSolveFilled}
-                  className={`border rounded-lg flex-[1.5] h-[58px] text-[10px] font-bold tracking-wide flex items-center justify-center ${
+                  className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(9px,1.6vh,10px)] font-bold tracking-wide flex items-center justify-center ${
                     solveMode && allSolveFilled
                       ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30"
                       : solveMode
@@ -1508,14 +1498,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
                   <button key={letter}
                     onClick={() => canTap && (isPicking ? handlePickLetter(letter) : handleLetter(letter))}
                     disabled={!canTap}
-                    className={`${cls} border rounded-lg flex-1 h-[58px] text-[15px] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
+                    className={`${cls} border rounded-lg flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(13px,2.1vh,15px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
                     {letter}
                   </button>
                 );
               })}
               {ri === 2 && (
                 <button onClick={() => solveMode ? handleSolveBackspace() : (phase === "pick-letters" || phase === "pick-double") ? handlePickBackspace() : undefined}
-                  className={`border rounded-lg flex-[1.5] h-[58px] text-sm font-bold flex items-center justify-center ${
+                  className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-sm font-bold flex items-center justify-center ${
                     solveMode || ((phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0)
                       ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
                       : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
@@ -1542,7 +1532,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative h-dvh bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden"
-      style={{ fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
+      style={{ minHeight: "100svh", fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
       <RolesStyles />
       <div className="film-grain" />
       {children}
