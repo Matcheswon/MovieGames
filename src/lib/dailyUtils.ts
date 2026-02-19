@@ -25,7 +25,7 @@ export function getDailyRolesPuzzle(
 
 const NY_TIMEZONE = "America/New_York";
 
-function getNyDateKey(date: Date): string {
+export function getNyDateKey(date: Date): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: NY_TIMEZONE,
     year: "numeric",

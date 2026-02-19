@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
+import { getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
 
 type Screen = "start" | "playing" | "results";
@@ -173,6 +175,7 @@ function CriticRow({
 }
 
 export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }: ThumbWarsGameProps) {
+  const router = useRouter();
   const ROUND_SIZE = movies.length;
 
   const [screen, setScreen] = useState<Screen>("start");
@@ -188,6 +191,8 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
   const [posterLoaded, setPosterLoaded] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
   const [bestDailyStreak, setBestDailyStreak] = useState(0);
+  const [alreadyPlayed, setAlreadyPlayed] = useState<ThumbsHistoryEntry | null>(null);
+  const [showOverview, setShowOverview] = useState(false);
   const dailyRecorded = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const nextTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -223,18 +228,38 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
     setScreen("playing");
   }, [movies, mode]);
 
-  // Load daily streak from localStorage
+  // Load daily streak + detect already-played from localStorage
   useEffect(() => {
     if (mode !== "daily") return;
     const data = readDailyStreak();
-    // If last played was yesterday or today, show current streak
     if (data.lastPlayedDate && dateKey) {
       if (data.lastPlayedDate === dateKey || isYesterday(data.lastPlayedDate, dateKey)) {
         setDailyStreak(data.dailyStreak);
       }
     }
     setBestDailyStreak(data.bestDailyStreak);
+    if (dateKey) {
+      const todayEntry = data.history.find(h => h.dateKey === dateKey);
+      if (todayEntry) setAlreadyPlayed(todayEntry);
+    }
   }, [mode, dateKey]);
+
+  // Freshness guard: if server-rendered dateKey is stale, refresh the page
+  useEffect(() => {
+    if (mode !== "daily" || !dateKey) return;
+    const clientDate = getNyDateKey(new Date());
+    if (clientDate !== dateKey) {
+      router.refresh();
+      return;
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && getNyDateKey(new Date()) !== dateKey) {
+        router.refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [mode, dateKey, router]);
 
   // Record daily streak when game ends
   useEffect(() => {
@@ -313,6 +338,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
         setEbertPick(null);
         setRevealed(false);
         setPosterLoaded(false);
+        setShowOverview(false);
       }
     }, 1200);
   };
@@ -388,6 +414,50 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             <img src="/images/tmdb_logo.svg" alt="TMDB" className="h-3" />
           </a>
         </div>
+
+        {/* Already-played popup */}
+        {mode === "daily" && alreadyPlayed && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={() => setAlreadyPlayed(null)} />
+            <div className="relative w-full max-w-sm animate-slideUp"
+              style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
+              <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
+                <div className="p-6 text-center">
+                  <div className="flex items-center justify-center gap-2.5 mb-3">
+                    <span className="text-xl">{"\u{1F44D}"}</span>
+                    <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>THUMBS</h2>
+                    <span className="text-xs text-zinc-600">#{puzzleNumber}</span>
+                  </div>
+                  <p className="text-sm text-zinc-400 mb-4">
+                    Today&apos;s challenge complete
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 mb-5">
+                    {[
+                      { v: `${alreadyPlayed.score}/${alreadyPlayed.outOf}`, l: "Correct" },
+                      { v: formatTime(alreadyPlayed.timeSecs), l: "Time" },
+                      { v: `${dailyStreak}`, l: "Streak", icon: "\u{1F525}" },
+                    ].map((s, i) => (
+                      <div key={i} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5">
+                        <p className={`text-lg font-bold ${i === 2 ? "text-amber-400" : "text-zinc-100"}`}>{s.v}{s.icon ?? ""}</p>
+                        <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">{s.l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => { setAlreadyPlayed(null); startGame(); }}
+                      className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
+                      Play Again
+                    </button>
+                    <button onClick={() => setAlreadyPlayed(null)}
+                      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -534,6 +604,13 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
           <span className="text-zinc-600">&middot;</span>
           <span>{movie.director}</span>
         </div>
+        {movie.overview && (
+          <button onClick={(e) => { e.stopPropagation(); setShowOverview(true); }}
+            className="mt-1.5 text-left animate-fadeIn cursor-pointer group">
+            <span className="text-xs text-zinc-500 leading-relaxed line-clamp-1">{movie.overview}</span>
+            <span className="text-[10px] text-amber-400/70 group-hover:text-amber-400 font-medium ml-0.5">More</span>
+          </button>
+        )}
       </div>
       {revealed && (
         <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${
@@ -625,7 +702,15 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
               {index + 1} of {ROUND_SIZE}
             </p>
             <h2 className="font-display text-2xl font-bold text-zinc-100 leading-tight animate-fadeIn">{movie.title}</h2>
-            <p className="text-sm text-zinc-500 mb-8">{movie.year} &middot; {movie.director}</p>
+            <p className="text-sm text-zinc-500">{movie.year} &middot; {movie.director}</p>
+            {movie.overview && (
+              <button onClick={() => setShowOverview(true)}
+                className="mt-1.5 text-left animate-fadeIn cursor-pointer group">
+                <span className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{movie.overview}</span>
+                <span className="text-[10px] text-amber-400/70 group-hover:text-amber-400 font-medium ml-0.5">More</span>
+              </button>
+            )}
+            <div className="mb-6" />
             <div className="space-y-7">
               <CriticRow name="Siskel" initials="GS" pick={siskelPick} setPick={setSiskelPick}
                 revealed={revealed} result={siskelResult} movie={movie} criticKey="siskel" />
@@ -640,6 +725,31 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
           </div>
         </div>
       </div>
+
+      {/* ── OVERVIEW POPUP ── */}
+      {showOverview && movie.overview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" onClick={() => setShowOverview(false)}>
+          <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm animate-slideUp" onClick={e => e.stopPropagation()}>
+            <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60"
+              style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-zinc-100">{movie.title}</h3>
+                    <p className="text-xs text-zinc-500">{movie.year} &middot; {movie.director}</p>
+                  </div>
+                  <button onClick={() => setShowOverview(false)}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors text-lg leading-none cursor-pointer p-1 -mr-1 -mt-1">
+                    &times;
+                  </button>
+                </div>
+                <p className="text-sm text-zinc-400 leading-relaxed">{movie.overview}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { getDailyMovies } from "@/lib/dailyUtils";
 import { getMovieFromTmdb, searchMoviePoster } from "@/lib/tmdb";
 import { ThumbWarsMovie } from "@/lib/types";
 
-export const revalidate = 60 * 60;
+export const dynamic = "force-dynamic";
 
 const ROUND_SIZE = 10;
 
@@ -15,12 +15,16 @@ export default async function DailyThumbWarsPage() {
   const movies: ThumbWarsMovie[] = await Promise.all(
     selected.map(async (entry) => {
       let poster = "";
+      let overview: string | undefined;
       if (entry.tmdb_id && entry.tmdb_id > 0) {
         const meta = await getMovieFromTmdb(entry.tmdb_id);
         poster = meta?.posterUrl ?? "";
+        overview = meta?.overview ?? undefined;
       }
       if (!poster) {
-        poster = (await searchMoviePoster(entry.title, entry.year)) ?? "";
+        const search = await searchMoviePoster(entry.title, entry.year);
+        poster = search.poster ?? "";
+        if (!overview) overview = search.overview ?? undefined;
       }
       return {
         title: entry.title,
@@ -28,7 +32,8 @@ export default async function DailyThumbWarsPage() {
         director: entry.director,
         poster,
         siskel: entry.siskel_thumb,
-        ebert: entry.ebert_thumb
+        ebert: entry.ebert_thumb,
+        overview,
       };
     })
   );

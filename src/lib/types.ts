@@ -45,4 +45,5 @@ export type ThumbWarsMovie = {
   poster: string;
   siskel: 0 | 1;
   ebert: 0 | 1;
+  overview?: string;
 };

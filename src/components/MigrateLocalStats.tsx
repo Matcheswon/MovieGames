@@ -53,6 +53,7 @@ export default function MigrateLocalStats() {
               date_key: h.dateKey,
               solved: h.solved ?? false,
               strikes: h.strikes ?? 0,
+              rounds_used: h.roundsUsed ?? null,
               time_secs: h.timeSecs ?? 0,
             });
           }

@@ -12,6 +12,7 @@ type TmdbSearchResult = {
   results: Array<{
     id: number;
     poster_path: string | null;
+    overview?: string;
   }>;
 };
 
@@ -28,10 +29,10 @@ function tmdbAuthParam(): string {
   return apiKey ? `&api_key=${apiKey}` : "";
 }
 
-export async function searchMoviePoster(title: string, year: number): Promise<string | null> {
+export async function searchMoviePoster(title: string, year: number): Promise<{ poster: string | null; overview: string | null }> {
   const apiKey = process.env.TMDB_API_KEY;
   const accessToken = process.env.TMDB_ACCESS_TOKEN;
-  if (!apiKey && !accessToken) return null;
+  if (!apiKey && !accessToken) return { poster: null, overview: null };
 
   const useBearer = Boolean(accessToken);
   const query = encodeURIComponent(title);
@@ -44,13 +45,15 @@ export async function searchMoviePoster(title: string, year: number): Promise<st
       headers: useBearer ? { Authorization: `Bearer ${accessToken}` } : undefined,
       next: { revalidate: 60 * 60 * 24 }
     });
-    if (!response.ok) return null;
+    if (!response.ok) return { poster: null, overview: null };
     const data = (await response.json()) as TmdbSearchResult;
     const first = data.results?.[0];
-    if (first?.poster_path) return `https://image.tmdb.org/t/p/w500${first.poster_path}`;
-    return null;
+    return {
+      poster: first?.poster_path ? `https://image.tmdb.org/t/p/w500${first.poster_path}` : null,
+      overview: first?.overview || null,
+    };
   } catch {
-    return null;
+    return { poster: null, overview: null };
   }
 }
 
