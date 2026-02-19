@@ -1302,8 +1302,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey }: { puzzle: R
           {/* (fanfare toast moved to keyboard area) */}
         </div>
 
-        {/* Action zone — flex-1 so keyboard never moves */}
-        <div className="flex-1 relative px-4 flex flex-col items-center justify-center min-h-0 overflow-hidden">
+        {/* Action zone — content-sized so wheel never clips behind board/keyboard */}
+        <div className="shrink-0 relative px-4 py-2 flex flex-col items-center justify-center min-h-[220px]">
 
           {/* Always-visible wheel */}
           {(() => {
