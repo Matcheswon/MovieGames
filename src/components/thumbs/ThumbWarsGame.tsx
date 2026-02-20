@@ -606,9 +606,9 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
         </div>
         {movie.overview && (
           <button onClick={(e) => { e.stopPropagation(); setShowOverview(true); }}
-            className="mt-1.5 text-left animate-fadeIn cursor-pointer group">
-            <span className="text-xs text-zinc-500 leading-relaxed line-clamp-1">{movie.overview}</span>
-            <span className="text-[10px] text-amber-400/70 group-hover:text-amber-400 font-medium ml-0.5">More</span>
+            className="mt-1.5 text-left animate-fadeIn cursor-pointer group flex items-baseline gap-1.5">
+            <span className="text-sm text-zinc-500 leading-snug line-clamp-1 flex-1 min-w-0">{movie.overview}</span>
+            <span className="text-xs text-amber-400/70 group-hover:text-amber-400 font-medium shrink-0">More</span>
           </button>
         )}
       </div>
@@ -705,9 +705,9 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             <p className="text-sm text-zinc-500">{movie.year} &middot; {movie.director}</p>
             {movie.overview && (
               <button onClick={() => setShowOverview(true)}
-                className="mt-1.5 text-left animate-fadeIn cursor-pointer group">
-                <span className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{movie.overview}</span>
-                <span className="text-[10px] text-amber-400/70 group-hover:text-amber-400 font-medium ml-0.5">More</span>
+                className="mt-1.5 text-left animate-fadeIn cursor-pointer group flex items-baseline gap-1.5">
+                <span className="text-sm text-zinc-500 leading-snug line-clamp-2 flex-1 min-w-0">{movie.overview}</span>
+                <span className="text-xs text-amber-400/70 group-hover:text-amber-400 font-medium shrink-0">More</span>
               </button>
             )}
             <div className="mb-6" />
