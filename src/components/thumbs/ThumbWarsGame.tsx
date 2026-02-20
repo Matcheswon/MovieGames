@@ -468,7 +468,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
     const grade = pct >= 90 ? "S" : pct >= 75 ? "A" : pct >= 60 ? "B" : pct >= 40 ? "C" : "D";
     const gradeColor = pct >= 90 ? "text-amber-300" : pct >= 75 ? "text-emerald-300" : pct >= 60 ? "text-blue-300" : pct >= 40 ? "text-zinc-300" : "text-red-300";
     const flavorText = pct >= 90 ? "You belong in the balcony." : pct >= 75 ? "Two thumbs up for you." : pct >= 60 ? "Not bad \u2014 you know your critics." : pct >= 40 ? "Ebert would be gentle. Siskel\u2026 less so." : "Maybe stick to reading the reviews.";
-    const shareText = `\u{1F3AC} MovieGames THUMBS${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AC} MovieNight THUMBS${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">

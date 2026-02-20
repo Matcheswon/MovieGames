@@ -1369,7 +1369,7 @@ extension RolesGameView {
                 HStack(spacing: 0) {
                     Text("Movie")
                         .foregroundStyle(Theme.Colors.amber.opacity(0.7))
-                    Text("Games")
+                    Text("Night")
                         .foregroundStyle(Theme.Colors.zinc500)
                 }
                 .font(.system(size: 10, weight: .semibold))

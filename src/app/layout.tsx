@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "MovieGames",
+  title: "MovieNight",
   description: "A suite of movie mini-games."
 };
 

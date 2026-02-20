@@ -5,6 +5,7 @@ export type RolesPuzzle = {
   character: string;
   movie: string;
   year: number;
+  easter_egg?: string;
 };
 
 const ROLES_EPOCH = "2026-02-17";

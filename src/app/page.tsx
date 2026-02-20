@@ -66,7 +66,7 @@ export default function Home() {
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
           <h1 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight mb-2">
-            <span className="text-amber-400">Movie</span><span className="text-zinc-300">Games</span>
+            <span className="text-amber-400">Movie</span><span className="text-zinc-300">Night</span>
           </h1>
           <p className="text-sm md:text-base text-zinc-500 max-w-md mx-auto">
             Test your movie knowledge with fast-paced trivia games about the films you love.

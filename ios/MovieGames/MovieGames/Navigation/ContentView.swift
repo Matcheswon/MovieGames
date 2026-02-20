@@ -21,7 +21,7 @@ struct ContentView: View {
             if authManager.isLoading {
                 // Splash / loading state
                 VStack {
-                    Text("MovieGames")
+                    Text("MovieNight")
                         .font(.display(size: 40))
                         .foregroundStyle(Theme.Colors.amber)
                     ProgressView()
@@ -102,7 +102,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                Text("MovieGames")
+                Text("MovieNight")
                     .font(.display(size: 36))
                     .foregroundStyle(Theme.Colors.amber)
 

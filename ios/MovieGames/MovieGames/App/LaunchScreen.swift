@@ -21,7 +21,7 @@ struct LaunchScreen: View {
                 Text("\u{1F3AC}")
                     .font(.system(size: 48))
 
-                Text("MovieGames")
+                Text("MovieNight")
                     .font(.custom("PlayfairDisplay-Bold", size: 36))
                     .foregroundStyle(Color(hex: "f59e0b")) // amber-500
             }

@@ -15,7 +15,8 @@
     "actor": "HEATH LEDGER",
     "character": "THE JOKER",
     "movie": "The Dark Knight",
-    "year": 2008
+    "year": 2008,
+    "easter_egg": "Why so serious?"
   },
   {
     "actor": "BRAD PITT",
@@ -27,7 +28,8 @@
     "actor": "JACK NICHOLSON",
     "character": "JACK TORRANCE",
     "movie": "The Shining",
-    "year": 1980
+    "year": 1980,
+    "easter_egg": "Here's Johnny"
   },
   {
     "actor": "SIGOURNEY WEAVER",
@@ -63,7 +65,8 @@
     "actor": "RUSSELL CROWE",
     "character": "MAXIMUS",
     "movie": "Gladiator",
-    "year": 2000
+    "year": 2000,
+    "easter_egg": "Are you not entertained?"
   },
   {
     "actor": "BRUCE WILLIS",
@@ -81,7 +84,8 @@
     "actor": "ARNOLD SCHWARZENEGGER",
     "character": "THE TERMINATOR",
     "movie": "The Terminator",
-    "year": 1984
+    "year": 1984,
+    "easter_egg": "I'll be back"
   },
   {
     "actor": "MERYL STREEP",
@@ -147,7 +151,8 @@
     "actor": "CLINT EASTWOOD",
     "character": "HARRY CALLAHAN",
     "movie": "Dirty Harry",
-    "year": 1971
+    "year": 1971,
+    "easter_egg": "Do you feel lucky, punk?"
   },
   {
     "actor": "TOBEY MAGUIRE",
@@ -267,7 +272,8 @@
     "actor": "SEAN CONNERY",
     "character": "JAMES BOND",
     "movie": "Dr. No",
-    "year": 1962
+    "year": 1962,
+    "easter_egg": "Bond. James Bond."
   },
   {
     "actor": "ELIZABETH TAYLOR",
@@ -418,5 +424,12 @@
     "character": "GALADRIEL",
     "movie": "The Lord of the Rings: The Fellowship of the Ring",
     "year": 2001
+  },
+  {
+    "actor": "BILL SKARSGÅRD",
+    "character": "PENNYWISE",
+    "movie": "It",
+    "year": 2017,
+    "easter_egg": "We all float down here"
   }
 ]
