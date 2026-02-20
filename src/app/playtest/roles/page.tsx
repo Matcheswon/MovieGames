@@ -21,10 +21,12 @@ export default function PlaytestRolesPage() {
   const [results, setResults] = useState<PlaytestResult[]>([]);
   const [autoAdvance, setAutoAdvance] = useState(true);
 
-  // Localhost gate
+  // Access gate: localhost OR secret key in URL
+  const PLAYTEST_KEY = "asdlkfjalhoeirwioeu32u49289slkh";
   useEffect(() => {
     const host = window.location.hostname;
-    setAllowed(host === "localhost" || host === "127.0.0.1");
+    const params = new URLSearchParams(window.location.search);
+    setAllowed(host === "localhost" || host === "127.0.0.1" || params.get("key") === PLAYTEST_KEY);
   }, []);
 
   // Restore session from localStorage
