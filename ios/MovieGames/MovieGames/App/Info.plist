@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- URL Types for OAuth Deep Link Callback -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.moviegames.ios</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.moviegames.ios</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Custom Fonts -->
+    <key>UIAppFonts</key>
+    <array>
+        <string>DMSans-VariableFont_opsz,wght.ttf</string>
+        <string>PlayfairDisplay-Bold.ttf</string>
+        <string>PlayfairDisplay-ExtraBold.ttf</string>
+    </array>
+</dict>
+</plist>
