@@ -215,6 +215,15 @@ struct ThumbsGameView: View {
         scores.append(ScoreEntry(siskelOk: siskelOk, ebertOk: ebertOk))
         revealed = true
 
+        // Haptic feedback on reveal
+        if siskelOk && ebertOk {
+            HapticManager.success()
+        } else if !siskelOk && !ebertOk {
+            HapticManager.error()
+        } else {
+            HapticManager.lightTap()
+        }
+
         // Advance after 1200ms
         Task {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
@@ -338,8 +347,6 @@ extension ThumbsGameView {
         ScrollView {
             VStack(spacing: 0) {
                 Spacer().frame(height: 60)
-
-                // Decorative dots
                 HStack(spacing: 6) {
                     Circle().fill(Theme.Colors.amber).frame(width: 6, height: 6)
                     Circle().fill(Theme.Colors.amber.opacity(0.6)).frame(width: 6, height: 6)
@@ -424,6 +431,10 @@ extension ThumbsGameView {
 
                 Spacer().frame(height: 40)
             }
+        }
+        .refreshable {
+            puzzleManager.checkFreshness()
+            loadDailyData()
         }
     }
 
@@ -529,6 +540,7 @@ extension ThumbsGameView {
             Text(formatTime(timer))
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(Theme.Colors.zinc500)
+                .accessibilityLabel("Timer: \(formatTime(timer))")
         }
     }
 
@@ -540,6 +552,8 @@ extension ThumbsGameView {
                     .frame(height: 4)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress: movie \(index + 1) of \(roundSize), \(totalCorrect) correct so far")
     }
 
     private func posterView(movie: ThumbsMovie) -> some View {
@@ -764,6 +778,16 @@ extension ThumbsGameView {
             desaturated = true
         }
 
+        let thumbLabel = type == 1 ? "Thumbs up" : "Thumbs down"
+        let stateDesc: String
+        if let result = result {
+            stateDesc = result == .correct ? ", correct" : ", wrong"
+        } else if selected {
+            stateDesc = ", selected"
+        } else {
+            stateDesc = ""
+        }
+
         return Button(action: onTap) {
             Text(emoji)
                 .font(.system(size: 22))
@@ -779,12 +803,14 @@ extension ThumbsGameView {
                 .animation(.easeInOut(duration: 0.2), value: scale)
         }
         .disabled(revealed)
+        .accessibilityLabel("\(thumbLabel)\(stateDesc)")
     }
 
     // MARK: - Auto-Reveal
 
     private func checkAutoReveal() {
         guard siskelPick != nil && ebertPick != nil && !revealed else { return }
+        HapticManager.lightTap()
         Task {
             try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
             await MainActor.run {

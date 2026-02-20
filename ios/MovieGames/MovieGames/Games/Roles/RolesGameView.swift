@@ -202,6 +202,7 @@ struct RolesGameView: View {
     @State private var tileBlinking: String? = nil
     @State private var tilesLit = Set<String>()
     @State private var tilesPopping = Set<String>()
+    @State private var blinkPhase: Bool = false // toggles for blink pulse
     @State private var fanfareLetter: String? = nil
     @State private var fanfareCount = 0
     @State private var fanfareEasterEgg: String? = nil
@@ -225,6 +226,17 @@ struct RolesGameView: View {
     private var dateKey: String { puzzleManager.currentDateKey }
     private var puzzleNumber: Int { puzzleManager.rolesResult?.puzzleNumber ?? 0 }
     private var puzzle: RolesPuzzle? { puzzleManager.rolesResult?.puzzle }
+
+    /// Tile size adapts to screen width for smaller devices (SE = 375pt)
+    private var tileWidth: CGFloat {
+        UIScreen.main.bounds.width < 390 ? 26 : 32
+    }
+    private var tileHeight: CGFloat {
+        UIScreen.main.bounds.width < 390 ? 32 : 38
+    }
+    private var tileFontSize: CGFloat {
+        UIScreen.main.bounds.width < 390 ? 13 : 15
+    }
 
     private var allLetters: Set<Character> {
         guard let p = puzzle else { return [] }
@@ -273,6 +285,42 @@ struct RolesGameView: View {
             }
         }
         .onAppear(perform: loadDailyData)
+        .focusable()
+        .onKeyPress(characters: .letters) { press in
+            let ch = Character(press.characters.uppercased())
+            let isPicking = phase == .pickLetters || phase == .pickDouble
+            if isPicking {
+                handlePickLetter(ch)
+                return .handled
+            } else if solveMode {
+                handleSolveType(ch)
+                return .handled
+            } else if phase == .guessing {
+                handleLetter(ch)
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(.return) {
+            if solveMode {
+                handleSolveSubmit()
+                return .handled
+            } else if phase == .preRoll {
+                handleSpin()
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(.delete) {
+            if solveMode {
+                handleSolveBackspace()
+                return .handled
+            } else if phase == .pickLetters || phase == .pickDouble {
+                handlePickBackspace()
+                return .handled
+            }
+            return .ignored
+        }
     }
 
     // MARK: - Load Daily Data
@@ -350,6 +398,7 @@ struct RolesGameView: View {
         finalSolveMode = false
         shakeBoard = false
         tileBlinking = nil
+        blinkPhase = false
         tilesLit = Set<String>()
         tilesPopping = Set<String>()
         fanfareLetter = nil
@@ -391,6 +440,7 @@ struct RolesGameView: View {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 if Task.isCancelled { break }
                 guessTimer -= 1
+                if guessTimer == 3 { HapticManager.warning() }
                 if guessTimer <= 0 {
                     guessResolving = true
                     phase = .roundEnding
@@ -480,6 +530,7 @@ struct RolesGameView: View {
         // During double guess, can't pick already guessed/revealed letters
         if phase == .pickDouble && (guessedLetters.contains(u) || revealed.contains(u)) { return }
 
+        HapticManager.selectionChanged()
         pickedLetters.append(u)
         if pickedLetters.count >= pickMax {
             let letters = pickedLetters
@@ -591,11 +642,13 @@ struct RolesGameView: View {
             }
 
             tileBlinking = key
+            blinkPhase = true
             lightIdx += 1
 
             Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 await MainActor.run {
+                    blinkPhase = false
                     tileBlinking = nil
                     tilesLit.insert(key)
                     Task {
@@ -690,6 +743,7 @@ struct RolesGameView: View {
 
     private func handleSpin() {
         guard phase == .preRoll else { return }
+        HapticManager.mediumTap()
         autoRoll(round)
     }
 
@@ -732,6 +786,7 @@ struct RolesGameView: View {
     private func spinTick(from currentIdx: Int, step: Int, total: Int, n: Int, eff: WheelEffect) {
         let nextIdx = (currentIdx + 1) % n
         rollAnimIdx = nextIdx
+        HapticManager.lightTap()
         let newStep = step + 1
 
         if newStep >= total {
@@ -739,6 +794,7 @@ struct RolesGameView: View {
             Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 await MainActor.run {
+                    HapticManager.mediumTap()
                     rollAnimIdx = -1
                     rollResult = eff
                     phase = .revealFlash
@@ -1009,6 +1065,7 @@ struct RolesGameView: View {
         let newStrikes = isCorrect ? strikes : strikes + 1
 
         if isCorrect {
+            HapticManager.success()
             // Pause timer, reveal tiles
             stopGuessTimer()
             let count = (p.actor + p.character).filter { normalizeLetter($0) == u }.count
@@ -1049,6 +1106,7 @@ struct RolesGameView: View {
             }
             return
         } else {
+            HapticManager.error()
             strikes = newStrikes
             wrongGuesses.append(u)
             lastGuess = (letter: u, correct: false, fromSpin: false)
@@ -1148,6 +1206,7 @@ struct RolesGameView: View {
 
         if actorGuess == normalizePhrase(p.actor) && charGuess == normalizePhrase(p.character) {
             // Correct solve!
+            HapticManager.success()
             stopTotalTimer()
             if let egg = p.easter_egg {
                 fanfareEasterEgg = egg
@@ -1173,6 +1232,7 @@ struct RolesGameView: View {
             }
         } else {
             // Wrong solve
+            HapticManager.error()
             if finalSolveMode {
                 let nextStrikes = strikes + 1
                 strikes = nextStrikes
@@ -1426,6 +1486,10 @@ extension RolesGameView {
                 Spacer().frame(height: 40)
             }
         }
+        .refreshable {
+            puzzleManager.checkFreshness()
+            loadDailyData()
+        }
     }
 
     @ViewBuilder
@@ -1515,11 +1579,14 @@ extension RolesGameView {
                         .foregroundStyle(i < strikes ? Theme.Colors.red : Theme.Colors.zinc800)
                 }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(strikes) of \(MAX_STRIKES) strikes")
             if phase != .pickLetters && phase != .revealingPicks {
                 Text(formatTime(totalTime))
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(Theme.Colors.zinc400)
                     .padding(.leading, 8)
+                    .accessibilityLabel("Timer: \(formatTime(totalTime))")
             }
         }
     }
@@ -1548,6 +1615,8 @@ extension RolesGameView {
                 }
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Round \(round + 1) of \(MAX_ROUNDS)\(phase == .guessing ? ", \(guessTimer) seconds remaining" : "")")
     }
 
     private func roundPipColor(_ i: Int) -> Color {
@@ -1679,8 +1748,8 @@ extension RolesGameView {
         let textColor: Color
 
         if isBlink {
-            bgColor = Theme.Colors.amber.opacity(0.2)
-            borderColor = Theme.Colors.amber400.opacity(0.6)
+            bgColor = Theme.Colors.amber.opacity(blinkPhase ? 0.35 : 0.05)
+            borderColor = Theme.Colors.amber400.opacity(blinkPhase ? 0.8 : 0.4)
             textColor = Theme.Colors.amber400
         } else if isLit && !isPop {
             bgColor = Theme.Colors.amber.opacity(0.15)
@@ -1726,17 +1795,19 @@ extension RolesGameView {
         }
 
         Text(displayChar)
-            .font(.system(size: 15, weight: .bold, design: .monospaced))
+            .font(.system(size: tileFontSize, weight: .bold, design: .monospaced))
             .foregroundStyle(textColor)
-            .frame(width: 32, height: 38)
+            .frame(width: tileWidth, height: tileHeight)
             .background(bgColor)
             .clipShape(RoundedRectangle(cornerRadius: 4))
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
                     .stroke(borderColor, lineWidth: isBlink || isCursor ? 2 : 1)
             )
-            .scaleEffect(isPop ? 1.15 : 1.0)
-            .animation(.easeOut(duration: 0.3), value: isPop)
+            .shadow(color: isBlink ? Theme.Colors.amber.opacity(blinkPhase ? 0.3 : 0) : .clear, radius: 8)
+            .animation(.easeInOut(duration: 0.38), value: blinkPhase)
+            .scaleEffect(isPop ? 1.18 : 1.0)
+            .animation(isPop ? .interpolatingSpring(stiffness: 300, damping: 12) : .easeOut(duration: 0.15), value: isPop)
             .onTapGesture {
                 if solveMode && !show {
                     // Set cursor to this blank
@@ -1745,6 +1816,8 @@ extension RolesGameView {
                     }
                 }
             }
+            .accessibilityLabel(show ? String(ch) : (isSolveTyped ? "Typed \(String(solveVal!))" : "Hidden letter"))
+            .accessibilityHint(solveMode && !show ? "Tap to move cursor here" : "")
     }
 
     // MARK: - Action Zone
@@ -2076,7 +2149,7 @@ extension RolesGameView {
                                 .font(.system(size: 9, weight: .bold))
                                 .tracking(1)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 48)
+                                .frame(height: UIScreen.main.bounds.width < 390 ? 40 : 48)
                                 .background(solveMode && allSolveFilled
                                             ? Theme.Colors.green.opacity(0.2)
                                             : Theme.Colors.zinc800.opacity(0.3))
@@ -2108,7 +2181,7 @@ extension RolesGameView {
                             Text("\u{232B}")
                                 .font(.system(size: 14, weight: .bold))
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 48)
+                                .frame(height: UIScreen.main.bounds.width < 390 ? 40 : 48)
                                 .background((solveMode || ((phase == .pickLetters || phase == .pickDouble) && !pickedLetters.isEmpty))
                                             ? Theme.Colors.zinc700.opacity(0.6)
                                             : Theme.Colors.zinc800.opacity(0.3))
@@ -2190,13 +2263,14 @@ extension RolesGameView {
 
         Button(action: {
             guard canTap else { return }
+            HapticManager.lightTap()
             if isPicking { handlePickLetter(letter) }
             else { handleLetter(letter) }
         }) {
             Text(String(letter))
                 .font(.system(size: 14, weight: .bold))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: UIScreen.main.bounds.width < 390 ? 40 : 48)
                 .background(bgColor)
                 .foregroundStyle(textColor)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -2206,6 +2280,7 @@ extension RolesGameView {
                 )
         }
         .disabled(!canTap)
+        .accessibilityLabel("\(String(letter))\(isRev ? ", revealed" : (isWrong ? ", wrong" : (isPicked ? ", picked" : "")))")
     }
 }
 
@@ -2342,9 +2417,9 @@ extension RolesGameView {
                             : Theme.Colors.red.opacity(0.2)
 
                         Text(guessable ? String(ch) : String(ch))
-                            .font(.system(size: 15, weight: .bold, design: .monospaced))
+                            .font(.system(size: tileFontSize, weight: .bold, design: .monospaced))
                             .foregroundStyle(guessable ? textColor : Theme.Colors.zinc100)
-                            .frame(width: 32, height: 38)
+                            .frame(width: tileWidth, height: tileHeight)
                             .background(guessable ? bgColor : Theme.Colors.zinc800)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                             .overlay(

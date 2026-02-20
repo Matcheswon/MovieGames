@@ -82,14 +82,14 @@
 ---
 
 ## Task 6: Polish, animations, and platform integration
-- [ ] Refine tile reveal animations for ROLES (blink → pop, stagger timing matching web)
-- [ ] Add haptic feedback: light tap on button press, success/error haptics on reveal
-- [ ] Implement keyboard input for iPad (physical keyboard support for letter guessing)
-- [ ] Add app icon and launch screen
-- [ ] Test on all iPhone sizes (SE, standard, Pro Max) — ensure responsive layout
-- [ ] Ensure VoiceOver accessibility for game elements (tile labels, button actions, timer announcements)
-- [ ] Add pull-to-refresh or manual refresh for stale puzzles
-- [ ] Final QA pass: verify daily puzzle parity with web app for current date
+- [x] Refine tile reveal animations for ROLES (blink → pop, stagger timing matching web)
+- [x] Add haptic feedback: light tap on button press, success/error haptics on reveal
+- [x] Implement keyboard input for iPad (physical keyboard support for letter guessing)
+- [x] Add app icon and launch screen
+- [x] Test on all iPhone sizes (SE, standard, Pro Max) — ensure responsive layout
+- [x] Ensure VoiceOver accessibility for game elements (tile labels, button actions, timer announcements)
+- [x] Add pull-to-refresh or manual refresh for stale puzzles
+- [x] Final QA pass: verify daily puzzle parity with web app for current date
 
 **Acceptance:** App feels polished and native. Animations are smooth. Works correctly across device sizes. Accessible via VoiceOver. Daily puzzles verified matching web.
 

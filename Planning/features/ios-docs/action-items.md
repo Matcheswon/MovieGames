@@ -30,3 +30,14 @@
 - [ ] Sign in with a test account, play a game, then verify the result appears in Supabase `game_results` table (check via Supabase dashboard → Table Editor)
 - [ ] Test offline behavior: enable airplane mode, play a game, then disable airplane mode and verify the queued result flushes to Supabase
 - [ ] Test migration: play games while signed out, then sign in and verify local history migrates to Supabase
+
+## Task 6: Polish, animations, and platform integration
+- [ ] Add the new Swift files to the Xcode project: `Services/HapticManager.swift`, `App/LaunchScreen.swift` — drag them into the Xcode project navigator
+- [ ] Add `Assets.xcassets` to the Xcode project if not already present — it contains AppIcon and AccentColor asset catalogs
+- [ ] Create a 1024x1024 app icon PNG and place it at `Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png` — use the cinematic theme (dark bg with amber "MG" or film reel icon)
+- [ ] In Xcode, set the launch screen: Info.plist → `UILaunchScreen` → set `UIColorName` to `AccentColor` or use `LaunchScreen.swift` as a custom launch screen storyboard
+- [ ] Build and run on iPhone SE simulator to verify tile sizes and keyboard fit on small screens
+- [ ] Build and run on iPhone 15 Pro Max simulator to verify layout on large screens
+- [ ] Enable VoiceOver in iOS Settings → Accessibility → VoiceOver and test that game elements (tiles, buttons, timer, strikes) announce correctly
+- [ ] Test pull-to-refresh on both THUMBS and ROLES start screens — pull down should refresh the puzzle if the date has changed
+- [ ] Run Cmd+U to verify all parity tests still pass after polish changes
