@@ -30,13 +30,13 @@ struct ContentView: View {
                 }
             } else {
                 TabView(selection: $selectedTab) {
-                    HomeView()
+                    HomeView(selectedTab: $selectedTab)
                         .tabItem {
                             Label("Home", systemImage: "film")
                         }
                         .tag(Tab.home)
 
-                    ThumbsPlaceholderView()
+                    ThumbsTabView()
                         .tabItem {
                             Label("THUMBS", systemImage: "hand.thumbsup")
                         }
@@ -97,6 +97,8 @@ struct ContentView: View {
 // MARK: - Placeholder Views (implemented in Tasks 3-5)
 
 struct HomeView: View {
+    @Binding var selectedTab: ContentView.Tab
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -109,19 +111,25 @@ struct HomeView: View {
                     .foregroundStyle(Theme.Colors.zinc400)
 
                 VStack(spacing: 16) {
-                    GameCard(
-                        title: "THUMBS",
-                        subtitle: "Siskel & Ebert Lightning Round",
-                        icon: "hand.thumbsup.fill",
-                        description: "Guess the critics' thumbs for 10 movies"
-                    )
+                    Button { selectedTab = .thumbs } label: {
+                        GameCard(
+                            title: "THUMBS",
+                            subtitle: "Siskel & Ebert Lightning Round",
+                            icon: "hand.thumbsup.fill",
+                            description: "Guess the critics' thumbs for 10 movies"
+                        )
+                    }
+                    .buttonStyle(.plain)
 
-                    GameCard(
-                        title: "ROLES",
-                        subtitle: "Actor/Character Guessing",
-                        icon: "theatermasks.fill",
-                        description: "Uncover actor and character names letter by letter"
-                    )
+                    Button { selectedTab = .roles } label: {
+                        GameCard(
+                            title: "ROLES",
+                            subtitle: "Actor/Character Guessing",
+                            icon: "theatermasks.fill",
+                            description: "Uncover actor and character names letter by letter"
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 24)
 
@@ -168,11 +176,10 @@ struct GameCard: View {
     }
 }
 
-struct ThumbsPlaceholderView: View {
+struct ThumbsTabView: View {
     var body: some View {
         NavigationStack {
-            Text("THUMBS — implemented in Task 3")
-                .foregroundStyle(Theme.Colors.zinc500)
+            ThumbsGameView()
         }
     }
 }

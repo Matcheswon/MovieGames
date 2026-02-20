@@ -33,16 +33,16 @@
 ---
 
 ## Task 3: THUMBS game implementation
-- [ ] Build THUMBS start screen (instructions, streak display, play button, already-played detection)
-- [ ] Build playing screen: movie poster (from TMDB), title/year, Siskel & Ebert thumb buttons
-- [ ] Implement thumb button states: default → selected (amber) → correct (green) → wrong (red)
-- [ ] Add progress bar (10 pips: green/amber/red/gray)
-- [ ] Implement auto-reveal timing (300ms after both picks, 1200ms before next movie)
-- [ ] Add continuous game timer
-- [ ] Build results screen: grade, score, time, perfect rounds, streak, movie-by-movie breakdown
-- [ ] Implement share sheet with emoji grid format matching web
-- [ ] Add TMDB poster fetching with caching (URLCache or SwiftUI AsyncImage with cache)
-- [ ] Add movie info/overview popup
+- [x] Build THUMBS start screen (instructions, streak display, play button, already-played detection)
+- [x] Build playing screen: movie poster (from TMDB), title/year, Siskel & Ebert thumb buttons
+- [x] Implement thumb button states: default → selected (amber) → correct (green) → wrong (red)
+- [x] Add progress bar (10 pips: green/amber/red/gray)
+- [x] Implement auto-reveal timing (300ms after both picks, 1200ms before next movie)
+- [x] Add continuous game timer
+- [x] Build results screen: grade, score, time, perfect rounds, streak, movie-by-movie breakdown
+- [x] Implement share sheet with emoji grid format matching web
+- [x] Add TMDB poster fetching with caching (URLCache or SwiftUI AsyncImage with cache)
+- [x] Add movie info/overview popup
 
 **Acceptance:** Full THUMBS game playable with correct scoring, grading, timing, and visual feedback matching the web experience.
 

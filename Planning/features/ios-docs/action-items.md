@@ -13,3 +13,8 @@
 - [ ] Add `Data/ratings.json` and `Data/roles.json` to the test target's bundle resources as well — needed for `DailyPuzzleEngineTests` parity tests
 - [ ] Create a test target in Xcode (File → New → Target → Unit Testing Bundle) named `MovieGamesTests` and add `MovieGamesTests/DailyPuzzleEngineTests.swift` to it
 - [ ] Run the unit tests in Xcode to verify all parity tests pass (Product → Test or Cmd+U)
+
+## Task 3: THUMBS game implementation
+- [ ] Add the new Swift files to the Xcode project: `Games/Thumbs/ThumbsGameView.swift` and `Services/TMDBService.swift` — drag them into the Xcode project navigator
+- [ ] Add TMDB API credentials to Info.plist: set `TMDB_API_KEY` or `TMDB_ACCESS_TOKEN` (same values as the web app's `.env`) — needed for poster fetching
+- [ ] Build and run in Xcode to verify the THUMBS tab loads and is playable (Cmd+R)
