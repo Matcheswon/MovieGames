@@ -49,19 +49,19 @@
 ---
 
 ## Task 4: ROLES game implementation
-- [ ] Build ROLES start screen (instructions, streak display, play button, already-played detection)
-- [ ] Build letter board: two rows (actor + character) with hidden/revealed tile states
-- [ ] Implement pick-3-letters phase with keyboard and stagger reveal animation
-- [ ] Build Role Call wheel animation (spin, settle, display effect)
-- [ ] Implement all 8 wheel effects with constraints (max counts, no consecutive bad effects)
-- [ ] Build guessing phase: on-screen QWERTY keyboard, letter state coloring (green/red/default)
-- [ ] Implement timer with per-round countdown (8s base, effect modifications)
-- [ ] Implement strike system (3 strikes = game over)
-- [ ] Build solve mode: fill-in-the-blank overlay with keyboard input and submit
-- [ ] Implement solve attempt limits (2 normal + 1 final)
-- [ ] Build win screen with easter egg quote display and celebration animation
-- [ ] Build loss screen with answer reveal
-- [ ] Implement share sheet matching web format
+- [x] Build ROLES start screen (instructions, streak display, play button, already-played detection)
+- [x] Build letter board: two rows (actor + character) with hidden/revealed tile states
+- [x] Implement pick-3-letters phase with keyboard and stagger reveal animation
+- [x] Build Role Call wheel animation (spin, settle, display effect)
+- [x] Implement all 8 wheel effects with constraints (max counts, no consecutive bad effects)
+- [x] Build guessing phase: on-screen QWERTY keyboard, letter state coloring (green/red/default)
+- [x] Implement timer with per-round countdown (8s base, effect modifications)
+- [x] Implement strike system (3 strikes = game over)
+- [x] Build solve mode: fill-in-the-blank overlay with keyboard input and submit
+- [x] Implement solve attempt limits (2 normal + 1 final)
+- [x] Build win screen with easter egg quote display and celebration animation
+- [x] Build loss screen with answer reveal
+- [x] Implement share sheet matching web format
 
 **Acceptance:** Full ROLES game playable with correct wheel effects, letter logic, strike tracking, solve mode, and timing matching web behavior.
 

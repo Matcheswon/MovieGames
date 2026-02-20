@@ -42,7 +42,7 @@ struct ContentView: View {
                         }
                         .tag(Tab.thumbs)
 
-                    RolesPlaceholderView()
+                    RolesTabView()
                         .tabItem {
                             Label("ROLES", systemImage: "theatermasks")
                         }
@@ -184,11 +184,10 @@ struct ThumbsTabView: View {
     }
 }
 
-struct RolesPlaceholderView: View {
+struct RolesTabView: View {
     var body: some View {
         NavigationStack {
-            Text("ROLES — implemented in Task 4")
-                .foregroundStyle(Theme.Colors.zinc500)
+            RolesGameView()
         }
     }
 }

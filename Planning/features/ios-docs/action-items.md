@@ -18,3 +18,8 @@
 - [ ] Add the new Swift files to the Xcode project: `Games/Thumbs/ThumbsGameView.swift` and `Services/TMDBService.swift` — drag them into the Xcode project navigator
 - [ ] Add TMDB API credentials to Info.plist: set `TMDB_API_KEY` or `TMDB_ACCESS_TOKEN` (same values as the web app's `.env`) — needed for poster fetching
 - [ ] Build and run in Xcode to verify the THUMBS tab loads and is playable (Cmd+R)
+
+## Task 4: ROLES game implementation
+- [ ] Add the new Swift file to the Xcode project: `Games/Roles/RolesGameView.swift` — drag it into the Xcode project navigator under `Games/Roles/`
+- [ ] Build and run in Xcode to verify the ROLES tab loads and is playable (Cmd+R)
+- [ ] Test the full game flow: pick 3 letters → wheel spin → guess/solve → win/loss screens
