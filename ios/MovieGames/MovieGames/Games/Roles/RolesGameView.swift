@@ -1259,6 +1259,15 @@ struct RolesGameView: View {
         writeRolesDailyStreak(data)
         dailyStreak = newStreak
         bestDailyStreak = newBest
+
+        // Dual-save: also save to Supabase if authenticated
+        GameResultService.shared.saveRolesResult(
+            dateKey: dateKey,
+            solved: screen == .solved,
+            strikes: strikes,
+            roundsUsed: roundsUsed,
+            timeSecs: totalTime
+        )
     }
 
     // MARK: - Formatting

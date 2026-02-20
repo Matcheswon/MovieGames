@@ -269,6 +269,14 @@ struct ThumbsGameView: View {
         writeDailyStreak(data)
         dailyStreak = newStreak
         bestDailyStreak = newBest
+
+        // Dual-save: also save to Supabase if authenticated
+        GameResultService.shared.saveThumbsResult(
+            dateKey: dateKey,
+            score: totalCorrect,
+            outOf: totalPossible,
+            timeSecs: timer
+        )
     }
 
     // MARK: - Formatting

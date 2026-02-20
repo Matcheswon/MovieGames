@@ -48,7 +48,7 @@ struct ContentView: View {
                         }
                         .tag(Tab.roles)
 
-                    StatsPlaceholderView()
+                    StatsView()
                         .tabItem {
                             Label("Stats", systemImage: "chart.bar")
                         }
@@ -94,7 +94,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Placeholder Views (implemented in Tasks 3-5)
+// MARK: - Tab Content Views
 
 struct HomeView: View {
     @Binding var selectedTab: ContentView.Tab
@@ -188,15 +188,6 @@ struct RolesTabView: View {
     var body: some View {
         NavigationStack {
             RolesGameView()
-        }
-    }
-}
-
-struct StatsPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            Text("Stats — implemented in Task 5")
-                .foregroundStyle(Theme.Colors.zinc500)
         }
     }
 }

@@ -23,3 +23,10 @@
 - [ ] Add the new Swift file to the Xcode project: `Games/Roles/RolesGameView.swift` — drag it into the Xcode project navigator under `Games/Roles/`
 - [ ] Build and run in Xcode to verify the ROLES tab loads and is playable (Cmd+R)
 - [ ] Test the full game flow: pick 3 letters → wheel spin → guess/solve → win/loss screens
+
+## Task 5: Persistence layer (local + Supabase) and stats
+- [ ] Add the new Swift files to the Xcode project: `Services/GameResultService.swift`, `Services/StatsService.swift`, `Views/StatsView.swift` — drag them into the Xcode project navigator
+- [ ] Build and run in Xcode to verify the Stats tab loads and shows "Sign In to View Stats" for unauthenticated users (Cmd+R)
+- [ ] Sign in with a test account, play a game, then verify the result appears in Supabase `game_results` table (check via Supabase dashboard → Table Editor)
+- [ ] Test offline behavior: enable airplane mode, play a game, then disable airplane mode and verify the queued result flushes to Supabase
+- [ ] Test migration: play games while signed out, then sign in and verify local history migrates to Supabase

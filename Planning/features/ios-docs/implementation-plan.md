@@ -68,14 +68,14 @@
 ---
 
 ## Task 5: Persistence layer (local + Supabase) and stats
-- [ ] Implement UserDefaults storage for guest mode using same key structure as web (`moviegames:thumbwars:daily`, `moviegames:roles:daily`)
-- [ ] Implement Supabase `game_results` upsert for authenticated users (THUMBS and ROLES payloads)
-- [ ] Implement dual-save: save to local storage always, save to Supabase if authenticated
-- [ ] Implement daily streak logic: consecutive NY-timezone dates, reset if gap > 1 day
-- [ ] Build local → Supabase migration flow on first sign-in
-- [ ] Build Stats screen: THUMBS tab (games played, avg score %, best score, avg time, streaks) and ROLES tab (games played, solve rate %, avg strikes, avg time, streaks)
-- [ ] Implement streak computation from Supabase game_results (matching web algorithm)
-- [ ] Handle offline gracefully: queue Supabase writes for retry, show local stats as fallback
+- [x] Implement UserDefaults storage for guest mode using same key structure as web (`moviegames:thumbwars:daily`, `moviegames:roles:daily`)
+- [x] Implement Supabase `game_results` upsert for authenticated users (THUMBS and ROLES payloads)
+- [x] Implement dual-save: save to local storage always, save to Supabase if authenticated
+- [x] Implement daily streak logic: consecutive NY-timezone dates, reset if gap > 1 day
+- [x] Build local → Supabase migration flow on first sign-in
+- [x] Build Stats screen: THUMBS tab (games played, avg score %, best score, avg time, streaks) and ROLES tab (games played, solve rate %, avg strikes, avg time, streaks)
+- [x] Implement streak computation from Supabase game_results (matching web algorithm)
+- [x] Handle offline gracefully: queue Supabase writes for retry, show local stats as fallback
 
 **Acceptance:** Guest results persist locally. Authenticated results appear in Supabase and match web stats. Migration transfers all local history on sign-in. Stats screen shows correct aggregated data.
 
