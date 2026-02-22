@@ -431,5 +431,257 @@
     "movie": "It",
     "year": 2017,
     "easter_egg": "We all float down here"
+  },
+  {
+    "actor": "HUMPHREY BOGART",
+    "character": "SAM SPADE",
+    "movie": "The Maltese Falcon",
+    "year": 1941
+  },
+  {
+    "actor": "VIVIEN LEIGH",
+    "character": "SCARLETT O'HARA",
+    "movie": "Gone with the Wind",
+    "year": 1939
+  },
+  {
+    "actor": "JAMES DEAN",
+    "character": "JIM STARK",
+    "movie": "Rebel Without a Cause",
+    "year": 1955
+  },
+  {
+    "actor": "AUDREY HEPBURN",
+    "character": "SABRINA FAIRCHILD",
+    "movie": "Sabrina",
+    "year": 1954
+  },
+  {
+    "actor": "MARLEE MATLIN",
+    "character": "SARAH NORMAN",
+    "movie": "Children of a Lesser God",
+    "year": 1986
+  },
+  {
+    "actor": "MICHAEL J. FOX",
+    "character": "MARTY MCFLY",
+    "movie": "Back to the Future",
+    "year": 1985
+  },
+  {
+    "actor": "MORGAN FREEMAN",
+    "character": "ELLIS BOYD REDDING",
+    "movie": "The Shawshank Redemption",
+    "year": 1994
+  },
+  {
+    "actor": "MICHELLE WILLIAMS",
+    "character": "CINDY LOU WHO",
+    "movie": "How the Grinch Stole Christmas",
+    "year": 2000
+  },
+  {
+    "actor": "KEANU REEVES",
+    "character": "NEO",
+    "movie": "The Matrix",
+    "year": 1999
+  },
+  {
+    "actor": "TONI COLLETTE",
+    "character": "EOWYN",
+    "movie": "The Lord of the Rings: The Return of the King",
+    "year": 2003
+  },
+  {
+    "actor": "BENICIO DEL TORO",
+    "character": "JAVIER RODRIGUEZ",
+    "movie": "Traffic",
+    "year": 2000
+  },
+  {
+    "actor": "LUPITA NYONG'O",
+    "character": "NAKIA",
+    "movie": "Black Panther",
+    "year": 2018
+  },
+  {
+    "actor": "GARY OLDMAN",
+    "character": "SIRIUS BLACK",
+    "movie": "Harry Potter and the Prisoner of Azkaban",
+    "year": 2004
+  },
+  {
+    "actor": "TILDA SWINTON",
+    "character": "THE WHITE WITCH",
+    "movie": "The Lion, the Witch and the Wardrobe",
+    "year": 2005
+  },
+  {
+    "actor": "JACK BLACK",
+    "character": "DEWEY FINN",
+    "movie": "School of Rock",
+    "year": 2003
+  },
+  {
+    "actor": "VIOLA DAVIS",
+    "character": "AIBILEEN CLARK",
+    "movie": "The Help",
+    "year": 2011
+  },
+  {
+    "actor": "OSCAR ISAAC",
+    "character": "NATHAN BATEMAN",
+    "movie": "Ex Machina",
+    "year": 2015
+  },
+  {
+    "actor": "MARGOT ROBBIE",
+    "character": "BARBIE",
+    "movie": "Barbie",
+    "year": 2023
+  },
+  {
+    "actor": "MICHAEL B. JORDAN",
+    "character": "ERIK KILLMONGER",
+    "movie": "Black Panther",
+    "year": 2018
+  },
+  {
+    "actor": "FRANCES McDORMAND",
+    "character": "MARGE GUNDERSON",
+    "movie": "Fargo",
+    "year": 1996
+  },
+  {
+    "actor": "GINNEFER GOODWIN",
+    "character": "JUDY HOPPS",
+    "movie": "Zootopia",
+    "year": 2016
+  },
+  {
+    "actor": "LAWRENCE OLIVIER",
+    "character": "MAXIMUS DE WINTER",
+    "movie": "Rebecca",
+    "year": 1940
+  },
+  {
+    "actor": "RITA HAYWORTH",
+    "character": "GILDA MUNDSON",
+    "movie": "Gilda",
+    "year": 1946
+  },
+  {
+    "actor": "GREGORY PECK",
+    "character": "ATTICUS FINCH",
+    "movie": "To Kill a Mockingbird",
+    "year": 1962
+  },
+  {
+    "actor": "JULIE ANDREWS",
+    "character": "MARIA VON TRAPP",
+    "movie": "The Sound of Music",
+    "year": 1965
+  },
+  {
+    "actor": "PETER FONDA",
+    "character": "WYATT",
+    "movie": "Easy Rider",
+    "year": 1969
+  },
+  {
+    "actor": "DIANE KEATON",
+    "character": "LOUISE SAWYER",
+    "movie": "Thelma & Louise",
+    "year": 1991
+  },
+  {
+    "actor": "GEENA DAVIS",
+    "character": "THELMA DICKINSON",
+    "movie": "Thelma & Louise",
+    "year": 1991
+  },
+  {
+    "actor": "JEFF GOLDBLUM",
+    "character": "SETH BRUNDLE",
+    "movie": "The Fly",
+    "year": 1986
+  },
+  {
+    "actor": "LINDA HAMILTON",
+    "character": "SARAH CONNOR",
+    "movie": "The Terminator 2: Judgment Day",
+    "year": 1991
+  },
+  {
+    "actor": "DANNY GLOVER",
+    "character": "ROGER MURTAUGH",
+    "movie": "Lethal Weapon",
+    "year": 1987
+  },
+  {
+    "actor": "CHRISTOPHER WALKEN",
+    "character": "NICK CHEVOTAREVICH",
+    "movie": "The Deer Hunter",
+    "year": 1978
+  },
+  {
+    "actor": "ANGELINA JOLIE",
+    "character": "LARA CROFT",
+    "movie": "Lara Croft: Tomb Raider",
+    "year": 2001
+  },
+  {
+    "actor": "WILL SMITH",
+    "character": "CHRIS GARDNER",
+    "movie": "The Pursuit of Happyness",
+    "year": 2006
+  },
+  {
+    "actor": "LUPITA NYONG'O",
+    "character": "MINER",
+    "movie": "12 Years a Slave",
+    "year": 2013
+  },
+  {
+    "actor": "BRIE LARSON",
+    "character": "JOY NEWSOME",
+    "movie": "Room",
+    "year": 2015
+  },
+  {
+    "actor": "SAOIRSE RONAN",
+    "character": "CHRISTINE COLLINS",
+    "movie": "Changeling",
+    "year": 2008
+  },
+  {
+    "actor": "DENZEL WASHINGTON",
+    "character": "CARL BRASHEAR",
+    "movie": "Men of Honor",
+    "year": 2000
+  },
+  {
+    "actor": "KATE BECKINSALE",
+    "character": "SELENE",
+    "movie": "Underworld",
+    "year": 2003
+  },
+  {
+    "actor": "JAKE GYLLENHAAL",
+    "character": "LOUIS BLOOM",
+    "movie": "Nightcrawler",
+    "year": 2014
+  },
+  {
+    "actor": "FLORENCE PUGH",
+    "character": "AMY MARCH",
+    "movie": "Little Women",
+    "year": 2019
+  },
+  {
+    "actor": "KATHHLEEN TURNER",
+    "character": "JESSICA RABBIT",
+    "movie": "Who Framed Roger Rabbit",
+    "year": 1990
   }
 ]

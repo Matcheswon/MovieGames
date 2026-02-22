@@ -174,6 +174,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [lostRounds, setLostRounds] = useState(new Set<number>());
   const [turnWarning, setTurnWarning] = useState<string | null>(null);
   const [preRollChoice, setPreRollChoice] = useState<"spin" | "solve">("spin");
+  const [preRollReady, setPreRollReady] = useState(false);
   const [alreadyPlayed, setAlreadyPlayed] = useState<RolesHistoryEntry | null>(null);
   const [fanfareLetter, setFanfareLetter] = useState<string | null>(null);
   const [fanfareCount, setFanfareCount] = useState(0);
@@ -181,6 +182,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [tilesPopping, setTilesPopping] = useState(new Set<string>());
   const [tilesLit, setTilesLit] = useState(new Set<string>());
   const [timerAnimKey, setTimerAnimKey] = useState(0);
+  const [pressedKey, setPressedKey] = useState<string | null>(null);
+  const [gameOverPopup, setGameOverPopup] = useState<string | null>(null);
+  const [gameWinPopup, setGameWinPopup] = useState(false);
   const [decisionTimer, setDecisionTimer] = useState(DECISION_TIME);
   const [decisionAnimKey, setDecisionAnimKey] = useState(0);
 
@@ -216,7 +220,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     screenRef.current = screen;
   }, [screen]);
 
-  // Desktop keyboard
+  // Desktop keyboard — intentionally omits dependency array so the handler
+  // always closes over the latest state without stale captures.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isOver || screen !== "playing") return;
@@ -228,12 +233,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         setPreRollChoice(prev => prev === "spin" ? "solve" : "spin");
         return;
       }
-      if (key === "ENTER" && phase === "pre-roll") {
+      if (key === "ENTER" && phase === "pre-roll" && preRollReady) {
         e.preventDefault();
         if (preRollChoice === "solve" && solveAttempts > 0) handlePreRollSolve();
         else handleSpin();
         return;
       }
+      if (key === "ENTER" && phase === "guessing" && roundKbLock && !solveMode && solveAttempts > 0) { e.preventDefault(); handlePreRollSolve(); return; }
+      if (key === "ENTER" && solveMode && !finalSolveMode && Object.keys(solveInputs).length === 0) { e.preventDefault(); cancelSolve(); return; }
       if (key === "ENTER" && solveMode) { e.preventDefault(); handleSolveSubmit(); return; }
       if (key.length === 1 && key >= "A" && key <= "Z") {
         e.preventDefault();
@@ -282,7 +289,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     guessesRemainingRef.current = 1;
     setGuessResolving(false);
     setLostRounds(new Set());
-    setTurnWarning(null);
+    setTurnWarning(null); setGameOverPopup(null); setGameWinPopup(false);
     setDecisionTimer(DECISION_TIME);
     if (decisionRef.current) clearInterval(decisionRef.current);
     setFanfareLetter(null); setFanfareCount(0);
@@ -324,7 +331,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   // Decision timer for pre-roll and final solve (30s)
   useEffect(() => {
-    const needsTimer = phase === "pre-roll" || (finalSolveMode && solveMode);
+    const needsTimer = phase === "pre-roll" || solveMode;
     if (needsTimer && screen === "playing") {
       setDecisionTimer(DECISION_TIME);
       setDecisionAnimKey(k => k + 1);
@@ -335,10 +342,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             if (phase === "pre-roll") {
               // Time's up at pre-roll — auto-spin
               handleSpin();
-            } else {
+            } else if (finalSolveMode) {
               // Time's up at final solve — fail
-              if (totalRef.current) clearInterval(totalRef.current);
-              setScreen("failed");
+              triggerGameOver("Time's Up — Game Over!");
+            } else {
+              // Time's up at normal solve — go back to guessing
+              cancelSolve();
             }
             return 0;
           }
@@ -352,9 +361,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   useEffect(() => {
     if (screen === "playing" && allDone && phase !== "pick-letters" && phase !== "revealing-picks" && phase !== "pick-double") {
-      if (totalRef.current) clearInterval(totalRef.current);
-      if (guessRef.current) clearInterval(guessRef.current);
-      setTimeout(() => setScreen("solved"), 500);
+      triggerWin();
     }
   }, [revealed, screen, phase, allDone]);
 
@@ -398,6 +405,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // Turn warning popup
   useEffect(() => {
     if (screen !== "playing" || phase !== "pre-roll") return;
+    setPreRollReady(false);
     const turnsLeft = MAX_ROUNDS - round;
     const msg =
       turnsLeft <= 3
@@ -405,7 +413,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         : `Round ${round + 1}`;
     setTurnWarning(msg);
     const t = setTimeout(() => setTurnWarning(null), 2000);
-    return () => clearTimeout(t);
+    const t2 = setTimeout(() => setPreRollReady(true), 1400);
+    return () => { clearTimeout(t); clearTimeout(t2); };
   }, [round, phase, screen]);
 
   // Record daily streak when game ends
@@ -544,7 +553,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   const advance =() => {
     if (screenRef.current !== "playing") return;
-    console.log(`[advance] called from round ${roundRef.current} → ${roundRef.current + 1}`, new Error().stack?.split('\n')[2]);
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     setGuessResolving(false);
     setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false);
@@ -564,6 +572,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     else {
       roundRef.current = next;
       setRound(next); setRollResult(null);
+      setPhase("round-ending");
       setGuessesRemaining(1);
       guessesRemainingRef.current = 1;
       setTimeout(() => { setPreRollChoice("spin"); setPhase("pre-roll"); }, 400);
@@ -611,6 +620,24 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setTimeout(() => advance(), 800);
     }
     return nextRemaining;
+  };
+
+  const triggerGameOver = (reason: string) => {
+    screenRef.current = "failed";
+    if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
+    if (totalRef.current) clearInterval(totalRef.current);
+    if (decisionRef.current) clearInterval(decisionRef.current);
+    setGameOverPopup(reason);
+    setTimeout(() => { setGameOverPopup(null); setScreen("failed"); }, 3000);
+  };
+
+  const triggerWin = () => {
+    screenRef.current = "solved";
+    if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
+    if (totalRef.current) clearInterval(totalRef.current);
+    if (decisionRef.current) clearInterval(decisionRef.current);
+    setGameWinPopup(true);
+    setTimeout(() => { setGameWinPopup(false); setScreen("solved"); }, 3000);
   };
 
   const spinLetter = (letter: string) => {
@@ -816,7 +843,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             setFanfareCount(hitCount);
             setTimeout(() => { setFanfareLetter(null); setFanfareCount(0); }, 2400);
           }
-          setTimeout(() => advance(), 800);
+          // Show miss feedback after fanfare, then advance
+          const missDelay = hitCount > 0 ? 2000 : 0;
+          setTimeout(() => showMisses(() => setTimeout(() => advance(), 400)), missDelay);
         }, 400);
         return;
       }
@@ -828,9 +857,24 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setTimeout(revealAll, 250);
     };
 
+    const misses = letters.filter(l => !allLetters.has(l));
+
+    // Stagger miss feedback using lastGuess float-ups
+    const showMisses = (onDone: () => void) => {
+      if (misses.length === 0) { onDone(); return; }
+      let i = 0;
+      const showNext = () => {
+        if (i >= misses.length) { setLastGuess(null); onDone(); return; }
+        setLastGuess({ letter: misses[i], correct: false, fromSpin: true });
+        i++;
+        setTimeout(() => { setLastGuess(null); setTimeout(showNext, 200); }, 1400);
+      };
+      showNext();
+    };
+
     if (allPositions.length === 0) {
-      // Both misses — just advance
-      setTimeout(() => advance(), 800);
+      // Both misses — show miss feedback then advance
+      setTimeout(() => showMisses(() => setTimeout(() => advance(), 400)), 400);
     } else {
       setTimeout(lightUp, 400);
     }
@@ -906,6 +950,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (t === "kb_lock") {
       setGuessResolving(false);
       setRoundKbLock(true);
+      setLostRounds(prev => { const n = new Set(prev); n.add(roundRef.current); return n; });
       setGuessTime(4);
       setTimeout(() => setPhase("guessing"), 400);
       return;
@@ -982,6 +1027,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (phase !== "guessing" || kbLocked || guessResolving || guessTimer <= 0) return;
     const u = letter.toUpperCase();
     if (guessedLetters.has(u) || revealed.has(u)) return;
+    setPressedKey(u);
     setGuessResolving(true);
 
     const ng = new Set(guessedLetters); ng.add(u); setGuessedLetters(ng);
@@ -1003,11 +1049,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           setTimeout(() => { setFanfareLetter(null); setFanfareCount(0); }, 2400);
           // Resume
           if (newStrikes >= MAX_STRIKES) {
-            if (totalRef.current) clearInterval(totalRef.current);
-            setScreen("failed");
+            triggerGameOver("3 Strikes — Game Over!");
             return;
           }
           consumeGuess();
+          setPressedKey(null);
           setGuessResolving(false);
         });
       }, 600);
@@ -1015,18 +1061,21 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     } else {
       setStrikes(newStrikes); setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false, freePass: isFreePass });
+      setPressedKey(null);
     }
 
     // 3 strikes = game over
     if (newStrikes >= MAX_STRIKES) {
-      if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
-      if (totalRef.current) clearInterval(totalRef.current);
-      setTimeout(() => setScreen("failed"), 1000);
+      triggerGameOver("3 Strikes — Game Over!");
       return;
     }
 
-    consumeGuess();
-    setGuessResolving(false);
+    // Brief pause so the strike/free-pass feedback registers before continuing
+    if (guessRef.current) clearInterval(guessRef.current);
+    setTimeout(() => {
+      consumeGuess();
+      setGuessResolving(false);
+    }, 800);
   };
 
   // ─── SOLVE ───
@@ -1059,30 +1108,30 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (!solveMode) return;
     const allFilled = blankPositions.every(p => solveInputs[`${p.word}-${p.index}`]);
     if (!allFilled) return;
+    if (decisionRef.current) { clearInterval(decisionRef.current); decisionRef.current = null; }
     const actorG = puzzle.actor.split("").map((ch, i) =>
       !isGuessableChar(ch) ? ch : revealed.has(normalizeLetter(ch)) ? normalizeLetter(ch) : (solveInputs[`actor-${i}`] || "?")).join("");
     const charG = puzzle.character.split("").map((ch, i) =>
       !isGuessableChar(ch) ? ch : revealed.has(normalizeLetter(ch)) ? normalizeLetter(ch) : (solveInputs[`character-${i}`] || "?")).join("");
     if (actorG === normalizePhrase(puzzle.actor) && charG === normalizePhrase(puzzle.character)) {
-      if (totalRef.current) clearInterval(totalRef.current);
-      if (guessRef.current) clearInterval(guessRef.current);
       // Reveal all letters so board shows complete answer
       setRevealed(new Set(allLetters));
-      setScreen("solved");
+      triggerWin();
     } else {
       if (finalSolveMode) {
         const nextStrikes = strikes + 1;
         setStrikes(nextStrikes);
         setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
         setSolveInputs({}); setSolveCursor(0);
-        if (nextStrikes >= MAX_STRIKES) { if (totalRef.current) clearInterval(totalRef.current); setScreen("failed"); }
+        if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes — Game Over!"); }
         return;
       }
       const na = solveAttempts - 1; setSolveAttempts(na);
       const nextStrikes = strikes + 1; setStrikes(nextStrikes);
       setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
       setSolveInputs({}); setSolveCursor(0);
-      if (nextStrikes >= MAX_STRIKES || na <= 0) { if (totalRef.current) clearInterval(totalRef.current); setScreen("failed"); }
+      if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes — Game Over!"); }
+      else if (na <= 0) { triggerGameOver("No solves left — Game Over!"); }
     }
   };
 
@@ -1191,7 +1240,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-2">
-            <span className="text-amber-400/70">Movie</span>Games
+            <span className="text-amber-400/70">Movie</span>Night
           </p>
           <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-1 text-zinc-100">
             ROLES
@@ -1307,7 +1356,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   if (isOver) {
     const won = screen === "solved";
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
-    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}${!playtestMode ? ` \u00B7 ${dateKey}` : ""}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
     return (
       <Shell compact={playtestMode}>
         <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
@@ -1363,7 +1412,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <ShareButton text={shareText} />
                 </div>
 
-                <Link href="/games/thumbs/daily"
+                <Link href="/play/thumbs/daily"
                   className="flex items-center gap-3 bg-sky-500/10 border border-sky-400/30 rounded-xl px-5 py-4 hover:border-sky-400/50 hover:bg-sky-500/15 transition-all group text-left">
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] uppercase tracking-[0.25em] text-sky-400/50 mb-1.5">Try another game</p>
@@ -1386,7 +1435,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // ─── PLAYING ───
   const urgent = guessTimer <= 3;
   const keyboardDocked = phase === "guessing" || solveMode || phase === "pick-letters" || phase === "pick-double";
-  const isRoundIntroBlockingSpin = phase === "pre-roll" && !!turnWarning;
 
   return (
     <Shell compact={playtestMode}>
@@ -1429,8 +1477,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 <div key={i} className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                   lostRounds.has(i) ? "bg-red-500/70" :
                   i < round ? "bg-amber-400" :
-                  i === round ? "bg-amber-400/50" :
-                  isUrgent && i > round ? `bg-zinc-700 ${blinkClass}` :
+                  i === round ? (isUrgent ? `bg-amber-400/50 ${blinkClass}` : "bg-amber-400/50") :
                   "bg-zinc-800"}`} />
               );
             })}
@@ -1516,9 +1563,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                           <span className={`text-xs ${isSpinning ? "opacity-85" : "opacity-60"}`}>{bottomEff?.icon ?? ""}</span>
                         </div>
                       </div>
-                      {lostTurn && (
-                        <p className="text-center text-sm text-red-400 font-bold mt-2 animate-fadeIn">{"\u23ED\uFE0F"} Turn lost &mdash; moving on...</p>
-                      )}
                     </div>
                   )}
 
@@ -1527,11 +1571,21 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                       <div className="mx-auto flex w-full max-w-[320px] flex-col items-center gap-1.5 text-center">
                         <span className={`font-mono text-base font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
                         {!kbLocked ? (
-                          <p className="text-xs text-zinc-300 whitespace-nowrap">
+                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 whitespace-nowrap">
                             Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
                           </p>
                         ) : (
-                          <p className="text-xs text-zinc-400 whitespace-nowrap">Keyboard locked</p>
+                          <div className="flex flex-col items-center gap-2">
+                            <p className="text-xs text-zinc-400 whitespace-nowrap">Keyboard locked</p>
+                            {roundKbLock && solveAttempts > 0 && (
+                              <button
+                                onClick={handlePreRollSolve}
+                                className="px-5 py-2 rounded-xl font-bold text-sm tracking-wide bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer transition-all ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950"
+                              >
+                                Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1541,18 +1595,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     <div className={`animate-fadeIn w-full pointer-events-auto ${finalSolveMode ? "mt-0" : "space-y-2 mt-2"}`}>
                       {finalSolveMode ? (
                         <div className="mx-auto flex w-full max-w-[300px] flex-col items-center gap-3 text-center">
-                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-400/90">Solve or lose</p>
+                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-400/90">Solve or die</p>
                           <p className="text-sm text-zinc-300">
                             Rounds over. Submit your final solve with ENTER. <span className="text-zinc-500">{strikesLeft} strike{strikesLeft === 1 ? "" : "s"} left</span>
                           </p>
-                          <button onClick={() => { if (totalRef.current) clearInterval(totalRef.current); if (decisionRef.current) clearInterval(decisionRef.current); setScreen("failed"); }}
+                          <button onClick={() => triggerGameOver("Threw in the towel!")}
                             className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors cursor-pointer">
                             Give up
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <button onClick={cancelSolve} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-all active:scale-[0.97] cursor-pointer">&larr; Back</button>
+                          <button onClick={cancelSolve} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-all active:scale-[0.97] cursor-pointer ring-2 ring-zinc-500 ring-offset-2 ring-offset-zinc-950">&larr; Back</button>
                           <p className="text-[11px] text-zinc-400">
                             Tap blanks to fill, then press ENTER{" \u00b7 "}
                             <span className="text-zinc-600">{solveAttempts} left</span>
@@ -1562,28 +1616,23 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     </div>
                   )}
 
-                  {isPreRoll && (
+                  {isPreRoll && preRollReady && (
                     <div className="mt-3 flex flex-col items-center gap-2.5 animate-fadeIn pointer-events-auto">
                       <div className="flex items-center gap-3">
                         <button
                           onClick={handleSpin}
-                          disabled={isRoundIntroBlockingSpin}
-                          className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 ${
-                            isRoundIntroBlockingSpin
-                              ? "opacity-45 cursor-not-allowed"
-                              : "hover:bg-amber-400 active:scale-[0.97] cursor-pointer"
-                          } ${preRollChoice === "spin" && !isRoundIntroBlockingSpin ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                          className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
                         >
                           Spin
                         </button>
                         <button
                           onClick={handlePreRollSolve}
-                          disabled={isRoundIntroBlockingSpin || solveAttempts <= 0}
+                          disabled={solveAttempts <= 0}
                           className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
-                            isRoundIntroBlockingSpin || solveAttempts <= 0
+                            solveAttempts <= 0
                               ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
                               : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
-                          } ${preRollChoice === "solve" && !isRoundIntroBlockingSpin && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                          } ${preRollChoice === "solve" && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
                         >
                           Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
                         </button>
@@ -1594,8 +1643,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   {isPickDouble && (
                     <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
                       <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-1">Pick {2 - pickedLetters.length} Letter{2 - pickedLetters.length !== 1 ? "s" : ""}</p>
+                      <p className="text-xs text-zinc-500">No strikes for misses</p>
                       {pickedLetters.length > 0 && (
-                        <p className="text-sm text-zinc-400">{pickedLetters.join(", ")} selected</p>
+                        <p className="text-sm text-zinc-400 mt-1">{pickedLetters.join(", ")} selected</p>
                       )}
                     </div>
                   )}
@@ -1658,7 +1708,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           </div>
 
           {/* Timer bar above keyboard */}
-          {(phase === "guessing" || phase === "pick-double") && !solveMode && !lostTurn && (
+          {(phase === "guessing" || phase === "pick-double") && !solveMode && !lostTurn && !gameWinPopup && !gameOverPopup && (
             <div className="shrink-0 px-3 pb-0.5 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                 <div key={timerAnimKey}
@@ -1668,7 +1718,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <span className={`font-mono text-[11px] font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
             </div>
           )}
-          {(phase === "pre-roll" || (finalSolveMode && solveMode)) && (
+          {(phase === "pre-roll" || solveMode) && (
             <div className="shrink-0 px-3 pb-0.5 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                 <div key={decisionAnimKey}
@@ -1715,6 +1765,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   else if (solveMode && isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
                   else if (solveMode && isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
                   else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
+                  else if (pressedKey === letter) cls = "bg-amber-500/30 text-amber-200 border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.25)]";
                   else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30";
                   else if (isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
                   else if (isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
@@ -1748,7 +1799,25 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
           <div className={`pop-warning bg-zinc-900/95 border rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50 ${turnWarning.toLowerCase().includes("locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
             <p className={`font-extrabold text-xl tracking-wide ${turnWarning.toLowerCase().includes("locked") ? "text-red-400" : "text-amber-400"}`}>{turnWarning}</p>
-            <p className="text-zinc-500 text-xs mt-1">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : "keep going!"}</p>
+            <p className="text-zinc-500 text-xs mt-1">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : round === 0 ? "let's go!" : "keep going!"}</p>
+          </div>
+        </div>
+      )}
+
+      {gameOverPopup && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+          <div className="pop-warning-3s bg-zinc-900/95 border border-red-500/40 rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50">
+            <p className="font-extrabold text-xl tracking-wide text-red-400">{gameOverPopup}</p>
+            <p className="text-zinc-500 text-xs mt-1">Better luck next time</p>
+          </div>
+        </div>
+      )}
+
+      {gameWinPopup && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+          <div className="pop-warning-3s bg-zinc-900/95 border border-emerald-500/40 rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50">
+            <p className="font-extrabold text-xl tracking-wide text-emerald-400">Solved!</p>
+            <p className="text-zinc-500 text-xs mt-1">Nice work</p>
           </div>
         </div>
       )}
@@ -1778,6 +1847,7 @@ function RolesStyles() {
       @keyframes wheelTickUp { 0% { opacity: 0.15; transform: translateY(-10px) scale(0.97); } 60% { opacity: 1; transform: translateY(2px) scale(1.01); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
       @keyframes popWarn { 0% { opacity:0; transform:scale(0.75); } 15% { opacity:1; transform:scale(1.05); } 25% { transform:scale(1); } 70% { opacity:1; } 100% { opacity:0; transform:scale(0.95); } }
       .pop-warning { animation: popWarn 2s ease-out forwards; }
+      .pop-warning-3s { animation: popWarn 3s ease-out forwards; }
       @keyframes blink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
       .blink-slow { animation: blink 1.5s ease-in-out infinite; }
       .blink-med { animation: blink 0.9s ease-in-out infinite; }

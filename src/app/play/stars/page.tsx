@@ -21,7 +21,7 @@ export default function StarsPage() {
         </div>
 
         <div className="flex gap-3 justify-center">
-          <Link href="/games/thumbs"
+          <Link href="/play/thumbs"
             className="py-3 px-5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20">
             Play Thumbs
           </Link>

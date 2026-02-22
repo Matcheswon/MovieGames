@@ -26,6 +26,8 @@ const GAME_CONFIGS = {
     description: "iconic movie actor/character pairings for a daily word-guessing puzzle",
     rules: [
       "Actor and character names MUST be in ALL CAPS (e.g. \"JODIE FOSTER\", \"CLARICE STARLING\")",
+      "The \"actor\" field must be a real ACTOR or ACTRESS — never a director, writer, or producer",
+      "The \"character\" field must be the name of the CHARACTER they played in that movie — fictional or real (for biopics)",
       "Only include pairings that most casual movie fans would recognize",
       "The character name must be the character's actual name, not a title (e.g. \"TONY MONTANA\" not \"SCARFACE\")",
       "Mix eras: classic Hollywood, 70s-80s, 90s, 2000s, 2010s-2020s",

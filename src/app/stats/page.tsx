@@ -33,7 +33,7 @@ function StreakBox({ current, best }: { current: number; best: number }) {
 }
 
 function EmptyState({ game }: { game: string }) {
-  const href = game === "thumbs" ? "/games/thumbs/daily" : "/games/roles/daily";
+  const href = game === "thumbs" ? "/play/thumbs/daily" : "/play/roles/daily";
   return (
     <div className="text-center py-6">
       <p className="text-sm text-zinc-500 mb-3">No {game} games played yet</p>

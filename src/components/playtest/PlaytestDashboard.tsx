@@ -48,7 +48,7 @@ export default function PlaytestDashboard({ results, totalPuzzles, onBack }: {
 
   // Distributions
   const strikeDist = [0, 1, 2, 3].map(s => ranged.filter(r => r.strikes === s).length);
-  const maxRoundsPlayed = Math.max(...ranged.map(r => r.roundsUsed), 8);
+  const maxRoundsPlayed = Math.max(...ranged.map(r => r.roundsUsed), 10);
   const roundDist = Array.from({ length: maxRoundsPlayed }, (_, i) => ranged.filter(r => r.roundsUsed === i + 1).length);
   const maxStrikeDist = Math.max(...strikeDist, 1);
   const maxRoundDist = Math.max(...roundDist, 1);

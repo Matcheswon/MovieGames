@@ -7,6 +7,15 @@ const nextConfig = {
         hostname: 'image.tmdb.org'
       }
     ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/games/:path*',
+        destination: '/play/:path*',
+        permanent: true
+      }
+    ];
   }
 };
 

@@ -359,7 +359,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-2">
-            <span className="text-amber-400/70">Movie</span>Games
+            <span className="text-amber-400/70">Movie</span>Night
           </p>
           <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-1 text-zinc-100">
             THUMBS
@@ -531,7 +531,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             <ShareButton text={shareText} />
           </div>
 
-          <Link href="/games/roles/daily"
+          <Link href="/play/roles/daily"
             className="flex items-center gap-3 mt-5 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
             <div className="flex-1 min-w-0">
               <p className="text-[9px] uppercase tracking-[0.25em] text-teal-400/50 mb-1.5">Try another game</p>

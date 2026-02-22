@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ThumbWarsPage() {
-  redirect("/games/thumbs/daily");
+  redirect("/play/thumbs/daily");
 }

@@ -25,7 +25,7 @@ function AuthForm() {
         <Link href="/" className="block text-center mb-10">
           <h1 className="font-display text-3xl font-extrabold tracking-tight">
             <span className="text-amber-400">Movie</span>
-            <span className="text-zinc-300">Games</span>
+            <span className="text-zinc-300">Night</span>
           </h1>
         </Link>
 
