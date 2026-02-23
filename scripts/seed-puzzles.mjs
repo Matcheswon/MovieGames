@@ -7,7 +7,8 @@
  * Usage:
  *   node scripts/seed-puzzles.mjs roles
  *   node scripts/seed-puzzles.mjs roles --count=30
- *   node scripts/seed-puzzles.mjs roles --score-all   (backfill popularity + retag difficulty)
+ *   node scripts/seed-puzzles.mjs roles --score-all   (backfill unscored entries + retag difficulty)
+ *   node scripts/seed-puzzles.mjs roles --rescore-all (re-score ALL entries with current prompts + retag)
  *
  * Requires ANTHROPIC_API_KEY in .env.local or environment.
  */
@@ -33,8 +34,8 @@ const GAME_CONFIGS = {
       "AVOID PRESTIGE BIAS: Do NOT over-index on Oscar-bait dramas, arthouse films, or prestige actors (Meryl Streep, Cate Blanchett, Tilda Swinton, etc.). If you include a prestige actor, pick their most ICONIC mainstream role (e.g. Kate Winslet → Rose from Titanic or Clementine from Eternal Sunshine, NOT some obscure period drama).",
       "Only include pairings that most casual movie fans would recognize",
       "The character name must be the character's actual name, not a title (e.g. \"TONY MONTANA\" not \"SCARFACE\")",
-      "DIFFICULTY — unique letters: Count the total number of DISTINCT letters across the actor name AND character name (ignoring spaces). Aim for 14 or fewer (normal difficulty). 15-16 unique is OK for well-known pairings — these will be auto-tagged as \"hard\" puzzles with extra rounds. Never exceed 16 unique letters.",
-      "DIFFICULTY — total letters: The total letter count (actor + character, no spaces) should be between 14 and 32. Aim for 14-28 (normal). 29-32 is OK for well-known pairings (will be auto-tagged as hard).",
+      "DIFFICULTY — unique letters: Count the total number of DISTINCT letters across the actor name AND character name (ignoring spaces). Aim for 14 or fewer (normal difficulty). 15-18 unique is OK for well-known pairings — these will be auto-tagged as \"hard\" puzzles with extra rounds. Never exceed 18 unique letters.",
+      "DIFFICULTY — total letters: The total letter count (actor + character, no spaces) should be between 10 and 32. Aim for 14-28 (normal). 29-32 is OK for well-known pairings (will be auto-tagged as hard).",
       "DIFFICULTY — character recognition: The character name must be one that a casual moviegoer would recognize or be able to guess from partial letters. Avoid deep-cut character names that only hardcore fans know (e.g. C.C. BAXTER, NICK CHEVOTAREVICH, AILEEN WUORNOS are too obscure).",
       "ERA RULE: Primarily use films from 1980 onward. The only exception for pre-1980 films is truly iconic pairings that the mass majority of people would still recognize today — from ANY era. Examples: Sean Connery as James Bond, Bela Lugosi as Dracula, Boris Karloff as Frankenstein's Monster, Clint Eastwood as Blondie. If a pre-1980 pairing isn't something most people on the street would know, skip it.",
       "Mix eras: 80s, 90s, 2000s, 2010s-2020s (with rare iconic pre-1980 exceptions)",
@@ -63,14 +64,14 @@ const GAME_CONFIGS = {
       const uniqueLetters = new Set((actorLetters + charLetters).toUpperCase()).size;
 
       // Hard reject — truly impossible puzzles
-      if (uniqueLetters > 16) {
-        issues.push(`${uniqueLetters} unique letters (max 16)`);
+      if (uniqueLetters > 18) {
+        issues.push(`${uniqueLetters} unique letters (max 18)`);
       }
       if (totalLetters > 32) {
         issues.push(`${totalLetters} total letters (max 32)`);
       }
-      if (totalLetters < 14) {
-        issues.push(`${totalLetters} total letters (min 14)`);
+      if (totalLetters < 10) {
+        issues.push(`${totalLetters} total letters (min 10)`);
       }
       if (entry.actor !== entry.actor.toUpperCase()) {
         issues.push("actor name not ALL CAPS");
@@ -91,6 +92,8 @@ const GAME_CONFIGS = {
         const charPop = entry.characterPopularity ?? pop; // fall back to overall popularity
 
         const isHard =
+          // Very short puzzles — few letters means less info per guess, mechanically hard
+          totalLetters < 14 ||
           // Popularity override: pop >= 8 means everyone knows the names,
           // so letter mechanics alone shouldn't make it "hard"
           pop < 8 && (
@@ -236,31 +239,30 @@ async function loadEnv() {
 // ─── Popularity scoring ──────────────────────────────────────────────────────
 async function scorePopularity(entries, apiKey) {
   if (entries.length === 0) return;
-  console.log(`\nScoring popularity for ${entries.length} entries via Haiku...`);
+  console.log(`\nScoring popularity for ${entries.length} entries...`);
 
-  // Batch into groups of 50 to stay within token limits
-  const BATCH = 50;
+  // Batch into groups of 25 for more consistent scoring
+  const BATCH = 25;
   for (let i = 0; i < entries.length; i += BATCH) {
     const batch = entries.slice(i, i + BATCH);
     const list = batch
       .map((e, j) => `${j + 1}. ${e.actor} as ${e.character} in "${e.movie}" (${e.year})`)
       .join("\n");
 
-    const prompt = `Rate each actor/character/movie combination on a POPULARITY score from 1-10.
+    const prompt = `Rate each actor/movie combination on a POPULARITY score from 1-10.
 
-This measures how recognizable the combination is to a GENERAL audience (not film buffs).
+This measures how well-known the ACTOR is to everyday people AND how mainstream the MOVIE is. Focus primarily on the actor's fame — a household-name actor in a lesser-known movie still scores higher than an unknown actor in a blockbuster.
 
-Consider:
-- How famous is the actor to everyday people?
-- How iconic/recognizable is the character name?
-- How mainstream is the movie? (box office, cultural impact, streaming)
-- Would a casual moviegoer (not a cinephile) recognize this?
+CALIBRATION EXAMPLES (use these as anchors — match these scores):
+10 = Household name + mega-hit: Tom Hanks in Forrest Gump, Leonardo DiCaprio in Titanic, Arnold Schwarzenegger in The Terminator, Robin Williams in Aladdin
+ 9 = A-list celebrity + very well-known movie: Brad Pitt in Fight Club, Jim Carrey in The Truman Show, Samuel L. Jackson in Pulp Fiction, Angelina Jolie in Tomb Raider, Ryan Gosling in Drive, John Travolta in Pulp Fiction, Hugh Jackman in Logan, Julia Roberts in Pretty Woman
+ 8 = Famous actor + well-known movie: Christian Bale in American Psycho, Joaquin Phoenix in Walk the Line, Cameron Diaz in There's Something About Mary, Jamie Lee Curtis in Halloween, Timothée Chalamet in Dune, Liam Neeson in Schindler's List
+ 7 = Recognizable actor OR famous actor in a lesser film: Russell Crowe in Gladiator, Orlando Bloom in Pirates of the Caribbean, Jeff Bridges in The Big Lebowski, Renée Zellweger in Bridget Jones's Diary
+ 5-6 = Known to regular moviegoers: Saoirse Ronan in Little Women, Frances McDormand in Fargo, Vera Farmiga in The Conjuring
+ 3-4 = Niche: Peter O'Toole in Lawrence of Arabia, Kate Beckinsale in Underworld
+ 1-2 = Very obscure
 
-Scale:
-10 = Universally iconic (e.g. Tom Hanks / Forrest Gump)
-7-9 = Very well known to most people
-4-6 = Known to regular moviegoers but not everyone
-1-3 = Niche — only dedicated film fans would know
+IMPORTANT: Most A-list actors (Brad Pitt, Angelina Jolie, Jim Carrey, Ryan Gosling, Samuel L. Jackson, Johnny Depp, Will Smith, Tom Cruise, etc.) should be 9+ regardless of which movie. Do NOT underrate famous actors because a specific movie is less mainstream.
 
 Return ONLY a JSON array of integers, one per entry, in order. Example: [10, 8, 7]
 
@@ -310,7 +312,7 @@ async function scoreCharacterPopularity(entries, apiKey) {
   if (entries.length === 0) return;
   console.log(`\nScoring character name recognition for ${entries.length} entries...`);
 
-  const BATCH = 50;
+  const BATCH = 25;
   for (let i = 0; i < entries.length; i += BATCH) {
     const batch = entries.slice(i, i + BATCH);
     const list = batch
@@ -319,15 +321,18 @@ async function scoreCharacterPopularity(entries, apiKey) {
 
     const prompt = `Rate each CHARACTER NAME on how recognizable it is to a CASUAL moviegoer on a scale of 1-10.
 
-This measures ONLY the character name — NOT the actor or movie. Could someone who has seen the movie recall this character's name?
+This measures the character NAME specifically — would a casual moviegoer recognize or recall this name?
 
-Scale:
-10 = Universally iconic name everyone knows (e.g. FORREST GUMP, DARTH VADER, JAMES BOND)
-7-9 = Very recognizable — most people who saw the movie remember this name (e.g. TONY STARK, JACK SPARROW)
-4-6 = Moderately recognizable — regular moviegoers might know it (e.g. MARGE GUNDERSON, ANTON CHIGURH)
-1-3 = Obscure — even people who saw the movie might not remember the character's name (e.g. BENOIT BLANC, FURIOSA)
+CALIBRATION EXAMPLES (use these as anchors — match these scores):
+10 = Universally iconic — everyone knows: FORREST GUMP, DARTH VADER, JAMES BOND, HARRY POTTER, INDIANA JONES, PRINCESS LEIA, LUKE SKYWALKER
+ 9 = Extremely well-known: TONY STARK, ROCKY BALBOA, KATNISS EVERDEEN, JACK SPARROW, FREDDIE MERCURY, WILLY WONKA, HANNIBAL LECTER
+ 8 = Very recognizable: TYLER DURDEN, VINCENT VEGA, ROSE (Titanic), ELLE WOODS, PATRICK BATEMAN, LARA CROFT, JOHN MCCLANE
+ 7 = Well-known to regular moviegoers: FURIOSA, MAXIMUS, LOGAN, BRIDGET JONES, CLARICE STARLING, CATWOMAN, JASON BOURNE
+ 5-6 = Moderately known — you might recall if prompted: MARTIN RIGGS, AXEL FOLEY, PETER VENKMAN, MIRANDA PRIESTLY, JACK TORRANCE
+ 3-4 = Hard to recall by name even if you saw the movie: CHRIS GARDNER, ANNIE REED, ALONZO HARRIS, GRACIE HART
+ 1-2 = Very obscure — almost nobody remembers: SHEBA HART, EILIS LACEY, ADAM BELL, LUKE GLANTON
 
-Be strict — many characters are less memorable by name than people think. A character can be iconic visually but have a forgettable name.
+IMPORTANT: Characters whose name IS the movie title (FORREST GUMP, ROCKY, BRIDGET JONES, ERIN BROCKOVICH) should always score HIGH. Franchise characters (KATNISS, JACK SPARROW, TONY STARK) should score HIGH. Characters from famous movies whose names nobody actually remembers should score LOW.
 
 Return ONLY a JSON array of integers, one per entry, in order. Example: [10, 6, 3]
 
@@ -381,6 +386,7 @@ async function main() {
   const countFlag = args.find((a) => a.startsWith("--count="));
   const count = countFlag ? parseInt(countFlag.split("=")[1], 10) : 10;
   const scoreAll = args.includes("--score-all");
+  const rescoreAll = args.includes("--rescore-all");
 
   if (!gameName || !GAME_CONFIGS[gameName]) {
     console.error("Usage: node scripts/seed-puzzles.mjs <game> [--count=N]");
@@ -408,23 +414,24 @@ async function main() {
     process.exit(1);
   }
 
-  // ─── --score-all: backfill popularity on existing entries ──────────────────
-  if (scoreAll) {
+  // ─── --score-all / --rescore-all: score popularity on existing entries ──────
+  if (scoreAll || rescoreAll) {
     if (gameName !== "roles") {
-      console.error("--score-all is only supported for roles");
+      console.error("--score-all/--rescore-all is only supported for roles");
       process.exit(1);
     }
-    const unscored = existing.filter((e) => e.popularity == null);
-    if (unscored.length === 0) {
+    const toScore = rescoreAll ? existing : existing.filter((e) => e.popularity == null);
+    if (toScore.length === 0) {
       console.log("All entries already have popularity scores.");
     } else {
-      await scorePopularity(unscored, apiKey);
+      if (rescoreAll) console.log("Re-scoring ALL entries with updated prompts...");
+      await scorePopularity(toScore, apiKey);
     }
-    const unscoredChar = existing.filter((e) => e.characterPopularity == null);
-    if (unscoredChar.length === 0) {
+    const toScoreChar = rescoreAll ? existing : existing.filter((e) => e.characterPopularity == null);
+    if (toScoreChar.length === 0) {
       console.log("All entries already have character popularity scores.");
     } else {
-      await scoreCharacterPopularity(unscoredChar, apiKey);
+      await scoreCharacterPopularity(toScoreChar, apiKey);
     }
     // Re-tag difficulty for ALL entries using updated formula
     let retagged = 0;
@@ -447,7 +454,7 @@ async function main() {
       }
     }
     await fs.writeFile(dataPath, `${JSON.stringify(existing, null, 2)}\n`, "utf8");
-    console.log(`\n✓ Scored ${unscored.length} entries. Re-tagged ${retagged} difficulty changes.`);
+    console.log(`\n✓ Scored ${toScore.length} entries. Re-tagged ${retagged} difficulty changes.`);
     console.log(`✓ ${config.dataFile} saved with ${existing.length} entries.`);
     return;
   }
@@ -660,6 +667,24 @@ ${verifyList}`;
     });
     const movieCapped = beforeMovieCap - fresh.length;
     if (movieCapped > 0) console.log(`⚠ Movie cap removed ${movieCapped} entries.`);
+
+    // Quality gate: reject obscure character names nobody will guess
+    const beforeQuality = fresh.length;
+    fresh = fresh.filter((e) => {
+      const cp = e.characterPopularity ?? 5;
+      const p = e.popularity ?? 5;
+      if (cp <= 2) {
+        console.warn(`  ✗ Too obscure: ${e.actor} / ${e.character} (charPop ${cp}) — nobody will know this character`);
+        return false;
+      }
+      if (cp <= 3 && p <= 6) {
+        console.warn(`  ✗ Too niche: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}) — obscure actor + obscure character`);
+        return false;
+      }
+      return true;
+    });
+    const qualityRejected = beforeQuality - fresh.length;
+    if (qualityRejected > 0) console.log(`⚠ Quality gate removed ${qualityRejected} too-obscure entries.`);
   }
 
   // Validate entries (runs after scoring so popularity-based difficulty tagging works)

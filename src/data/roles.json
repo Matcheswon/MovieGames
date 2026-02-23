@@ -1480,5 +1480,122 @@
     "popularity": 4,
     "characterPopularity": 7,
     "difficulty": "hard"
+  },
+  {
+    "actor": "EMMA THOMPSON",
+    "character": "ELINOR DASHWOOD",
+    "movie": "Sense and Sensibility",
+    "year": 1995,
+    "popularity": 7,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "PIERCE BROSNAN",
+    "character": "JAMES BOND",
+    "movie": "GoldenEye",
+    "year": 1995,
+    "popularity": 9,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "PAUL RUDD",
+    "character": "SCOTT LANG",
+    "movie": "Ant-Man",
+    "year": 2015,
+    "popularity": 9,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "ANNE HATHAWAY",
+    "character": "SELINA KYLE",
+    "movie": "The Dark Knight Rises",
+    "year": 2012,
+    "popularity": 9,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "CHRIS EVANS",
+    "character": "STEVE ROGERS",
+    "movie": "Captain America: The First Avenger",
+    "year": 2011,
+    "popularity": 9,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "MICHAEL KEATON",
+    "character": "BRUCE WAYNE",
+    "movie": "Batman",
+    "year": 1989,
+    "popularity": 10,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "JOHN GOODMAN",
+    "character": "WALTER SOBCHAK",
+    "movie": "The Big Lebowski",
+    "year": 1998,
+    "popularity": 8,
+    "characterPopularity": 7,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ZENDAYA",
+    "character": "MJ",
+    "movie": "Spider-Man: No Way Home",
+    "year": 2021,
+    "popularity": 9,
+    "characterPopularity": 7,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "BRAD PITT",
+    "character": "CLIFF BOOTH",
+    "movie": "Once Upon a Time in Hollywood",
+    "year": 2019,
+    "popularity": 9,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "JENNIFER LAWRENCE",
+    "character": "ROSALYN ROSENFELD",
+    "movie": "American Hustle",
+    "year": 2013,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "MATT DAMON",
+    "character": "WILL HUNTING",
+    "movie": "Good Will Hunting",
+    "year": 1997,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "JIM CARREY",
+    "character": "LLOYD CHRISTMAS",
+    "movie": "Dumb and Dumber",
+    "year": 1994,
+    "popularity": 9,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "ROBIN WILLIAMS",
+    "character": "ALAN PARRISH",
+    "movie": "Jumanji",
+    "year": 1995,
+    "popularity": 10,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "MICHELLE YEOH",
+    "character": "EVELYN WANG",
+    "movie": "Everything Everywhere All at Once",
+    "year": 2022,
+    "popularity": 7,
+    "characterPopularity": 6
   }
 ]

@@ -189,6 +189,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setLostRounds(prev => { const n = new Set(prev); n.add(r); lostRoundsRef.current = n; return n; });
   };
   const [movieRevealed, setMovieRevealed] = useState(false);
+  const [confirmReveal, setConfirmReveal] = useState(false);
   const [turnWarning, setTurnWarning] = useState<string | null>(null);
   const [preRollChoice, setPreRollChoice] = useState<"spin" | "solve">("spin");
   const [preRollReady, setPreRollReady] = useState(false);
@@ -580,7 +581,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (screenRef.current !== "playing") return;
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     setGuessResolving(false);
-    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false); setMovieRevealed(false);
+    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false); setMovieRevealed(false); setConfirmReveal(false);
     setLastGuess(null); setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
     const next = roundRef.current + 1;
     if (next >= MAX_ROUNDS) {
@@ -606,6 +607,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   };
 
   const handleRevealMovie = () => {
+    if (!confirmReveal) { setConfirmReveal(true); return; }
+    setConfirmReveal(false);
     setMovieRevealed(true);
     addLostRound(roundRef.current);
     setTimeout(() => advance(), 2000);
@@ -659,6 +662,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
     if (totalRef.current) clearInterval(totalRef.current);
     if (decisionRef.current) clearInterval(decisionRef.current);
+    setSolveMode(false);
     setGameOverPopup(reason);
     setTimeout(() => { setGameOverPopup(null); setScreen("failed"); }, 3000);
   };
@@ -668,6 +672,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
     if (totalRef.current) clearInterval(totalRef.current);
     if (decisionRef.current) clearInterval(decisionRef.current);
+    setSolveMode(false);
     setGameWinPopup(true);
     setTimeout(() => { setGameWinPopup(false); setScreen("solved"); }, 3000);
   };
@@ -1760,8 +1765,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                               Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
                             </button>
                           </div>
-                          <button onClick={handleRevealMovie} className="text-base text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer mt-2">
-                            Reveal movie <span className="text-red-400/60">· forfeit round</span>
+                          <button onClick={handleRevealMovie} className={`text-base transition-colors cursor-pointer mt-2 ${confirmReveal ? "text-red-400 hover:text-red-300" : "text-zinc-400 hover:text-zinc-200"}`}>
+                            {confirmReveal ? "Are you sure? · forfeit round" : <>Reveal movie <span className="text-red-400/60">· forfeit round</span></>}
                           </button>
                         </>
                       )}
@@ -1874,7 +1879,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     disabled={solveMode && !allSolveFilled}
                     className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(9px,1.6vh,10px)] font-bold tracking-wide flex items-center justify-center ${
                       solveMode && allSolveFilled
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30 animate-enterFlash"
                         : solveMode
                           ? "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
                           : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
@@ -2003,6 +2008,8 @@ function RolesStyles() {
       @keyframes tileBlink { 0% { background: rgba(251,191,36,0.05); } 50% { background: rgba(251,191,36,0.35); box-shadow: 0 0 12px rgba(251,191,36,0.3); } 100% { background: rgba(251,191,36,0.1); } }
       .animate-tileBlink { animation: tileBlink 0.38s ease-in-out; }
       @keyframes tilePop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+      @keyframes enterFlash { 0%,100% { box-shadow: 0 0 4px rgba(16,185,129,0.2); } 50% { box-shadow: 0 0 14px rgba(16,185,129,0.5), 0 0 4px rgba(16,185,129,0.3); background: rgba(16,185,129,0.25); } }
+      .animate-enterFlash { animation: enterFlash 0.8s ease-in-out infinite; }
       .animate-tilePop { animation: tilePop 0.35s ease-out; }
       .wheel-tick { animation: wheelTick 0.12s ease-out both; }
       .wheel-tick-up { animation: wheelTickUp 0.2s ease-out both; }
