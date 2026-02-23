@@ -1612,7 +1612,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
         {/* Board */}
         <div className={`shrink-0 px-4 py-2 relative transition-all duration-200 ${shakeBoard ? "animate-shake" : ""} ${fanfareLetter ? "animate-boardPulse" : ""}`}>
-          <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-3.5 space-y-2">
+          <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-3.5 space-y-2 relative">
+            <span className="absolute top-3 right-3.5 text-[11px] text-zinc-600 font-medium tracking-wide">{Math.floor(puzzle.year / 10) * 10}s</span>
             <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400">Actor</p>
             {renderTiles(puzzle.actor, "actor")}
             <div className="border-t border-zinc-700/30" />

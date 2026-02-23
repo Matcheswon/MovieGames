@@ -1597,5 +1597,91 @@
     "year": 2022,
     "popularity": 7,
     "characterPopularity": 6
+  },
+  {
+    "actor": "WILL SMITH",
+    "character": "AGENT J",
+    "movie": "Men in Black",
+    "year": 1997,
+    "popularity": 10,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "EMMA WATSON",
+    "character": "BELLE",
+    "movie": "Beauty and the Beast",
+    "year": 2017,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "MICHAEL KEATON",
+    "character": "BEETLEJUICE",
+    "movie": "Beetlejuice",
+    "year": 1988,
+    "popularity": 8,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "SANDRA BULLOCK",
+    "character": "ANNIE PORTER",
+    "movie": "Speed",
+    "year": 1994,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "DWAYNE JOHNSON",
+    "character": "LUKE HOBBS",
+    "movie": "Fast Five",
+    "year": 2011,
+    "popularity": 10,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "WHOOPI GOLDBERG",
+    "character": "DELORIS VAN CARTIER",
+    "movie": "Sister Act",
+    "year": 1992,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "KEANU REEVES",
+    "character": "JOHN WICK",
+    "movie": "John Wick",
+    "year": 2014,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "BRUCE WILLIS",
+    "character": "MALCOLM CROWE",
+    "movie": "The Sixth Sense",
+    "year": 1999,
+    "popularity": 10,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "SALLY FIELD",
+    "character": "NORMA RAE WEBSTER",
+    "movie": "Norma Rae",
+    "year": 1979,
+    "popularity": 7,
+    "characterPopularity": 7,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "JOSEPH GORDON-LEVITT",
+    "character": "ARTHUR",
+    "movie": "Inception",
+    "year": 2010,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   }
 ]

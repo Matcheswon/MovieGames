@@ -321,18 +321,24 @@ async function scoreCharacterPopularity(entries, apiKey) {
 
     const prompt = `Rate each CHARACTER NAME on how recognizable it is to a CASUAL moviegoer on a scale of 1-10.
 
-This measures the character NAME specifically — would a casual moviegoer recognize or recall this name?
+This measures ONLY the character's NAME — NOT the movie, NOT the actor. The question is: "If I said this character name to someone on the street, would they know who it is?"
+
+COMMON TRAP: Many characters from famous movies have forgettable names. The movie is iconic but the character name is not. A character can be visually iconic but have a name nobody remembers. Be honest about this — if YOU had to guess the character's name without looking it up, could you? Most people can't for many famous movies.
 
 CALIBRATION EXAMPLES (use these as anchors — match these scores):
-10 = Universally iconic — everyone knows: FORREST GUMP, DARTH VADER, JAMES BOND, HARRY POTTER, INDIANA JONES, PRINCESS LEIA, LUKE SKYWALKER
- 9 = Extremely well-known: TONY STARK, ROCKY BALBOA, KATNISS EVERDEEN, JACK SPARROW, FREDDIE MERCURY, WILLY WONKA, HANNIBAL LECTER
- 8 = Very recognizable: TYLER DURDEN, VINCENT VEGA, ROSE (Titanic), ELLE WOODS, PATRICK BATEMAN, LARA CROFT, JOHN MCCLANE
- 7 = Well-known to regular moviegoers: FURIOSA, MAXIMUS, LOGAN, BRIDGET JONES, CLARICE STARLING, CATWOMAN, JASON BOURNE
- 5-6 = Moderately known — you might recall if prompted: MARTIN RIGGS, AXEL FOLEY, PETER VENKMAN, MIRANDA PRIESTLY, JACK TORRANCE
- 3-4 = Hard to recall by name even if you saw the movie: CHRIS GARDNER, ANNIE REED, ALONZO HARRIS, GRACIE HART
- 1-2 = Very obscure — almost nobody remembers: SHEBA HART, EILIS LACEY, ADAM BELL, LUKE GLANTON
+10 = Everyone on earth knows this name: FORREST GUMP, DARTH VADER, JAMES BOND, HARRY POTTER, INDIANA JONES, PRINCESS LEIA
+ 9 = Extremely well-known name: TONY STARK, ROCKY BALBOA, KATNISS EVERDEEN, JACK SPARROW, WILLY WONKA, HANNIBAL LECTER
+ 8 = Very recognizable name: TYLER DURDEN, ELLE WOODS, PATRICK BATEMAN, LARA CROFT, JOHN MCCLANE, HERMIONE
+ 7 = Name a regular moviegoer would know: MAXIMUS, LOGAN, BRIDGET JONES, CLARICE STARLING, JASON BOURNE, CATWOMAN
+ 5-6 = You might recall if prompted: AXEL FOLEY, PETER VENKMAN, MIRANDA PRIESTLY, JACK TORRANCE, PETER QUILL
+ 3-4 = Hard to recall even if you saw the movie: AGENT J (Men in Black), LUKE HOBBS (Fast & Furious), ALAN PARRISH (Jumanji), ALONZO HARRIS (Training Day), MALCOLM CROWE (Sixth Sense), ANDY SACHS (Devil Wears Prada)
+ 1-2 = Almost nobody remembers: SHEBA HART, EILIS LACEY, ADAM BELL, FERN (Nomadland)
 
-IMPORTANT: Characters whose name IS the movie title (FORREST GUMP, ROCKY, BRIDGET JONES, ERIN BROCKOVICH) should always score HIGH. Franchise characters (KATNISS, JACK SPARROW, TONY STARK) should score HIGH. Characters from famous movies whose names nobody actually remembers should score LOW.
+IMPORTANT:
+- Characters whose name IS the movie title (FORREST GUMP, ROCKY, ERIN BROCKOVICH) → always HIGH
+- Franchise characters people say by name (KATNISS, JACK SPARROW, TONY STARK) → HIGH
+- Characters from HUGE movies whose names nobody actually says (Agent J, Luke Hobbs, Malcolm Crowe) → LOW (3-4)
+- Ask yourself: "Would a fan of this movie say this character's name in conversation?" If not, score LOW
 
 Return ONLY a JSON array of integers, one per entry, in order. Example: [10, 6, 3]
 
