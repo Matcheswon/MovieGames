@@ -13,8 +13,7 @@
     "movie": "Forrest Gump",
     "year": 1994,
     "popularity": 10,
-    "characterPopularity": 10,
-    "difficulty": "hard"
+    "characterPopularity": 10
   },
   {
     "actor": "HEATH LEDGER",
@@ -23,8 +22,7 @@
     "year": 2008,
     "easter_egg": "Why so serious?",
     "popularity": 9,
-    "characterPopularity": 9,
-    "difficulty": "easy"
+    "characterPopularity": 9
   },
   {
     "actor": "BRAD PITT",
@@ -57,8 +55,7 @@
     "movie": "Raiders of the Lost Ark",
     "year": 1981,
     "popularity": 9,
-    "characterPopularity": 10,
-    "difficulty": "easy"
+    "characterPopularity": 10
   },
   {
     "actor": "MERYL STREEP",
@@ -150,8 +147,7 @@
     "movie": "Dr. No",
     "year": 1962,
     "popularity": 9,
-    "characterPopularity": 10,
-    "difficulty": "easy"
+    "characterPopularity": 10
   },
   {
     "actor": "JANE FONDA",
@@ -192,8 +188,7 @@
     "movie": "Titanic",
     "year": 1997,
     "popularity": 9,
-    "characterPopularity": 5,
-    "difficulty": "easy"
+    "characterPopularity": 5
   },
   {
     "actor": "JOHNNY DEPP",
@@ -218,8 +213,7 @@
     "movie": "Harry Potter and the Philosopher's Stone",
     "year": 2001,
     "popularity": 9,
-    "characterPopularity": 9,
-    "difficulty": "easy"
+    "characterPopularity": 9
   },
   {
     "actor": "LUPITA NYONG'O",
@@ -381,8 +375,7 @@
     "movie": "The Silence of the Lambs",
     "year": 1991,
     "popularity": 9,
-    "characterPopularity": 9,
-    "difficulty": "hard"
+    "characterPopularity": 9
   },
   {
     "actor": "RUSSELL CROWE",
@@ -399,8 +392,7 @@
     "movie": "Die Hard",
     "year": 1988,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "SYLVESTER STALLONE",
@@ -416,8 +408,7 @@
     "movie": "Breakfast at Tiffany's",
     "year": 1961,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "MEG RYAN",
@@ -459,8 +450,7 @@
     "movie": "Mission: Impossible",
     "year": 1996,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "easy"
+    "characterPopularity": 8
   },
   {
     "actor": "MEL GIBSON",
@@ -485,8 +475,7 @@
     "movie": "Spider-Man",
     "year": 2002,
     "popularity": 9,
-    "characterPopularity": 10,
-    "difficulty": "hard"
+    "characterPopularity": 10
   },
   {
     "actor": "ROBERT DOWNEY JR",
@@ -546,8 +535,7 @@
     "movie": "Willy Wonka & the Chocolate Factory",
     "year": 1971,
     "popularity": 9,
-    "characterPopularity": 10,
-    "difficulty": "easy"
+    "characterPopularity": 10
   },
   {
     "actor": "PETER SELLERS",
@@ -582,8 +570,7 @@
     "movie": "The Ten Commandments",
     "year": 1956,
     "popularity": 8,
-    "characterPopularity": 9,
-    "difficulty": "easy"
+    "characterPopularity": 9
   },
   {
     "actor": "ELIZABETH TAYLOR",
@@ -599,8 +586,7 @@
     "movie": "True Grit",
     "year": 1969,
     "popularity": 8,
-    "characterPopularity": 5,
-    "difficulty": "hard"
+    "characterPopularity": 5
   },
   {
     "actor": "HARRISON FORD",
@@ -617,8 +603,7 @@
     "movie": "Beverly Hills Cop",
     "year": 1984,
     "popularity": 8,
-    "characterPopularity": 6,
-    "difficulty": "hard"
+    "characterPopularity": 6
   },
   {
     "actor": "LEONARDO DICAPRIO",
@@ -642,8 +627,7 @@
     "movie": "Pirates of the Caribbean: The Curse of the Black Pearl",
     "year": 2003,
     "popularity": 9,
-    "characterPopularity": 9,
-    "difficulty": "hard"
+    "characterPopularity": 9
   },
   {
     "actor": "ORLANDO BLOOM",
@@ -729,8 +713,7 @@
     "movie": "To Kill a Mockingbird",
     "year": 1962,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "JULIE ANDREWS",
@@ -738,8 +721,7 @@
     "movie": "The Sound of Music",
     "year": 1965,
     "popularity": 9,
-    "characterPopularity": 7,
-    "difficulty": "hard"
+    "characterPopularity": 7
   },
   {
     "actor": "GEENA DAVIS",
@@ -885,8 +867,7 @@
     "movie": "Doctor Strange",
     "year": 2016,
     "popularity": 8,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "CATE BLANCHETT",
@@ -912,8 +893,7 @@
     "movie": "The Force Awakens",
     "year": 2015,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "easy"
+    "characterPopularity": 8
   },
   {
     "actor": "OLIVIA COLMAN",
@@ -974,8 +954,7 @@
     "movie": "Bohemian Rhapsody",
     "year": 2018,
     "popularity": 9,
-    "characterPopularity": 9,
-    "difficulty": "easy"
+    "characterPopularity": 9
   },
   {
     "actor": "ADRIEN BRODY",
@@ -1247,8 +1226,7 @@
     "movie": "Captain Marvel",
     "year": 2019,
     "popularity": 9,
-    "characterPopularity": 7,
-    "difficulty": "easy"
+    "characterPopularity": 7
   },
   {
     "actor": "CYNTHIA ERIVO",
@@ -1282,8 +1260,7 @@
     "movie": "The Terminator",
     "year": 1984,
     "popularity": 10,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "JULIA ROBERTS",
@@ -1309,8 +1286,7 @@
     "movie": "Aladdin",
     "year": 1992,
     "popularity": 10,
-    "characterPopularity": 9,
-    "difficulty": "easy"
+    "characterPopularity": 9
   },
   {
     "actor": "JENNIFER LAWRENCE",
@@ -1318,8 +1294,7 @@
     "movie": "The Hunger Games",
     "year": 2012,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "ALAN RICKMAN",
@@ -1403,8 +1378,7 @@
     "movie": "The Avengers",
     "year": 2012,
     "popularity": 9,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "characterPopularity": 8
   },
   {
     "actor": "BILL MURRAY",
@@ -1412,8 +1386,7 @@
     "movie": "Ghostbusters",
     "year": 1984,
     "popularity": 8,
-    "characterPopularity": 6,
-    "difficulty": "hard"
+    "characterPopularity": 6
   },
   {
     "actor": "CHRIS HEMSWORTH",
@@ -1462,8 +1435,7 @@
     "movie": "Star Wars",
     "year": 1977,
     "popularity": 10,
-    "characterPopularity": 10,
-    "difficulty": "easy"
+    "characterPopularity": 10
   },
   {
     "actor": "DANIEL CRAIG",
@@ -1498,8 +1470,7 @@
     "movie": "Star Wars",
     "year": 1977,
     "popularity": 10,
-    "characterPopularity": 10,
-    "difficulty": "easy"
+    "characterPopularity": 10
   },
   {
     "actor": "VAL KILMER",

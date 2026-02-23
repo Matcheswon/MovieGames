@@ -91,12 +91,15 @@ const GAME_CONFIGS = {
         const charPop = entry.characterPopularity ?? pop; // fall back to overall popularity
 
         const isHard =
+          // Popularity override: pop >= 8 means everyone knows the names,
+          // so letter mechanics alone shouldn't make it "hard"
+          pop < 8 && (
           // High unique + enough uncommon letters to be genuinely hard
           (uniqueLetters >= 15 && uncommon >= 5) ||
           // Very long puzzles
           totalLetters >= 29 ||
           // Short but brutal (high unique-to-total ratio)
-          (totalLetters < 20 && uniqueLetters > 12) ||
+          (totalLetters < 20 && uniqueLetters > 12)) ||
           // Moderate unique but heavily uncommon (most guesses miss) — exempt if very popular
           (uniqueLetters >= 13 && uncommon >= 7 && pop < 8) ||
           // Borderline letter difficulty + low popularity → tips to hard
@@ -111,22 +114,6 @@ const GAME_CONFIGS = {
           entry.difficulty = "hard";
         }
 
-        // Easy tag: very recognizable + few unique letters = trivially easy puzzle
-        if (!entry.difficulty) {
-          const isEasy =
-            charPop >= 7 && (
-              // Super famous + few unique letters (most guesses hit)
-              (pop >= 9 && uniqueLetters <= 12) ||
-              // Famous + very common letters (almost no misses)
-              (pop >= 8 && uncommon <= 2) ||
-              // Universally iconic + short puzzle
-              (pop >= 9 && totalLetters <= 18)
-            );
-
-          if (isEasy) {
-            entry.difficulty = "easy";
-          }
-        }
       }
 
       return issues;
@@ -450,16 +437,12 @@ async function main() {
         if (entry.difficulty === "hard" && !oldDiff) {
           console.log(`  ↑ Now hard: ${label}`);
           retagged++;
-        } else if (entry.difficulty === "easy" && !oldDiff) {
-          console.log(`  ↓ Now easy: ${label}`);
-          retagged++;
         } else if (!entry.difficulty && oldDiff === "hard") {
-          // Preserve manually-tagged hard entries
-          entry.difficulty = "hard";
-          console.log(`  ⚑ Kept manual hard: ${label} (auto-formula says normal)`);
+          console.log(`  ↓ No longer hard: ${label}`);
+          retagged++;
         } else if (!entry.difficulty && oldDiff === "easy") {
-          entry.difficulty = "easy";
-          console.log(`  ⚑ Kept manual easy: ${label} (auto-formula says normal)`);
+          console.log(`  ↑ No longer easy: ${label}`);
+          retagged++;
         }
       }
     }
@@ -683,7 +666,6 @@ ${verifyList}`;
   if (config.validate) {
     const beforeCount = fresh.length;
     let hardCount = 0;
-    let easyCount = 0;
     fresh = fresh.filter((e) => {
       const issues = config.validate(e);
       if (issues.length > 0) {
@@ -702,16 +684,12 @@ ${verifyList}`;
         const ul = new Set(((e.actor ?? "") + (e.character ?? "")).replace(/[^A-Z]/gi, "").toUpperCase()).size;
         console.log(`  ★ Hard: ${e.actor} / ${e.character} (${al + cl} total, ${ul} unique, pop ${e.popularity ?? "?"})`);
         hardCount++;
-      } else if (e.difficulty === "easy") {
-        console.log(`  ☆ Easy: ${e.actor} / ${e.character} (pop ${e.popularity ?? "?"})`);
-        easyCount++;
       }
       return true;
     });
     const rejected = beforeCount - fresh.length;
     if (rejected > 0) console.log(`⚠ Rejected ${rejected} entries that failed validation.`);
     if (hardCount > 0) console.log(`★ Tagged ${hardCount} entries as hard.`);
-    if (easyCount > 0) console.log(`☆ Tagged ${easyCount} entries as easy.`);
 
     // Warn if batch is too niche
     if (gameName === "roles" && fresh.length > 0) {

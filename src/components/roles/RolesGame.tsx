@@ -150,7 +150,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const uniqueLetterCount = new Set(
     [...puzzle.actor, ...puzzle.character].filter(ch => isGuessableChar(ch)).map(ch => normalizeLetter(ch))
   ).size;
-  const isHard = puzzle.difficulty === "hard" || uniqueLetterCount >= 14;
+  const isHard = puzzle.difficulty === "hard";
   const MAX_ROUNDS = maxRoundsProp ?? (isHard ? 10 : DEFAULT_MAX_ROUNDS);
   const router = useRouter();
   const [screen, setScreen] = useState<"start" | "playing" | "solved" | "failed">("start");
