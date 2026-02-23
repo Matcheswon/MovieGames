@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RolesPuzzle, getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
+import {
+  ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
+  ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
+  Share2, SkipForward, Sparkles, Target, ThumbsUp, Ticket, Type,
+} from "lucide-react";
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
@@ -74,24 +79,25 @@ function ShareButton({ text }: { text: string }) {
 
   return (
     <button onClick={handleShare}
-      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
+      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5">
+      <Share2 className="w-3.5 h-3.5" />
       {copied ? "Copied!" : "Share"}
     </button>
   );
 }
 
 // Role Call effects — the wheel guesses FOR you now
-const CALL_SHEET = [
-  { label: "Letter Spin", desc: "A random letter is guessed", icon: "\u{1F524}", type: "random_letter", good: true },
-  { label: "Letter Spin", desc: "A random letter is guessed", icon: "\u{1F524}", type: "random_letter", good: true },
-  { label: "Double Spin", desc: "Two random letters guessed", icon: "\u2728", type: "double_letter", good: true },
-  { label: "Vowel Spin", desc: "A random vowel is guessed", icon: "\u{1F170}\uFE0F", type: "vowel", good: true },
-  { label: "Double Guess", desc: "Guess 2 letters next!", icon: "\u{1F3AF}", type: "double_guess", good: true },
-  { label: "+4 Seconds", desc: "Extra time this round", icon: "\u23F1\uFE0F", type: "bonus_time", good: true },
-  { label: "Free Letter", desc: "Miss without a strike", icon: "\u{1F3AB}", type: "free_letter", good: true },
-  { label: "Lose a Turn", desc: "Skip to next round", icon: "\u23ED\uFE0F", type: "lose_turn", good: false },
-  { label: "Half Time", desc: "Only 4 seconds", icon: "\u23F3", type: "half_time", good: false },
-  { label: "Keyboard Lock", desc: "Solve only this round", icon: "\u{1F512}", type: "kb_lock", good: false },
+const CALL_SHEET: { label: string; desc: string; icon: ReactNode; type: string; good: boolean }[] = [
+  { label: "Letter Spin", desc: "A random letter is guessed", icon: <Type className="w-4 h-4" />, type: "random_letter", good: true },
+  { label: "Letter Spin", desc: "A random letter is guessed", icon: <Type className="w-4 h-4" />, type: "random_letter", good: true },
+  { label: "Double Spin", desc: "Two random letters guessed", icon: <Sparkles className="w-4 h-4" />, type: "double_letter", good: true },
+  { label: "Vowel Spin", desc: "A random vowel is guessed", icon: <ALargeSmall className="w-4 h-4" />, type: "vowel", good: true },
+  { label: "Double Guess", desc: "Guess 2 letters next!", icon: <Target className="w-4 h-4" />, type: "double_guess", good: true },
+  { label: "+4 Seconds", desc: "Extra time this round", icon: <ClockPlus className="w-4 h-4" />, type: "bonus_time", good: true },
+  { label: "Free Letter", desc: "Miss without a strike", icon: <Ticket className="w-4 h-4" />, type: "free_letter", good: true },
+  { label: "Lose a Turn", desc: "Skip to next round", icon: <SkipForward className="w-4 h-4" />, type: "lose_turn", good: false },
+  { label: "Half Time", desc: "Only 4 seconds", icon: <Hourglass className="w-4 h-4" />, type: "half_time", good: false },
+  { label: "Keyboard Lock", desc: "Solve only this round", icon: <Lock className="w-4 h-4" />, type: "kb_lock", good: false },
 ];
 
 function rng(seed: number) {
@@ -101,7 +107,8 @@ function rng(seed: number) {
 
 const BASE_TIME = 8;
 const MAX_STRIKES = 3;
-const DEFAULT_MAX_ROUNDS = 10;
+const DEFAULT_MAX_ROUNDS = 8;
+const VOWELS = new Set(["A", "E", "I", "O", "U"]);
 const DECISION_TIME = 30;
 
 function normalizeLetter(ch: string): string {
@@ -140,7 +147,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   playtestMode?: boolean; onPlaytestComplete?: (result: PlaytestResult) => void;
   maxRounds?: number;
 }) {
-  const MAX_ROUNDS = maxRoundsProp ?? DEFAULT_MAX_ROUNDS;
+  const uniqueLetterCount = new Set(
+    [...puzzle.actor, ...puzzle.character].filter(ch => isGuessableChar(ch)).map(ch => normalizeLetter(ch))
+  ).size;
+  const isHard = puzzle.difficulty === "hard" || uniqueLetterCount >= 14;
+  const MAX_ROUNDS = maxRoundsProp ?? (isHard ? 10 : DEFAULT_MAX_ROUNDS);
   const router = useRouter();
   const [screen, setScreen] = useState<"start" | "playing" | "solved" | "failed">("start");
   const [revealed, setRevealed] = useState(new Set<string>());
@@ -156,7 +167,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [justEliminated, setJustEliminated] = useState(new Set<string>());
   const [rollResult, setRollResult] = useState<typeof CALL_SHEET[number] | null>(null);
   const [rollAnimIdx, setRollAnimIdx] = useState(-1);
-  const [lastGuess, setLastGuess] = useState<{ letter: string; correct: boolean; fromSpin?: boolean; freePass?: boolean } | null>(null);
+  const [lastGuess, setLastGuess] = useState<{ letter: string; correct: boolean; fromSpin?: boolean; freePass?: boolean; fromBuy?: boolean } | null>(null);
   const [pickedLetters, setPickedLetters] = useState<string[]>([]);
   const [revealingIdx, setRevealingIdx] = useState(-1);
   const [solveMode, setSolveMode] = useState(false);
@@ -164,6 +175,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [solveInputs, setSolveInputs] = useState<Record<string, string>>({});
   const [solveAttempts, setSolveAttempts] = useState(2);
   const [finalSolveMode, setFinalSolveMode] = useState(false);
+  const finalSolveModeRef = useRef(false);
   const [shakeBoard, setShakeBoard] = useState(false);
   const [roundKbLock, setRoundKbLock] = useState(false);
   const [lostTurn, setLostTurn] = useState(false);
@@ -172,6 +184,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [freeLetterActive, setFreeLetterActive] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
   const [lostRounds, setLostRounds] = useState(new Set<number>());
+  const lostRoundsRef = useRef(new Set<number>());
+  const addLostRound = (r: number) => {
+    setLostRounds(prev => { const n = new Set(prev); n.add(r); lostRoundsRef.current = n; return n; });
+  };
+  const [movieRevealed, setMovieRevealed] = useState(false);
   const [turnWarning, setTurnWarning] = useState<string | null>(null);
   const [preRollChoice, setPreRollChoice] = useState<"spin" | "solve">("spin");
   const [preRollReady, setPreRollReady] = useState(false);
@@ -187,6 +204,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [gameWinPopup, setGameWinPopup] = useState(false);
   const [decisionTimer, setDecisionTimer] = useState(DECISION_TIME);
   const [decisionAnimKey, setDecisionAnimKey] = useState(0);
+  const [buyingVowel, setBuyingVowel] = useState(false);
+  const [vowelNudge, setVowelNudge] = useState(false);
 
   const rand = useRef(rng(puzzleNumber));
   const rollSeqRef = useRef<typeof CALL_SHEET[number][]>([]);
@@ -239,12 +258,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         else handleSpin();
         return;
       }
+      if (key === "ESCAPE" && buyingVowel) { e.preventDefault(); cancelBuyVowel(); return; }
       if (key === "ENTER" && phase === "guessing" && roundKbLock && !solveMode && solveAttempts > 0) { e.preventDefault(); handlePreRollSolve(); return; }
       if (key === "ENTER" && solveMode && !finalSolveMode && Object.keys(solveInputs).length === 0) { e.preventDefault(); cancelSolve(); return; }
       if (key === "ENTER" && solveMode) { e.preventDefault(); handleSolveSubmit(); return; }
       if (key.length === 1 && key >= "A" && key <= "Z") {
         e.preventDefault();
         if (phase === "pick-letters" || phase === "pick-double") handlePickLetter(key);
+        else if (buyingVowel) handleVowelPick(key);
         else if (solveMode) handleSolveType(key);
         else if (phase === "guessing") handleLetter(key);
       }
@@ -260,8 +281,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       const counts: Record<string, number> = {};
       for (const e of seq) counts[e.type] = (counts[e.type] ?? 0) + 1;
       const prev = i > 0 ? seq[i - 1].type : null;
-      // Effect constraints: bad effects back off as they accumulate; free_letter ≤2
+      const totalBad = (counts["lose_turn"] ?? 0) + (counts["kb_lock"] ?? 0) + (counts["half_time"] ?? 0);
+      const maxBad = MAX_ROUNDS <= 9 ? 2 : 3;
+      // Effect constraints: cap total bad effects, per-type limits, no back-to-back; free_letter ≤2
+      const isBad = (t: string) => t === "lose_turn" || t === "kb_lock" || t === "half_time";
       const isRejected = (t: string) =>
+        (isBad(t) && totalBad >= maxBad) ||
         (t === "lose_turn"   && (prev === "lose_turn" || (counts["lose_turn"]   ?? 0) >= 2)) ||
         (t === "kb_lock"     && (prev === "kb_lock"   || (counts["kb_lock"]     ?? 0) >= 1)) ||
         (t === "half_time"   && (prev === "half_time" || (counts["half_time"]   ?? 0) >= 2)) ||
@@ -283,12 +308,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setRollResult(null); setRollAnimIdx(-1);
     setLastGuess(null); setPickedLetters([]); setRevealingIdx(-1);
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
-    setSolveAttempts(2); setFinalSolveMode(false); setShakeBoard(false); setFreeLetterActive(false);
-    setRoundKbLock(false); setLostTurn(false);
+    setSolveAttempts(2); setFinalSolveMode(false); finalSolveModeRef.current = false; setShakeBoard(false); setFreeLetterActive(false);
+    setRoundKbLock(false); setLostTurn(false); setBuyingVowel(false);
     setGuessesRemaining(1);
     guessesRemainingRef.current = 1;
     setGuessResolving(false);
-    setLostRounds(new Set());
+    setLostRounds(new Set()); lostRoundsRef.current = new Set();
     setTurnWarning(null); setGameOverPopup(null); setGameWinPopup(false);
     setDecisionTimer(DECISION_TIME);
     if (decisionRef.current) clearInterval(decisionRef.current);
@@ -342,7 +367,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             if (phase === "pre-roll") {
               // Time's up at pre-roll — auto-spin
               handleSpin();
-            } else if (finalSolveMode) {
+            } else if (finalSolveModeRef.current) {
               // Time's up at final solve — fail
               triggerGameOver("Time's Up — Game Over!");
             } else {
@@ -555,13 +580,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (screenRef.current !== "playing") return;
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     setGuessResolving(false);
-    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false);
+    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false); setMovieRevealed(false);
     setLastGuess(null); setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
     const next = roundRef.current + 1;
     if (next >= MAX_ROUNDS) {
       if (totalRef.current) clearInterval(totalRef.current);
       if (guessRef.current) clearInterval(guessRef.current);
       setFinalSolveMode(true);
+      finalSolveModeRef.current = true;
       setSolveAttempts(1);
       setGuessesRemaining(0);
       guessesRemainingRef.current = 0;
@@ -577,6 +603,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       guessesRemainingRef.current = 1;
       setTimeout(() => { setPreRollChoice("spin"); setPhase("pre-roll"); }, 400);
     }
+  };
+
+  const handleRevealMovie = () => {
+    setMovieRevealed(true);
+    addLostRound(roundRef.current);
+    setTimeout(() => advance(), 2000);
   };
 
   const handleSpin = () => { autoRoll(round); };
@@ -931,13 +963,22 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     }, 200);
   };
 
+  const MAX_LOST_ROUNDS = isHard ? 3 : 2;
+
   const applyRollEffect = (roll: typeof CALL_SHEET[number]) => {
     const t = roll.type;
+
+    // Cap skipped rounds — downgrade lose_turn/kb_lock to a normal guessing round
+    if ((t === "lose_turn" || t === "kb_lock") && lostRoundsRef.current.size >= MAX_LOST_ROUNDS) {
+      setGuessResolving(false);
+      setTimeout(() => setPhase("guessing"), 400);
+      return;
+    }
 
     if (t === "lose_turn") {
       setGuessResolving(false);
       setLostTurn(true);
-      setLostRounds(prev => { const n = new Set(prev); n.add(roundRef.current); return n; });
+      addLostRound(roundRef.current);
       setTimeout(() => advance(), 1500);
       return;
     }
@@ -950,7 +991,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (t === "kb_lock") {
       setGuessResolving(false);
       setRoundKbLock(true);
-      setLostRounds(prev => { const n = new Set(prev); n.add(roundRef.current); return n; });
+      addLostRound(roundRef.current);
       setGuessTime(4);
       setTimeout(() => setPhase("guessing"), 400);
       return;
@@ -1035,19 +1076,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     const isFreePass = !isCorrect && freeLetterActive;
     const newStrikes = isCorrect || isFreePass ? strikes : strikes + 1;
     if (isFreePass) setFreeLetterActive(false);
+    // Pause timer while we resolve
+    if (guessRef.current) clearInterval(guessRef.current);
+
     if (isCorrect) {
-      // Pause timer, light up tiles, fanfare, THEN reveal
-      if (guessRef.current) clearInterval(guessRef.current);
       const count = (puzzle.actor + puzzle.character).split("").filter((c) => normalizeLetter(c) === u).length;
       setLastGuess({ letter: u, correct: true });
       setTimeout(() => {
         staggerRevealLetter(u, () => {
-          // Fanfare after reveal
           fanfareKeyRef.current += 1;
           setFanfareLetter(u);
           setFanfareCount(count);
           setTimeout(() => { setFanfareLetter(null); setFanfareCount(0); }, 2400);
-          // Resume
           if (newStrikes >= MAX_STRIKES) {
             triggerGameOver("3 Strikes — Game Over!");
             return;
@@ -1058,24 +1098,82 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         });
       }, 600);
       return;
-    } else {
+    }
+
+    // Wrong guess — hold amber suspense beat, then reveal miss
+    setTimeout(() => {
       setStrikes(newStrikes); setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false, freePass: isFreePass });
       setPressedKey(null);
-    }
 
-    // 3 strikes = game over
-    if (newStrikes >= MAX_STRIKES) {
-      triggerGameOver("3 Strikes — Game Over!");
-      return;
-    }
-
-    // Brief pause so the strike/free-pass feedback registers before continuing
-    if (guessRef.current) clearInterval(guessRef.current);
-    setTimeout(() => {
-      consumeGuess();
-      setGuessResolving(false);
+      if (newStrikes >= MAX_STRIKES) {
+        triggerGameOver("3 Strikes — Game Over!");
+        return;
+      }
+      setTimeout(() => {
+        consumeGuess();
+        setGuessResolving(false);
+      }, 800);
     }, 800);
+  };
+
+  // ─── BUY A VOWEL ───
+  const nudgeVowel = () => {
+    setVowelNudge(true);
+    setTimeout(() => setVowelNudge(false), 1400);
+  };
+
+  const handleBuyVowel = () => {
+    if (phase !== "guessing" || solveMode || finalSolveMode || kbLocked || guessResolving) return;
+    if (round >= MAX_ROUNDS - 1) return;
+    if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
+    setBuyingVowel(true);
+  };
+
+  const cancelBuyVowel = () => {
+    setBuyingVowel(false);
+    restartGuessClock();
+  };
+
+  const handleVowelPick = (letter: string) => {
+    if (!buyingVowel || phase !== "guessing") return;
+    const u = letter.toUpperCase();
+    if (!VOWELS.has(u)) return;
+    if (guessedLetters.has(u) || revealed.has(u)) return;
+
+    setBuyingVowel(false);
+    setGuessResolving(true);
+    setPressedKey(u);
+
+    const ng = new Set(guessedLetters); ng.add(u); setGuessedLetters(ng);
+    const isCorrect = allLetters.has(u);
+
+    if (isCorrect) {
+      const count = (puzzle.actor + puzzle.character).split("").filter((c) => normalizeLetter(c) === u).length;
+      setLastGuess({ letter: u, correct: true });
+      setTimeout(() => {
+        staggerRevealLetter(u, () => {
+          fanfareKeyRef.current += 1;
+          setFanfareLetter(u);
+          setFanfareCount(count);
+          setTimeout(() => { setFanfareLetter(null); setFanfareCount(0); }, 2400);
+          setPressedKey(null);
+          setGuessResolving(false);
+          setPhase("round-ending");
+          setTimeout(() => advance(), 800);
+        });
+      }, 600);
+    } else {
+      // Wrong vowel — no strike, just consumes the round
+      setWrongGuesses(p => [...p, u]);
+      setLastGuess({ letter: u, correct: false, fromBuy: true });
+      setPressedKey(null);
+      setTimeout(() => {
+        setGuessResolving(false);
+        setPhase("round-ending");
+        setTimeout(() => advance(), 800);
+      }, 1200);
+    }
   };
 
   // ─── SOLVE ───
@@ -1142,23 +1240,38 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   };
 
   // ─── TILES ───
-  // Compute tile size based on the longest single word (no wrapping within a word)
-  const tileSize = (() => {
-    const longestWord = Math.max(
-      ...puzzle.actor.split(" ").map(w => w.length),
-      ...puzzle.character.split(" ").map(w => w.length),
-    );
-    // Each tile = width + gap. Target: fit longest word within ~300px
-    // w-10(40)+gap-1(4)=44 per tile → 300/44 ≈ 6.8 chars
-    // w-8(32)+gap-0.5(2)=34 per tile → 300/34 ≈ 8.8 chars
-    // w-7(28)+gap-0.5(2)=30 per tile → 300/30 = 10 chars
-    // w-6(24)+gap-0.5(2)=26 per tile → 300/26 ≈ 11.5 chars
-    // w-5(20)+gap-0.5(2)=22 per tile → 300/22 ≈ 13.6 chars
-    if (longestWord > 13) return { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", spacer: "w-1.5" };
-    if (longestWord > 11) return { w: "w-6", h: "h-8", text: "text-xs", gap: "gap-0.5", spacer: "w-2" };
-    if (longestWord > 8) return { w: "w-7", h: "h-9", text: "text-sm", gap: "gap-0.5", spacer: "w-2.5" };
-    if (longestWord > 6) return { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", spacer: "w-3" };
-    return { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", spacer: "w-4" };
+  // Pick the largest tile tier where both names fit in ≤2 rows on a ~300px mobile screen.
+  // Cap the container to the same effective width on desktop so wrapping stays consistent.
+  const { tileSize, tileMaxWidth } = (() => {
+    const tiers = [
+      { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", spacer: "w-4", tilePx: 44 },
+      { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", spacer: "w-3", tilePx: 34 },
+      { w: "w-7", h: "h-9", text: "text-sm", gap: "gap-0.5", spacer: "w-2.5", tilePx: 30 },
+      { w: "w-6", h: "h-8", text: "text-xs", gap: "gap-0.5", spacer: "w-2", tilePx: 26 },
+      { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", spacer: "w-1.5", tilePx: 22 },
+      { w: "w-4", h: "h-6", text: "text-[9px]", gap: "gap-px", spacer: "w-1", tilePx: 17 },
+    ];
+    const MOBILE = 300;
+    function rowCount(phrase: string, perRow: number): number {
+      const words = phrase.split(" ");
+      if (words.some(w => w.length > perRow)) return 99;
+      let rows = 1, used = 0;
+      for (const w of words) {
+        if (used === 0) used = w.length;
+        else if (used + 1 + w.length <= perRow) used += 1 + w.length;
+        else { rows++; used = w.length; }
+      }
+      return rows;
+    }
+    for (const tier of tiers) {
+      const perRow = Math.floor(MOBILE / tier.tilePx);
+      if (rowCount(puzzle.actor, perRow) <= 2 && rowCount(puzzle.character, perRow) <= 2) {
+        return { tileSize: tier, tileMaxWidth: perRow * tier.tilePx };
+      }
+    }
+    const last = tiers[tiers.length - 1];
+    const perRow = Math.floor(MOBILE / last.tilePx);
+    return { tileSize: last, tileMaxWidth: perRow * last.tilePx };
   })();
 
   const renderTiles = (word: string, wordKey: string) => {
@@ -1174,7 +1287,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (current.length) segments.push(current);
 
     return (
-      <div className="flex flex-wrap gap-y-1.5 items-center">
+      <div className="flex flex-wrap gap-y-1.5 items-center" style={{ maxWidth: tileMaxWidth }}>
         {segments.map((seg, si) => (
           <React.Fragment key={si}>
             <div className={`flex ${tileSize.gap}`}>
@@ -1249,8 +1362,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             Daily Puzzle &middot; #{puzzleNumber}
           </p>
           {dailyStreak > 0 && (
-            <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn">
-              {"\u{1F525}"} {dailyStreak} day streak
+            <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn inline-flex items-center gap-1.5 justify-center w-full">
+              <Flame className="w-4 h-4" /> {dailyStreak} day streak
             </p>
           )}
           {dailyStreak === 0 && <div className="mb-6" />}
@@ -1261,26 +1374,26 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             </p>
             <div className="space-y-2.5 text-sm mb-4">
               <div className="flex gap-3 items-center">
-                <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xs">{"\u{1F3AC}"}</span>
+                <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center"><Clapperboard className="w-3.5 h-3.5 text-amber-400" /></span>
                 <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500">effects auto-spins each round</span></div>
               </div>
               <div className="flex gap-3 items-center">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center text-xs">{"\u2328\uFE0F"}</span>
+                <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center"><Keyboard className="w-3.5 h-3.5 text-zinc-400" /></span>
                 <div><span className="text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-500">before time runs out</span></div>
               </div>
             </div>
             <div className="bg-zinc-800/30 rounded-lg p-3 mb-4">
               <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Role Call effects</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                <span className="text-emerald-400/80">{"\u{1F524}"} Letter Spin</span>
-                <span className="text-red-400/80">{"\u23ED\uFE0F"} Lose a Turn</span>
-                <span className="text-emerald-400/80">{"\u2728"} Double Spin</span>
-                <span className="text-red-400/80">{"\u23F3"} Half Time</span>
-                <span className="text-emerald-400/80">{"\u{1F170}\uFE0F"} Vowel Spin</span>
-                <span className="text-red-400/80">{"\u{1F512}"} Keyboard Lock</span>
-                <span className="text-emerald-400/80">{"\u{1F3AF}"} Double Guess</span>
-                <span className="text-emerald-400/80">{"\u{1F3AB}"} Free Letter</span>
-                <span className="text-emerald-400/80">{"\u23F1\uFE0F"} +4 Seconds</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><Type className="w-3 h-3" /> Letter Spin</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><SkipForward className="w-3 h-3" /> Lose a Turn</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> Double Spin</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><Hourglass className="w-3 h-3" /> Half Time</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><ALargeSmall className="w-3 h-3" /> Vowel Spin</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><Ticket className="w-3 h-3" /> Free Letter</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><Target className="w-3 h-3" /> Double Guess</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><Lock className="w-3 h-3" /> Keyboard Lock</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><ClockPlus className="w-3 h-3" /> +4 Seconds</span>
               </div>
             </div>
             <p className="text-xs text-zinc-500 pt-3 border-t border-zinc-800/40">
@@ -1292,7 +1405,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-2 mb-6 hover:border-indigo-400/40 transition-all group">
             <span className="text-sm font-bold text-indigo-400">Passtime</span>
             <span className="text-[11px] text-indigo-300/50">All your events in one place · for iOS</span>
-            <span className="text-indigo-400/40 text-xs">↗</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-indigo-400/40" />
           </a>
 
           <button onClick={startGame}
@@ -1300,8 +1413,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             Start Puzzle
           </button>
 
-          <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
-            &larr; Back to Dashboard
+          <Link href="/" className="inline-flex items-center gap-1.5 mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+            <ArrowLeft className="w-3 h-3" /> Back to Dashboard
           </Link>
         </div>
 
@@ -1314,7 +1427,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
                 <div className="p-6 text-center">
                   <div className="flex items-center justify-center gap-2.5 mb-3">
-                    <span className="text-xl">{"\u{1F3AD}"}</span>
+                    <Drama className="w-5 h-5 text-amber-400" />
                     <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h2>
                     <span className="text-xs text-zinc-600">#{puzzleNumber}</span>
                   </div>
@@ -1325,10 +1438,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     {[
                       { v: fmt(alreadyPlayed.timeSecs), l: "Time" },
                       { v: `${alreadyPlayed.strikes}/${MAX_STRIKES}`, l: "Strikes" },
-                      { v: `${dailyStreak}`, l: "Streak", icon: "\u{1F525}" },
+                      { v: `${dailyStreak}`, l: "Streak", hasFlame: true },
                     ].map((s, i) => (
                       <div key={i} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5">
-                        <p className={`text-lg font-bold ${i === 2 ? "text-amber-400" : "text-zinc-100"}`}>{s.v}{s.icon ?? ""}</p>
+                        <p className={`text-lg font-bold inline-flex items-center justify-center gap-1 w-full ${i === 2 ? "text-amber-400" : "text-zinc-100"}`}>{s.v}{"hasFlame" in s && s.hasFlame && <Flame className="w-4 h-4" />}</p>
                         <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">{s.l}</p>
                       </div>
                     ))}
@@ -1363,7 +1476,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           <div className="animate-slideUp w-full max-w-sm py-8">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
-                <span className="text-xl">{"\u{1F3AD}"}</span>
+                <Drama className="w-5 h-5 text-amber-400" />
                 <h1 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
               </div>
               <div className="flex items-baseline gap-2">
@@ -1398,7 +1511,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               ))}
               {!playtestMode && (
                 <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5 text-center">
-                  <p className="text-lg font-bold text-amber-400">{dailyStreak}{"\u{1F525}"}</p>
+                  <p className="text-lg font-bold text-amber-400 inline-flex items-center justify-center gap-1 w-full">{dailyStreak}<Flame className="w-4 h-4" /></p>
                   <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">Streak</p>
                 </div>
               )}
@@ -1417,12 +1530,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] uppercase tracking-[0.25em] text-sky-400/50 mb-1.5">Try another game</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-base">{"\u{1F44D}"}</span>
+                      <ThumbsUp className="w-4 h-4 text-sky-400" />
                       <p className="text-base font-bold text-zinc-100 group-hover:text-sky-300 transition-colors">THUMBS</p>
                     </div>
                     <p className="text-xs text-zinc-400 mt-1">Guess Siskel &amp; Ebert&apos;s thumbs for 10 movies</p>
                   </div>
-                  <span className="text-sky-400/40 group-hover:text-sky-300/70 transition-colors text-2xl">&rsaquo;</span>
+                  <ChevronRight className="w-5 h-5 text-sky-400/40 group-hover:text-sky-300/70 transition-colors" />
                 </Link>
               </>
             )}
@@ -1435,6 +1548,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // ─── PLAYING ───
   const urgent = guessTimer <= 3;
   const keyboardDocked = phase === "guessing" || solveMode || phase === "pick-letters" || phase === "pick-double";
+  const unrevealedVowels = "AEIOU".split("").filter(v => !revealed.has(v) && !guessedLetters.has(v));
+  const canBuyVowel = phase === "guessing" && !solveMode && !finalSolveMode && !kbLocked && !buyingVowel && !guessResolving && !freeLetterActive && round < MAX_ROUNDS - 1 && unrevealedVowels.length > 0;
 
   return (
     <Shell compact={playtestMode}>
@@ -1486,7 +1601,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             const turnsLeft = MAX_ROUNDS - round - 1;
             if (turnsLeft <= 0) return <p className="text-sm text-red-400 font-bold mt-1.5">Last round!</p>;
             if (turnsLeft <= 2) return <p className="text-sm text-amber-500/80 font-semibold mt-1.5">{turnsLeft + 1} rounds left</p>;
-            return <p className="text-sm text-zinc-500 mt-1.5">Round {round + 1} of {MAX_ROUNDS}</p>;
+            return <p className="text-sm text-zinc-500 mt-1.5">Round {round + 1} of {MAX_ROUNDS} {isHard ? <span className="text-red-400/70 font-medium">· Hard</span> : <span className="text-zinc-600">· Normal</span>}</p>;
           })()}
         </div>
 
@@ -1606,7 +1721,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <button onClick={cancelSolve} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-all active:scale-[0.97] cursor-pointer ring-2 ring-zinc-500 ring-offset-2 ring-offset-zinc-950">&larr; Back</button>
+                          <button onClick={cancelSolve} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 border border-zinc-700/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-all active:scale-[0.97] cursor-pointer ring-2 ring-zinc-500 ring-offset-2 ring-offset-zinc-950 inline-flex items-center gap-1"><ArrowLeft className="w-3 h-3" /> Back</button>
                           <p className="text-[11px] text-zinc-400">
                             Tap blanks to fill, then press ENTER{" \u00b7 "}
                             <span className="text-zinc-600">{solveAttempts} left</span>
@@ -1618,25 +1733,38 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPreRoll && preRollReady && (
                     <div className="mt-3 flex flex-col items-center gap-2.5 animate-fadeIn pointer-events-auto">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={handleSpin}
-                          className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
-                        >
-                          Spin
-                        </button>
-                        <button
-                          onClick={handlePreRollSolve}
-                          disabled={solveAttempts <= 0}
-                          className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
-                            solveAttempts <= 0
-                              ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
-                              : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
-                          } ${preRollChoice === "solve" && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
-                        >
-                          Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
-                        </button>
-                      </div>
+                      {movieRevealed ? (
+                        <div className="flex flex-col items-center gap-1.5">
+                          <p className="text-sm text-zinc-400">Movie</p>
+                          <p className="text-base font-bold text-zinc-100">{puzzle.movie} <span className="text-zinc-500 font-normal">({puzzle.year})</span></p>
+                          <p className="text-xs text-red-400/70 mt-1">Round forfeit</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={handleSpin}
+                              className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                            >
+                              Spin
+                            </button>
+                            <button
+                              onClick={handlePreRollSolve}
+                              disabled={solveAttempts <= 0}
+                              className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
+                                solveAttempts <= 0
+                                  ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
+                                  : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
+                              } ${preRollChoice === "solve" && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                            >
+                              Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
+                            </button>
+                          </div>
+                          <button onClick={handleRevealMovie} className="text-base text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer mt-2">
+                            Reveal movie <span className="text-red-400/60">· forfeit round</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -1653,12 +1781,13 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   {isPickStart && (
                     <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
                       <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 mb-3">
-                        {phase === "revealing-picks" ? "Revealing..." : "Pick 3 Starting Letters"}
+                        {phase === "revealing-picks" ? "Revealing..." : "Pick 3 Letters"}
                       </p>
                       <div className="flex justify-center gap-3">
                         {Array.from({ length: 3 }).map((_, i) => {
                           const letter = pickedLetters[i];
                           const isHighlighted = phase === "revealing-picks" && revealingIdx >= i;
+                          const isVowelSlot = letter && VOWELS.has(letter);
                           return (
                             <div
                               key={i}
@@ -1696,9 +1825,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             )}
             {lastGuess && !lastGuess.correct && (
               <div key={lastGuess.letter} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
-                <p className={`animate-floatUp text-lg font-bold drop-shadow-lg ${lastGuess.freePass ? "text-amber-400" : "text-red-400"}`}>
+                <p className={`animate-floatUp text-lg font-bold drop-shadow-lg ${lastGuess.fromBuy ? "text-zinc-300" : lastGuess.freePass ? "text-amber-400" : "text-red-400"}`}>
                   {lastGuess.fromSpin
                     ? <>No &ldquo;{lastGuess.letter}&rdquo; in puzzle</>
+                    : lastGuess.fromBuy
+                    ? <>No &ldquo;{lastGuess.letter}&rdquo; &mdash; round forfeit</>
                     : lastGuess.freePass
                     ? <>&ldquo;{lastGuess.letter}&rdquo; &mdash; free!</>
                     : <>&ldquo;{lastGuess.letter}&rdquo; &mdash; strike!</>}
@@ -1755,13 +1886,23 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   const isPicking = phase === "pick-letters" || phase === "pick-double";
                   const isPicked = isPicking && pickedLetters.includes(letter);
                   const isJustElim = justEliminated.has(letter);
+                  const isVowelKey = VOWELS.has(letter);
+                  const pickVowelsFull = false;
                   let canTap = false;
-                  if (isPicking) canTap = !isPicked && !(phase === "pick-double" && (guessedLetters.has(letter) || revealed.has(letter)));
+                  if (isPicking) canTap = !isPicked && !(phase === "pick-double" && (guessedLetters.has(letter) || revealed.has(letter))) && !pickVowelsFull;
                   else if (solveMode) canTap = true;
-                  else if (phase === "guessing" && !kbLocked && !guessResolving && guessTimer > 0) canTap = !isRev && !isWrong;
+                  else if (phase === "guessing" && !kbLocked && !guessResolving && guessTimer > 0) {
+                    canTap = !isRev && !isWrong;
+                  }
 
                   let cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
-                  if (isPicking) cls = isPicked ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : canTap ? "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60" : "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                  if (isPicking) {
+                    if (isPicked) cls = "bg-amber-500/20 text-amber-300 border-amber-500/30";
+                    else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
+                    else cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                  }
+                  else if (buyingVowel && isVowelKey && canTap) cls = "bg-zinc-300/80 text-zinc-800 border-zinc-400/60 hover:bg-zinc-200 active:bg-zinc-100";
+                  else if (buyingVowel && !isVowelKey) cls = "bg-zinc-800/20 text-zinc-700 border-zinc-800/20";
                   else if (solveMode && isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
                   else if (solveMode && isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
                   else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
@@ -1773,7 +1914,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   return (
                     <button key={letter}
-                      onClick={() => canTap && (isPicking ? handlePickLetter(letter) : handleLetter(letter))}
+                      onClick={() => canTap && (isPicking ? handlePickLetter(letter) : buyingVowel ? handleVowelPick(letter) : handleLetter(letter))}
                       disabled={!canTap}
                       className={`${cls} border rounded-lg flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(13px,2.1vh,15px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
                       {letter}
@@ -1786,7 +1927,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                       solveMode || ((phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0)
                         ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
                         : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
-                    }`}>{"\u232B"}</button>
+                    }`}><Delete className="w-5 h-5 sm:w-6 sm:h-6" /></button>
                 )}
               </div>
             ))}

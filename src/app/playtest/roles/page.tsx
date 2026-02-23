@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import RolesGame from "@/components/roles/RolesGame";
 import PlaytestDashboard from "@/components/playtest/PlaytestDashboard";
 import puzzlesData from "@/data/roles.json";
@@ -13,6 +13,124 @@ import {
 } from "@/lib/playtest";
 
 const puzzles = puzzlesData as RolesPuzzle[];
+
+/* ─── Puzzle Selector Dropdown ──────────────────────────────────────────────── */
+
+function PuzzleSelector({
+  puzzles,
+  currentIndex,
+  results,
+  onSelect,
+}: {
+  puzzles: RolesPuzzle[];
+  currentIndex: number;
+  results: PlaytestResult[];
+  onSelect: (index: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const playedSet = useMemo(() => new Set(results.map(r => r.puzzleIndex)), [results]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return puzzles.map((p, i) => ({ puzzle: p, index: i }));
+    const q = query.toLowerCase();
+    return puzzles
+      .map((p, i) => ({ puzzle: p, index: i }))
+      .filter(({ puzzle }) =>
+        puzzle.actor.toLowerCase().includes(q) ||
+        puzzle.character.toLowerCase().includes(q) ||
+        puzzle.movie.toLowerCase().includes(q)
+      );
+  }, [puzzles, query]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  // Focus input on open
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="px-2.5 py-1 rounded text-[10px] font-medium bg-zinc-800 text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
+      >
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Go to…
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-80 max-h-80 bg-zinc-900 border border-zinc-700/60 rounded-lg shadow-xl overflow-hidden z-50">
+          <div className="p-2 border-b border-zinc-800">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search actor, character, or movie…"
+              className="w-full text-xs bg-zinc-800 border border-zinc-700/40 rounded px-2.5 py-1.5 text-zinc-200 placeholder-zinc-500 outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div className="overflow-y-auto max-h-64">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-4 text-xs text-zinc-500 text-center">No matches</div>
+            ) : (
+              filtered.map(({ puzzle, index }) => {
+                const played = playedSet.has(index);
+                const isCurrent = index === currentIndex;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => { onSelect(index); setOpen(false); setQuery(""); }}
+                    className={`w-full text-left px-3 py-2 text-xs border-b border-zinc-800/50 hover:bg-zinc-800/80 transition-colors cursor-pointer ${
+                      isCurrent ? "bg-amber-500/10" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-zinc-400 mr-1.5">#{index + 1}</span>
+                        <span className="text-zinc-200">{puzzle.actor}</span>
+                        <span className="text-zinc-600 mx-1">/</span>
+                        <span className="text-zinc-300">{puzzle.character}</span>
+                        {puzzle.difficulty === "hard" && (
+                          <span className="ml-1.5 text-[9px] text-red-400/70 font-medium">HARD</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {played && <span className="text-[9px] text-emerald-500/70">played</span>}
+                        {isCurrent && <span className="text-[9px] text-amber-400">current</span>}
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-zinc-600 mt-0.5">{puzzle.movie} ({puzzle.year})</div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Playtest Page ────────────────────────────────────────────────────── */
 
 export default function PlaytestRolesPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null);
@@ -29,12 +147,12 @@ export default function PlaytestRolesPage() {
     setAllowed(host === "localhost" || host === "127.0.0.1" || params.get("key") === PLAYTEST_KEY);
   }, []);
 
-  // Restore session from localStorage
+  // Restore session from localStorage (clamp index to valid range)
   useEffect(() => {
     const session = readPlaytestSession();
     if (session.results.length > 0) {
       setResults(session.results);
-      setCurrentIndex(session.currentIndex);
+      setCurrentIndex(Math.min(session.currentIndex, puzzles.length - 1));
     }
   }, []);
 
@@ -81,9 +199,10 @@ export default function PlaytestRolesPage() {
   };
 
   const jumpTo = (index: number) => {
-    setCurrentIndex(index);
+    const clamped = Math.max(0, Math.min(index, puzzles.length - 1));
+    setCurrentIndex(clamped);
     setView("playing");
-    persist(results, index);
+    persist(results, clamped);
   };
 
   if (allowed === null) return null;
@@ -105,20 +224,6 @@ export default function PlaytestRolesPage() {
   }
 
   const puzzle = puzzles[currentIndex];
-  if (!puzzle) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">All puzzles complete!</h1>
-          <button onClick={() => setView("dashboard")}
-            className="mt-4 px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold cursor-pointer">
-            View Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const playedThis = results.some(r => r.puzzleIndex === currentIndex);
 
   return (
@@ -140,6 +245,7 @@ export default function PlaytestRolesPage() {
               className="accent-amber-500 w-3 h-3" />
             <span className="text-[10px] text-zinc-500">Auto-advance</span>
           </label>
+          <PuzzleSelector puzzles={puzzles} currentIndex={currentIndex} results={results} onSelect={jumpTo} />
           <button onClick={handleSkip}
             className="px-2.5 py-1 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
             Skip
@@ -162,39 +268,49 @@ export default function PlaytestRolesPage() {
       </div>
 
       {/* Puzzle info strip */}
-      <div className="relative z-20 flex items-center justify-between px-4 py-1.5 bg-zinc-900/40 border-b border-zinc-800/30">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-zinc-600">{puzzle.movie} ({puzzle.year})</span>
-          {playedThis && <span className="text-[10px] text-emerald-500/70">Already played</span>}
+      {puzzle && (
+        <div className="relative z-20 flex items-center justify-between px-4 py-1.5 bg-zinc-900/40 border-b border-zinc-800/30">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-zinc-600">{puzzle.movie} ({puzzle.year})</span>
+            {puzzle.difficulty === "hard" && (
+              <span className="text-[10px] text-red-400/70 font-medium">HARD (10 rounds)</span>
+            )}
+            {playedThis && <span className="text-[10px] text-emerald-500/70">Already played</span>}
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => currentIndex > 0 && jumpTo(currentIndex - 1)}
+              disabled={currentIndex === 0}
+              className="px-2 py-0.5 rounded text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-30 cursor-pointer disabled:cursor-default">
+              &larr;
+            </button>
+            <input type="number" min={1} max={puzzles.length} value={currentIndex + 1}
+              onChange={e => { const v = parseInt(e.target.value); if (v >= 1 && v <= puzzles.length) jumpTo(v - 1); }}
+              className="w-12 text-center text-xs bg-zinc-800 border border-zinc-700/40 rounded px-1 py-0.5 text-zinc-300" />
+            <button onClick={() => currentIndex < puzzles.length - 1 && jumpTo(currentIndex + 1)}
+              disabled={currentIndex === puzzles.length - 1}
+              className="px-2 py-0.5 rounded text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-30 cursor-pointer disabled:cursor-default">
+              &rarr;
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => currentIndex > 0 && jumpTo(currentIndex - 1)}
-            disabled={currentIndex === 0}
-            className="px-2 py-0.5 rounded text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-30 cursor-pointer disabled:cursor-default">
-            &larr;
-          </button>
-          <input type="number" min={1} max={puzzles.length} value={currentIndex + 1}
-            onChange={e => { const v = parseInt(e.target.value); if (v >= 1 && v <= puzzles.length) jumpTo(v - 1); }}
-            className="w-12 text-center text-xs bg-zinc-800 border border-zinc-700/40 rounded px-1 py-0.5 text-zinc-300" />
-          <button onClick={() => currentIndex < puzzles.length - 1 && jumpTo(currentIndex + 1)}
-            disabled={currentIndex === puzzles.length - 1}
-            className="px-2 py-0.5 rounded text-xs text-zinc-500 hover:text-zinc-300 disabled:opacity-30 cursor-pointer disabled:cursor-default">
-            &rarr;
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Game */}
       <div className="flex-1 overflow-hidden">
-        <RolesGame
-          key={currentIndex}
-          puzzle={puzzle}
-          puzzleNumber={currentIndex + 1}
-          dateKey={`playtest-${currentIndex}`}
-          playtestMode
-          maxRounds={10}
-          onPlaytestComplete={handleComplete}
-        />
+        {puzzle ? (
+          <RolesGame
+            key={currentIndex}
+            puzzle={puzzle}
+            puzzleNumber={currentIndex + 1}
+            dateKey={`playtest-${currentIndex}`}
+            playtestMode
+            onPlaytestComplete={handleComplete}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+            No puzzle at this index. Use the selector above to pick a puzzle.
+          </div>
+        )}
       </div>
     </div>
   );

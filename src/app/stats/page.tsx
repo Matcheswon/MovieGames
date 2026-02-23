@@ -32,8 +32,14 @@ function StreakBox({ current, best }: { current: number; best: number }) {
   );
 }
 
+const gameHrefs: Record<string, string> = {
+  thumbs: "/play/thumbs/daily",
+  roles: "/play/roles/daily",
+  degrees: "/play/degrees/daily",
+};
+
 function EmptyState({ game }: { game: string }) {
-  const href = game === "thumbs" ? "/play/thumbs/daily" : "/play/roles/daily";
+  const href = gameHrefs[game] ?? "/";
   return (
     <div className="text-center py-6">
       <p className="text-sm text-zinc-500 mb-3">No {game} games played yet</p>
@@ -119,6 +125,33 @@ export default async function StatsPage() {
               </>
             ) : (
               <EmptyState game="roles" />
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-zinc-800/50 mb-8" />
+
+          {/* Degrees Stats */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">{"\u{1F517}"}</span>
+              <h2 className="font-display text-xl font-bold text-zinc-100">DEGREES</h2>
+            </div>
+
+            {stats?.degrees ? (
+              <>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <StatBox value={stats.degrees.gamesPlayed} label="Played" />
+                  <StatBox value={`${stats.degrees.solveRate}%`} label="Solve Rate" />
+                  <StreakBox current={stats.degrees.currentStreak} best={stats.degrees.bestStreak} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <StatBox value={formatTime(stats.degrees.averageTimeSecs)} label="Avg Time" />
+                  <StatBox value={stats.degrees.averageMistakes} label="Avg Mistakes" />
+                </div>
+              </>
+            ) : (
+              <EmptyState game="degrees" />
             )}
           </div>
         </div>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
 import { getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
+import { ThumbsPlaytestResult } from "@/lib/playtest";
 
 type Screen = "start" | "playing" | "results";
 type ScoreEntry = { siskelOk: number; ebertOk: number };
@@ -16,6 +17,8 @@ type ThumbWarsGameProps = {
   mode?: "random" | "daily";
   dateKey?: string;
   puzzleNumber?: number;
+  playtestMode?: boolean;
+  onPlaytestComplete?: (result: ThumbsPlaytestResult) => void;
 };
 
 // ─── Daily streak persistence ───
@@ -174,7 +177,7 @@ function CriticRow({
   );
 }
 
-export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }: ThumbWarsGameProps) {
+export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, playtestMode, onPlaytestComplete }: ThumbWarsGameProps) {
   const router = useRouter();
   const ROUND_SIZE = movies.length;
 
@@ -228,9 +231,14 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
     setScreen("playing");
   }, [movies, mode]);
 
+  // Auto-start in playtest mode
+  useEffect(() => {
+    if (playtestMode && screen === "start") startGame();
+  }, [playtestMode, screen, startGame]);
+
   // Load daily streak + detect already-played from localStorage
   useEffect(() => {
-    if (mode !== "daily") return;
+    if (playtestMode || mode !== "daily") return;
     const data = readDailyStreak();
     if (data.lastPlayedDate && dateKey) {
       if (data.lastPlayedDate === dateKey || isYesterday(data.lastPlayedDate, dateKey)) {
@@ -242,11 +250,11 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
       const todayEntry = data.history.find(h => h.dateKey === dateKey);
       if (todayEntry) setAlreadyPlayed(todayEntry);
     }
-  }, [mode, dateKey]);
+  }, [mode, dateKey, playtestMode]);
 
   // Freshness guard: if server-rendered dateKey is stale, refresh the page
   useEffect(() => {
-    if (mode !== "daily" || !dateKey) return;
+    if (playtestMode || mode !== "daily" || !dateKey) return;
     const clientDate = getNyDateKey(new Date());
     if (clientDate !== dateKey) {
       router.refresh();
@@ -259,12 +267,28 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [mode, dateKey, router]);
+  }, [mode, dateKey, router, playtestMode]);
 
-  // Record daily streak when game ends
+  // Record daily streak when game ends (or playtest callback)
   useEffect(() => {
-    if (screen !== "results" || mode !== "daily" || !dateKey || dailyRecorded.current) return;
+    if (screen !== "results" || dailyRecorded.current) return;
     dailyRecorded.current = true;
+
+    if (playtestMode) {
+      const total = scores.reduce((s, r) => s + r.siskelOk + r.ebertOk, 0);
+      const perfect = scores.filter(r => r.siskelOk && r.ebertOk).length;
+      onPlaytestComplete?.({
+        puzzleIndex: puzzleNumber ?? 0,
+        movies: movies.map(m => m.title),
+        score: total,
+        outOf: scores.length * 2,
+        perfectRounds: perfect,
+        timeSecs: timer,
+      });
+      return;
+    }
+
+    if (mode !== "daily" || !dateKey) return;
     const data = readDailyStreak();
     if (data.lastPlayedDate === dateKey) {
       // Already recorded today — just sync state
@@ -298,7 +322,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
         timeSecs: timer,
       });
     }
-  }, [screen, mode, dateKey, scores, timer]);
+  }, [screen, mode, dateKey, scores, timer, playtestMode, onPlaytestComplete, movies, puzzleNumber]);
 
   useEffect(() => {
     if (screen === "playing") {
@@ -523,16 +547,22 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             })}
           </div>
 
-          <div className="flex gap-3">
-            <button onClick={startGame}
-              className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
-              Play Again
-            </button>
-            <ShareButton text={shareText} />
-          </div>
+          {playtestMode ? (
+            <p className="text-xs text-zinc-500 text-center animate-fadeIn">
+              Game recorded. Advancing automatically&hellip;
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-3">
+                <button onClick={startGame}
+                  className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
+                  Play Again
+                </button>
+                <ShareButton text={shareText} />
+              </div>
 
-          <Link href="/play/roles/daily"
-            className="flex items-center gap-3 mt-5 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
+              <Link href="/play/roles/daily"
+                className="flex items-center gap-3 mt-5 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
             <div className="flex-1 min-w-0">
               <p className="text-[9px] uppercase tracking-[0.25em] text-teal-400/50 mb-1.5">Try another game</p>
               <div className="flex items-center gap-2">
@@ -544,9 +574,11 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber }
             <span className="text-teal-400/40 group-hover:text-teal-300/70 transition-colors text-2xl">&rsaquo;</span>
           </Link>
 
-          <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
-            &larr; Back to Dashboard
-          </Link>
+              <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+                &larr; Back to Dashboard
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );

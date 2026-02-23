@@ -17,22 +17,31 @@ type RolesResult = {
   timeSecs: number;
 };
 
-type GameResult = ThumbsResult | RolesResult;
+type DegreesResult = {
+  game: "degrees";
+  dateKey: string;
+  solved: boolean;
+  mistakes: number;
+  hints: number;
+  timeSecs: number;
+};
+
+type GameResult = ThumbsResult | RolesResult | DegreesResult;
 
 export async function saveGameResult(result: GameResult) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return; // not logged in, skip silently
 
-  const row = {
+  const row: Record<string, unknown> = {
     user_id: user.id,
     game: result.game,
     date_key: result.dateKey,
     time_secs: result.timeSecs,
     score: result.game === "thumbs" ? result.score : null,
     out_of: result.game === "thumbs" ? result.outOf : null,
-    solved: result.game === "roles" ? result.solved : null,
-    strikes: result.game === "roles" ? result.strikes : null,
+    solved: result.game === "roles" ? result.solved : result.game === "degrees" ? result.solved : null,
+    strikes: result.game === "roles" ? result.strikes : result.game === "degrees" ? result.mistakes : null,
     rounds_used: result.game === "roles" ? result.roundsUsed : null,
   };
 

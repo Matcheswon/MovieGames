@@ -1,4 +1,6 @@
-// Playtest types and persistence for ROLES game testing
+// Playtest types and persistence for game testing
+
+// ─── Result types per game ─────────────────────────────────────────────────
 
 export type PlaytestResult = {
   puzzleIndex: number;
@@ -14,40 +16,76 @@ export type PlaytestResult = {
   uniqueLetterCount: number;
 };
 
-type PlaytestSession = {
-  results: PlaytestResult[];
+export type ThumbsPlaytestResult = {
+  puzzleIndex: number;
+  movies: string[];
+  score: number;
+  outOf: number;
+  perfectRounds: number;
+  timeSecs: number;
+};
+
+export type DegreesPlaytestResult = {
+  puzzleIndex: number;
+  startActor: string;
+  endActor: string;
+  chainLength: number;
+  solved: boolean;
+  mistakes: number;
+  hints: number;
+  timeSecs: number;
+};
+
+// ─── Session types ──────────────────────────────────────────────────────────
+
+type PlaytestSession<T> = {
+  results: T[];
   currentIndex: number;
   startedAt: string;
 };
 
-const STORAGE_KEY = "moviegames:playtest:roles";
+const STORAGE_KEYS = {
+  roles: "moviegames:playtest:roles",
+  thumbs: "moviegames:playtest:thumbs",
+  degrees: "moviegames:playtest:degrees",
+} as const;
 
-const EMPTY_SESSION: PlaytestSession = {
-  results: [],
-  currentIndex: 0,
-  startedAt: new Date().toISOString(),
-};
+type GameKey = keyof typeof STORAGE_KEYS;
 
-export function readPlaytestSession(): PlaytestSession {
-  if (typeof window === "undefined") return EMPTY_SESSION;
+function emptySession<T>(): PlaytestSession<T> {
+  return { results: [], currentIndex: 0, startedAt: new Date().toISOString() };
+}
+
+// ─── Generic read/write/clear per game ──────────────────────────────────────
+
+export function readPlaytestSession(): PlaytestSession<PlaytestResult>;
+export function readPlaytestSession<T>(game: GameKey): PlaytestSession<T>;
+export function readPlaytestSession<T>(game: GameKey = "roles"): PlaytestSession<T> {
+  if (typeof window === "undefined") return emptySession<T>();
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return EMPTY_SESSION;
-    return JSON.parse(raw) as PlaytestSession;
+    const raw = window.localStorage.getItem(STORAGE_KEYS[game]);
+    if (!raw) return emptySession<T>();
+    return JSON.parse(raw) as PlaytestSession<T>;
   } catch {
-    return EMPTY_SESSION;
+    return emptySession<T>();
   }
 }
 
-export function writePlaytestSession(session: PlaytestSession): void {
+export function writePlaytestSession(session: PlaytestSession<PlaytestResult>): void;
+export function writePlaytestSession<T>(session: PlaytestSession<T>, game: GameKey): void;
+export function writePlaytestSession<T>(session: PlaytestSession<T>, game: GameKey = "roles"): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  window.localStorage.setItem(STORAGE_KEYS[game], JSON.stringify(session));
 }
 
-export function clearPlaytestSession(): void {
+export function clearPlaytestSession(): void;
+export function clearPlaytestSession(game: GameKey): void;
+export function clearPlaytestSession(game: GameKey = "roles"): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(STORAGE_KEYS[game]);
 }
+
+// ─── Utilities ──────────────────────────────────────────────────────────────
 
 export function countGuessableLetters(text: string): { total: number; unique: number } {
   const letters: string[] = [];

@@ -9,11 +9,15 @@
     "lint": "next lint",
     "import:ratings": "node scripts/import-ratings.mjs",
     "seed:roles": "node scripts/seed-puzzles.mjs roles",
-    "seed:roles:more": "node scripts/seed-puzzles.mjs roles --count=30"
+    "seed:roles:more": "node scripts/seed-puzzles.mjs roles --count=30",
+    "seed:roles:score": "node scripts/seed-puzzles.mjs roles --score-all",
+    "seed:degrees": "node scripts/seed-puzzles.mjs degrees",
+    "seed:degrees:more": "node scripts/seed-puzzles.mjs degrees --count=20"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "lucide-react": "^0.575.0",
     "next": "^14.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

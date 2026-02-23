@@ -83,6 +83,10 @@ create policy "Service role can manage subscriptions"
 7. [ ] Use `getProStatus()` to gate pro features
 8. [ ] Test with LemonSqueezy test mode
 
+## Pro Feature Ideas
+
+- **Classic Era Puzzles**: Pre-1970 actor/character pairings (classic Hollywood + most 1960s films) are reserved for pro subscribers. Playtest data showed these have significantly higher failure rates due to lower recognition, making them a good fit for a "hard mode" or bonus content tier. Only the most universally iconic 1960s pairings (e.g. Sean Connery/James Bond) are allowed in the free pool. Examples for pro: Humphrey Bogart, Vivien Leigh, Katharine Hepburn, Cary Grant, Peter O'Toole, etc.
+
 ## Gating Pro Features
 
 ```tsx

@@ -6,10 +6,13 @@ export type RolesPuzzle = {
   movie: string;
   year: number;
   easter_egg?: string;
+  difficulty?: "hard";
+  popularity?: number;
 };
 
 const ROLES_EPOCH = "2026-02-17";
 const THUMBS_EPOCH = "2026-02-17";
+const DEGREES_EPOCH = "2026-02-22";
 
 export function getDailyRolesPuzzle(
   puzzles: RolesPuzzle[],
@@ -69,6 +72,33 @@ function seededRandom(seed: number) {
     s = (s * 1664525 + 1013904223) >>> 0;
     return s / 0xffffffff;
   };
+}
+
+export type DegreesChainPiece = {
+  type: "movie" | "actor";
+  id: string;
+  name: string;
+  year?: number;
+};
+
+export type DegreesPuzzle = {
+  start: { name: string };
+  end: { name: string };
+  chain: DegreesChainPiece[];
+  herrings: DegreesChainPiece[];
+};
+
+export function getDailyDegreesPuzzle(
+  puzzles: DegreesPuzzle[],
+  now = new Date()
+): { dateKey: string; puzzle: DegreesPuzzle | null; puzzleNumber: number } {
+  const dateKey = getNyDateKey(now);
+  if (puzzles.length === 0) return { dateKey, puzzle: null, puzzleNumber: 0 };
+  const epoch = new Date(DEGREES_EPOCH + "T12:00:00");
+  const today = new Date(dateKey + "T12:00:00");
+  const daysSinceEpoch = Math.round((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+  const index = ((daysSinceEpoch % puzzles.length) + puzzles.length) % puzzles.length;
+  return { dateKey, puzzle: puzzles[index] ?? null, puzzleNumber: daysSinceEpoch + 1 };
 }
 
 export function getDailyMovies(

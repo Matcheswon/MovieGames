@@ -1,4 +1,5 @@
 import { createClient } from "./server";
+import { getNyDateKey } from "@/lib/dailyUtils";
 
 type GameStats = {
   gamesPlayed: number;
@@ -18,20 +19,32 @@ type RolesStats = GameStats & {
   averageStrikes: number;
 };
 
+type DegreesStats = GameStats & {
+  solveRate: number;
+  averageMistakes: number;
+};
+
 export type UserStats = {
   thumbs: ThumbsStats | null;
   roles: RolesStats | null;
+  degrees: DegreesStats | null;
 };
+
+function prevDateKey(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
 
 function computeStreak(dateKeys: string[]): { current: number; best: number } {
   if (dateKeys.length === 0) return { current: 0, best: 0 };
 
-  // Sort descending (newest first)
-  const sorted = [...dateKeys].sort((a, b) => b.localeCompare(a));
+  // Deduplicate and sort descending (newest first)
+  const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
 
-  // Check if today or yesterday is the most recent play
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
-  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  // Use the same date formatter as the game screens
+  const today = getNyDateKey(new Date());
+  const yesterday = prevDateKey(today);
   const mostRecent = sorted[0];
 
   let current = 0;
@@ -42,9 +55,7 @@ function computeStreak(dateKeys: string[]): { current: number; best: number } {
   if (mostRecent === today || mostRecent === yesterday) {
     current = 1;
     for (let i = 1; i < sorted.length; i++) {
-      const prev = new Date(sorted[i - 1] + "T12:00:00");
-      prev.setDate(prev.getDate() - 1);
-      const expected = prev.toISOString().slice(0, 10);
+      const expected = prevDateKey(sorted[i - 1]);
       if (sorted[i] === expected) {
         current++;
       } else {
@@ -55,9 +66,7 @@ function computeStreak(dateKeys: string[]): { current: number; best: number } {
 
   // Best streak: find longest consecutive run
   for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1] + "T12:00:00");
-    prev.setDate(prev.getDate() - 1);
-    const expected = prev.toISOString().slice(0, 10);
+    const expected = prevDateKey(sorted[i - 1]);
     if (sorted[i] === expected) {
       streak++;
     } else {
@@ -81,10 +90,11 @@ export async function getUserStats(): Promise<UserStats | null> {
     .eq("user_id", user.id)
     .order("date_key", { ascending: true });
 
-  if (!results || results.length === 0) return { thumbs: null, roles: null };
+  if (!results || results.length === 0) return { thumbs: null, roles: null, degrees: null };
 
   const thumbsResults = results.filter(r => r.game === "thumbs");
   const rolesResults = results.filter(r => r.game === "roles");
+  const degreesResults = results.filter(r => r.game === "degrees");
 
   let thumbs: ThumbsStats | null = null;
   if (thumbsResults.length > 0) {
@@ -117,5 +127,19 @@ export async function getUserStats(): Promise<UserStats | null> {
     };
   }
 
-  return { thumbs, roles };
+  let degrees: DegreesStats | null = null;
+  if (degreesResults.length > 0) {
+    const { current, best } = computeStreak(degreesResults.map(r => r.date_key));
+    const solved = degreesResults.filter(r => r.solved).length;
+    degrees = {
+      gamesPlayed: degreesResults.length,
+      currentStreak: current,
+      bestStreak: best,
+      averageTimeSecs: Math.round(degreesResults.reduce((s, r) => s + r.time_secs, 0) / degreesResults.length),
+      solveRate: Math.round((solved / degreesResults.length) * 100),
+      averageMistakes: +(degreesResults.reduce((s, r) => s + (r.strikes ?? 0), 0) / degreesResults.length).toFixed(1),
+    };
+  }
+
+  return { thumbs, roles, degrees };
 }
