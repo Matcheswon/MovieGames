@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
-      <head>
+      <body className="min-h-screen bg-zinc-950 font-body text-zinc-100 antialiased">
         <Script src="https://www.googletagmanager.com/gtag/js?id=G-K0S8DB1LFR" strategy="afterInteractive" />
         <Script id="gtag-init" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
@@ -34,8 +34,6 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', 'G-K0S8DB1LFR');
         `}</Script>
-      </head>
-      <body className="min-h-screen bg-zinc-950 font-body text-zinc-100 antialiased">
         <div className="film-grain" />
         {children}
       </body>
