@@ -173,7 +173,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [solveMode, setSolveMode] = useState(false);
   const [solveCursor, setSolveCursor] = useState(0);
   const [solveInputs, setSolveInputs] = useState<Record<string, string>>({});
-  const [solveAttempts, setSolveAttempts] = useState(2);
+  const solveAttempts = MAX_STRIKES - strikes;
   const [finalSolveMode, setFinalSolveMode] = useState(false);
   const finalSolveModeRef = useRef(false);
   const [shakeBoard, setShakeBoard] = useState(false);
@@ -188,8 +188,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const addLostRound = (r: number) => {
     setLostRounds(prev => { const n = new Set(prev); n.add(r); lostRoundsRef.current = n; return n; });
   };
-  const [movieRevealed, setMovieRevealed] = useState(false);
-  const [confirmReveal, setConfirmReveal] = useState(false);
   const [turnWarning, setTurnWarning] = useState<string | null>(null);
   const [preRollChoice, setPreRollChoice] = useState<"spin" | "solve">("spin");
   const [preRollReady, setPreRollReady] = useState(false);
@@ -309,7 +307,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setRollResult(null); setRollAnimIdx(-1);
     setLastGuess(null); setPickedLetters([]); setRevealingIdx(-1);
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
-    setSolveAttempts(2); setFinalSolveMode(false); finalSolveModeRef.current = false; setShakeBoard(false); setFreeLetterActive(false);
+    setFinalSolveMode(false); finalSolveModeRef.current = false; setShakeBoard(false); setFreeLetterActive(false);
     setRoundKbLock(false); setLostTurn(false); setBuyingVowel(false);
     setGuessesRemaining(1);
     guessesRemainingRef.current = 1;
@@ -581,7 +579,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (screenRef.current !== "playing") return;
     setSolveMode(false); setSolveCursor(0); setSolveInputs({});
     setGuessResolving(false);
-    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false); setMovieRevealed(false); setConfirmReveal(false);
+    setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false);
     setLastGuess(null); setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
     const next = roundRef.current + 1;
     if (next >= MAX_ROUNDS) {
@@ -589,7 +587,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       if (guessRef.current) clearInterval(guessRef.current);
       setFinalSolveMode(true);
       finalSolveModeRef.current = true;
-      setSolveAttempts(1);
       setGuessesRemaining(0);
       guessesRemainingRef.current = 0;
       setPhase("guessing");
@@ -604,14 +601,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       guessesRemainingRef.current = 1;
       setTimeout(() => { setPreRollChoice("spin"); setPhase("pre-roll"); }, 400);
     }
-  };
-
-  const handleRevealMovie = () => {
-    if (!confirmReveal) { setConfirmReveal(true); return; }
-    setConfirmReveal(false);
-    setMovieRevealed(true);
-    addLostRound(roundRef.current);
-    setTimeout(() => advance(), 2000);
   };
 
   const handleSpin = () => { autoRoll(round); };
@@ -1221,20 +1210,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setRevealed(new Set(allLetters));
       triggerWin();
     } else {
-      if (finalSolveMode) {
-        const nextStrikes = strikes + 1;
-        setStrikes(nextStrikes);
-        setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
-        setSolveInputs({}); setSolveCursor(0);
-        if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes — Game Over!"); }
-        return;
-      }
-      const na = solveAttempts - 1; setSolveAttempts(na);
-      const nextStrikes = strikes + 1; setStrikes(nextStrikes);
+      const nextStrikes = strikes + 1;
+      setStrikes(nextStrikes);
       setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
       setSolveInputs({}); setSolveCursor(0);
       if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes — Game Over!"); }
-      else if (na <= 0) { triggerGameOver("No solves left — Game Over!"); }
+      else if (!finalSolveMode) { setSolveMode(false); }
     }
   };
 
@@ -1739,38 +1720,25 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPreRoll && preRollReady && (
                     <div className="mt-3 flex flex-col items-center gap-2.5 animate-fadeIn pointer-events-auto">
-                      {movieRevealed ? (
-                        <div className="flex flex-col items-center gap-1.5">
-                          <p className="text-sm text-zinc-400">Movie</p>
-                          <p className="text-base font-bold text-zinc-100">{puzzle.movie} <span className="text-zinc-500 font-normal">({puzzle.year})</span></p>
-                          <p className="text-xs text-red-400/70 mt-1">Round forfeit</p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={handleSpin}
-                              className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
-                            >
-                              Spin
-                            </button>
-                            <button
-                              onClick={handlePreRollSolve}
-                              disabled={solveAttempts <= 0}
-                              className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
-                                solveAttempts <= 0
-                                  ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
-                                  : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
-                              } ${preRollChoice === "solve" && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
-                            >
-                              Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
-                            </button>
-                          </div>
-                          <button onClick={handleRevealMovie} className={`text-base transition-colors cursor-pointer mt-2 ${confirmReveal ? "text-red-400 hover:text-red-300" : "text-zinc-400 hover:text-zinc-200"}`}>
-                            {confirmReveal ? "Are you sure? · forfeit round" : <>Reveal movie <span className="text-red-400/60">· forfeit round</span></>}
-                          </button>
-                        </>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={handleSpin}
+                          className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                        >
+                          Spin
+                        </button>
+                        <button
+                          onClick={handlePreRollSolve}
+                          disabled={solveAttempts <= 0}
+                          className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
+                            solveAttempts <= 0
+                              ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
+                              : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
+                          } ${preRollChoice === "solve" && solveAttempts > 0 ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                        >
+                          Solve{solveAttempts < 2 ? ` (${solveAttempts})` : ""}
+                        </button>
+                      </div>
                     </div>
                   )}
 

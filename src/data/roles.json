@@ -1683,5 +1683,115 @@
     "popularity": 8,
     "characterPopularity": 3,
     "difficulty": "hard"
+  },
+  {
+    "actor": "ANTONIO BANDERAS",
+    "character": "ZORRO",
+    "movie": "The Mask of Zorro",
+    "year": 1998,
+    "popularity": 8,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "JEFF GOLDBLUM",
+    "character": "IAN MALCOLM",
+    "movie": "Jurassic Park",
+    "year": 1993,
+    "popularity": 9,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "EDDIE MURPHY",
+    "character": "DONKEY",
+    "movie": "Shrek",
+    "year": 2001,
+    "popularity": 10,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "ANTHONY PERKINS",
+    "character": "NORMAN BATES",
+    "movie": "Psycho",
+    "year": 1960,
+    "popularity": 4,
+    "characterPopularity": 9,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "PATRICK SWAYZE",
+    "character": "JOHNNY CASTLE",
+    "movie": "Dirty Dancing",
+    "year": 1987,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "MACAULAY CULKIN",
+    "character": "KEVIN MCCALLISTER",
+    "movie": "Home Alone",
+    "year": 1990,
+    "popularity": 10,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "MATTHEW MCCONAUGHEY",
+    "character": "COOPER",
+    "movie": "Interstellar",
+    "year": 2014,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "DEMI MOORE",
+    "character": "MOLLY JENSEN",
+    "movie": "Ghost",
+    "year": 1990,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "NICOLE KIDMAN",
+    "character": "SATINE",
+    "movie": "Moulin Rouge!",
+    "year": 2001,
+    "popularity": 9,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "KEVIN COSTNER",
+    "character": "RAY KINSELLA",
+    "movie": "Field of Dreams",
+    "year": 1989,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "HALLE BERRY",
+    "character": "STORM",
+    "movie": "X-Men",
+    "year": 2000,
+    "popularity": 9,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "CHRIS TUCKER",
+    "character": "RUBY RHOD",
+    "movie": "The Fifth Element",
+    "year": 1997,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "DIANE LANE",
+    "character": "CHERRY VALANCE",
+    "movie": "The Outsiders",
+    "year": 1983,
+    "popularity": 6,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   }
 ]
