@@ -337,7 +337,7 @@
     "characterPopularity": 7
   },
   {
-    "actor": "TIMOTHEE CHALAMET",
+    "actor": "TIMOTHÉE CHALAMET",
     "character": "PAUL ATREIDES",
     "movie": "Dune",
     "year": 2021,
@@ -735,7 +735,7 @@
   {
     "actor": "LINDA HAMILTON",
     "character": "SARAH CONNOR",
-    "movie": "The Terminator 2: Judgment Day",
+    "movie": "Terminator 2: Judgment Day",
     "year": 1991,
     "popularity": 8,
     "characterPopularity": 7
@@ -879,7 +879,7 @@
     "difficulty": "hard"
   },
   {
-    "actor": "TIMOTHEE CHALAMET",
+    "actor": "TIMOTHÉE CHALAMET",
     "character": "ELIO PERLMAN",
     "movie": "Call Me By Your Name",
     "year": 2017,
@@ -955,15 +955,6 @@
     "year": 2018,
     "popularity": 9,
     "characterPopularity": 9
-  },
-  {
-    "actor": "ADRIEN BRODY",
-    "character": "WLADISLAW SZPILMAN",
-    "movie": "The Pianist",
-    "year": 2002,
-    "popularity": 7,
-    "characterPopularity": 2,
-    "difficulty": "hard"
   },
   {
     "actor": "MARION COTILLARD",
@@ -1123,15 +1114,6 @@
     "difficulty": "hard"
   },
   {
-    "actor": "JESSICA LANGE",
-    "character": "JOAN CRAWFORD",
-    "movie": "Feud",
-    "year": 2017,
-    "popularity": 4,
-    "characterPopularity": 7,
-    "difficulty": "hard"
-  },
-  {
     "actor": "VIOLA DAVIS",
     "character": "ROSE MAXSON",
     "movie": "Fences",
@@ -1227,15 +1209,6 @@
     "year": 2019,
     "popularity": 9,
     "characterPopularity": 7
-  },
-  {
-    "actor": "CYNTHIA ERIVO",
-    "character": "CELIE HARRIS",
-    "movie": "The Color Purple",
-    "year": 2023,
-    "popularity": 6,
-    "characterPopularity": 3,
-    "difficulty": "hard"
   },
   {
     "actor": "AUSTIN BUTLER",
@@ -1793,5 +1766,83 @@
     "popularity": 6,
     "characterPopularity": 4,
     "difficulty": "hard"
+  },
+  {
+    "actor": "ZENDAYA",
+    "character": "CHANI",
+    "movie": "Dune: Part Two",
+    "year": 2024,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "TOM HANKS",
+    "character": "WOODY",
+    "movie": "Toy Story",
+    "year": 1995,
+    "popularity": 10,
+    "characterPopularity": 9,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ALAN RICKMAN",
+    "character": "HANS GRUBER",
+    "movie": "Die Hard",
+    "year": 1988,
+    "popularity": 8,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "DANIEL KALUUYA",
+    "character": "CHRIS WASHINGTON",
+    "movie": "Get Out",
+    "year": 2017,
+    "popularity": 7,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "JULIA ROBERTS",
+    "character": "ANNA SCOTT",
+    "movie": "Notting Hill",
+    "year": 1999,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "CHRIS PRATT",
+    "character": "EMMET BRICKOWSKI",
+    "movie": "The Lego Movie",
+    "year": 2014,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "WINONA RYDER",
+    "character": "LYDIA DEETZ",
+    "movie": "Beetlejuice",
+    "year": 1988,
+    "popularity": 7,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "GERARD BUTLER",
+    "character": "KING LEONIDAS",
+    "movie": "300",
+    "year": 2007,
+    "popularity": 7,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "WILL FERRELL",
+    "character": "RON BURGUNDY",
+    "movie": "Anchorman",
+    "year": 2004,
+    "popularity": 9,
+    "characterPopularity": 8
   }
 ]

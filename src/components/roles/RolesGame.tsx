@@ -1230,12 +1230,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // Cap the container to the same effective width on desktop so wrapping stays consistent.
   const { tileSize, tileMaxWidth } = (() => {
     const tiers = [
-      { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", spacer: "w-4", tilePx: 44 },
-      { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", spacer: "w-3", tilePx: 34 },
-      { w: "w-7", h: "h-9", text: "text-sm", gap: "gap-0.5", spacer: "w-2.5", tilePx: 30 },
-      { w: "w-6", h: "h-8", text: "text-xs", gap: "gap-0.5", spacer: "w-2", tilePx: 26 },
-      { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", spacer: "w-1.5", tilePx: 22 },
-      { w: "w-4", h: "h-6", text: "text-[9px]", gap: "gap-px", spacer: "w-1", tilePx: 17 },
+      { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", wordGap: "gap-x-4", tilePx: 44 },
+      { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", wordGap: "gap-x-3", tilePx: 34 },
+      { w: "w-7", h: "h-9", text: "text-sm", gap: "gap-0.5", wordGap: "gap-x-2.5", tilePx: 30 },
+      { w: "w-6", h: "h-8", text: "text-xs", gap: "gap-0.5", wordGap: "gap-x-2", tilePx: 26 },
+      { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", wordGap: "gap-x-1.5", tilePx: 22 },
+      { w: "w-4", h: "h-6", text: "text-[9px]", gap: "gap-px", wordGap: "gap-x-1", tilePx: 17 },
     ];
     const MOBILE = 300;
     function rowCount(phrase: string, perRow: number): number {
@@ -1273,7 +1273,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (current.length) segments.push(current);
 
     return (
-      <div className="flex flex-wrap gap-y-1.5 items-center" style={{ maxWidth: tileMaxWidth }}>
+      <div className={`flex flex-wrap gap-y-1.5 ${tileSize.wordGap} items-center`} style={{ maxWidth: tileMaxWidth }}>
         {segments.map((seg, si) => (
           <React.Fragment key={si}>
             <div className={`flex ${tileSize.gap}`}>
@@ -1313,7 +1313,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 );
               })}
             </div>
-            {si < segments.length - 1 && <div className={tileSize.spacer} />}
           </React.Fragment>
         ))}
       </div>
@@ -1671,7 +1670,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   {isGuessing && (
                     <div className="animate-fadeIn w-full pointer-events-auto">
                       <div className="mx-auto flex w-full max-w-[320px] flex-col items-center gap-1.5 text-center">
-                        <span className={`font-mono text-base font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
                         {!kbLocked ? (
                           <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 whitespace-nowrap">
                             Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
