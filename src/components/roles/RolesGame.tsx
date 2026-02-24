@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RolesPuzzle, getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
+import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
@@ -109,7 +110,6 @@ const BASE_TIME = 8;
 const MAX_STRIKES = 3;
 const DEFAULT_MAX_ROUNDS = 8;
 const VOWELS = new Set(["A", "E", "I", "O", "U"]);
-const DECISION_TIME = 30;
 
 function normalizeLetter(ch: string): string {
   return ch
@@ -201,8 +201,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [pressedKey, setPressedKey] = useState<string | null>(null);
   const [gameOverPopup, setGameOverPopup] = useState<string | null>(null);
   const [gameWinPopup, setGameWinPopup] = useState(false);
-  const [decisionTimer, setDecisionTimer] = useState(DECISION_TIME);
-  const [decisionAnimKey, setDecisionAnimKey] = useState(0);
   const [buyingVowel, setBuyingVowel] = useState(false);
   const [vowelNudge, setVowelNudge] = useState(false);
 
@@ -211,7 +209,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const totalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const guessRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const guessTimerRef = useRef(BASE_TIME);
-  const decisionRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const guessesRemainingRef = useRef(1);
   const dailyRecorded = useRef(false);
   const roundRef = useRef(0);
@@ -314,8 +311,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setGuessResolving(false);
     setLostRounds(new Set()); lostRoundsRef.current = new Set();
     setTurnWarning(null); setGameOverPopup(null); setGameWinPopup(false);
-    setDecisionTimer(DECISION_TIME);
-    if (decisionRef.current) clearInterval(decisionRef.current);
+
     setFanfareLetter(null); setFanfareCount(0);
     setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
     dailyRecorded.current = false;
@@ -353,35 +349,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   useEffect(() => { if (solveMode && guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; } }, [solveMode]);
 
-  // Decision timer for pre-roll and final solve (30s)
-  useEffect(() => {
-    const needsTimer = phase === "pre-roll" || solveMode;
-    if (needsTimer && screen === "playing") {
-      setDecisionTimer(DECISION_TIME);
-      setDecisionAnimKey(k => k + 1);
-      decisionRef.current = setInterval(() => {
-        setDecisionTimer(t => {
-          if (t <= 1) {
-            if (decisionRef.current) clearInterval(decisionRef.current);
-            if (phase === "pre-roll") {
-              // Time's up at pre-roll — auto-spin
-              handleSpin();
-            } else if (finalSolveModeRef.current) {
-              // Time's up at final solve — fail
-              triggerGameOver("Time's Up — Game Over!");
-            } else {
-              // Time's up at normal solve — go back to guessing
-              cancelSolve();
-            }
-            return 0;
-          }
-          return t - 1;
-        });
-      }, 1000);
-      return () => { if (decisionRef.current) clearInterval(decisionRef.current); };
-    }
-    return () => { if (decisionRef.current) clearInterval(decisionRef.current); };
-  }, [phase, finalSolveMode, solveMode, screen]);
+  // Decision timer removed — user manually chooses spin or solve
 
   useEffect(() => {
     if (screen === "playing" && allDone && phase !== "pick-letters" && phase !== "revealing-picks" && phase !== "pick-double") {
@@ -505,7 +473,21 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       roundsUsed,
       timeSecs: totalTime,
     });
-  }, [screen, strikes, totalTime, puzzleNumber, round, dateKey, playtestMode, onPlaytestComplete, puzzle]);
+
+    // Anonymous analytics (all users, no auth required)
+    logGameEvent("roles", today, {
+      puzzleIndex: puzzleNumber,
+      solved: won,
+      strikes,
+      roundsUsed,
+      timeSecs: totalTime,
+      pickedLetters: [...pickedLetters],
+      wrongGuesses: [...wrongGuesses],
+      guessedLetters: [...guessedLetters],
+      revealedCount: revealed.size,
+    });
+    trackEvent("game_completed", { game: "roles", solved: won, strikes, time_secs: totalTime });
+  }, [screen, strikes, totalTime, puzzleNumber, round, dateKey, playtestMode, onPlaytestComplete, puzzle, pickedLetters, wrongGuesses, guessedLetters, revealed]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -650,7 +632,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     screenRef.current = "failed";
     if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
     if (totalRef.current) clearInterval(totalRef.current);
-    if (decisionRef.current) clearInterval(decisionRef.current);
+
     setSolveMode(false);
     setGameOverPopup(reason);
     setTimeout(() => { setGameOverPopup(null); setScreen("failed"); }, 3000);
@@ -660,7 +642,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     screenRef.current = "solved";
     if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
     if (totalRef.current) clearInterval(totalRef.current);
-    if (decisionRef.current) clearInterval(decisionRef.current);
+
     setSolveMode(false);
     setGameWinPopup(true);
     setTimeout(() => { setGameWinPopup(false); setScreen("solved"); }, 3000);
@@ -1200,7 +1182,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (!solveMode) return;
     const allFilled = blankPositions.every(p => solveInputs[`${p.word}-${p.index}`]);
     if (!allFilled) return;
-    if (decisionRef.current) { clearInterval(decisionRef.current); decisionRef.current = null; }
     const actorG = puzzle.actor.split("").map((ch, i) =>
       !isGuessableChar(ch) ? ch : revealed.has(normalizeLetter(ch)) ? normalizeLetter(ch) : (solveInputs[`actor-${i}`] || "?")).join("");
     const charG = puzzle.character.split("").map((ch, i) =>
@@ -1819,16 +1800,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   style={{ animation: `shrinkToZero ${guessTime}s linear forwards`, animationPlayState: guessResolving ? "paused" : "running" }} />
               </div>
               <span className={`font-mono text-[11px] font-bold tabular-nums ${urgent ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{guessTimer}s</span>
-            </div>
-          )}
-          {(phase === "pre-roll" || solveMode) && (
-            <div className="shrink-0 px-3 pb-0.5 flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                <div key={decisionAnimKey}
-                  className={`h-full rounded-full ${decisionTimer <= 10 ? "bg-red-400" : "bg-amber-400"}`}
-                  style={{ animation: `shrinkToZero ${DECISION_TIME}s linear forwards` }} />
-              </div>
-              <span className={`font-mono text-[11px] font-bold tabular-nums ${decisionTimer <= 10 ? "text-red-400 animate-pulse" : "text-zinc-500"}`}>{decisionTimer}s</span>
             </div>
           )}
 

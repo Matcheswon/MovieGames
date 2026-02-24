@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
 import { getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
+import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { ThumbsPlaytestResult } from "@/lib/playtest";
 
 type Screen = "start" | "playing" | "results";
@@ -322,7 +323,24 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
         timeSecs: timer,
       });
     }
-  }, [screen, mode, dateKey, scores, timer, playtestMode, onPlaytestComplete, movies, puzzleNumber]);
+
+    // Anonymous analytics (all users, no auth required)
+    if (dateKey) {
+      logGameEvent("thumbs", dateKey, {
+        puzzleIndex: puzzleNumber ?? 0,
+        score: total,
+        outOf: scores.length * 2,
+        perfectRounds: scores.filter(r => r.siskelOk && r.ebertOk).length,
+        timeSecs: timer,
+        perMovie: shuffledMovies.slice(0, scores.length).map((m, i) => ({
+          title: m.title,
+          siskelOk: scores[i].siskelOk,
+          ebertOk: scores[i].ebertOk,
+        })),
+      });
+      trackEvent("game_completed", { game: "thumbs", score: total, out_of: scores.length * 2, time_secs: timer });
+    }
+  }, [screen, mode, dateKey, scores, timer, playtestMode, onPlaytestComplete, movies, puzzleNumber, shuffledMovies]);
 
   useEffect(() => {
     if (screen === "playing") {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Drama, Film, Share2, Star, Check } from "lucide-react";
 import { DegreesPuzzle, DegreesChainPiece, getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult } from "@/lib/saveResult";
+import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { DegreesPlaytestResult } from "@/lib/playtest";
 
 // ─── Daily streak persistence ───
@@ -225,6 +226,16 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
       hints: 0,
       timeSecs: timer,
     });
+
+    // Anonymous analytics (all users, no auth required)
+    logGameEvent("degrees", dateKey, {
+      puzzleIndex: puzzleNumber,
+      solved,
+      mistakes: finalAttempts,
+      timeSecs: timer,
+      chainLength: puzzle.chain.length,
+    });
+    trackEvent("game_completed", { game: "degrees", solved, mistakes: finalAttempts, time_secs: timer });
   }, [dateKey, puzzleNumber, timer, playtestMode, onPlaytestComplete, puzzle]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;

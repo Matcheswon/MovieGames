@@ -383,6 +383,134 @@ ${list}`;
   }
 }
 
+// ─── Scheduling: reorder new entries to avoid clustering issues ───────────────
+//
+// Reorders `fresh` entries so that when appended to `existing`, the result has:
+//   • No back-to-back hard puzzles (including the seam)
+//   • No same-actor within 14 days (including the seam with existing entries)
+//   • ~2-3 hard puzzles per week
+//
+function scheduleNewEntries(existing, fresh) {
+  if (fresh.length <= 1) return fresh;
+
+  const WEEK = 7;
+  const startIdx = existing.length;
+
+  // Shuffle the pool so repeated runs give variety
+  const available = [...fresh];
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+
+  const result = [];
+
+  for (let i = 0; i < fresh.length; i++) {
+    const globalIdx = startIdx + i;
+    const week = Math.floor(globalIdx / WEEK);
+    const weekStart = week * WEEK;
+
+    // Previous entry (from existing tail or already-placed result)
+    const prev = i === 0 ? existing[existing.length - 1] : result[i - 1];
+
+    // Actors within the last 14 days (from existing tail + already-placed result)
+    const recentActors = new Set();
+    const lookback = 13; // 14-day window: indices globalIdx-13 through globalIdx-1
+    for (let j = Math.max(0, globalIdx - lookback); j < globalIdx; j++) {
+      const entry = j < startIdx ? existing[j] : result[j - startIdx];
+      if (entry) recentActors.add(entry.actor);
+    }
+
+    // Hard count already placed in this week
+    let weekHards = 0;
+    for (let j = weekStart; j < globalIdx; j++) {
+      const entry = j < startIdx ? existing[j] : result[j - startIdx];
+      if (entry?.difficulty === "hard") weekHards++;
+    }
+
+    // Remaining balance check
+    const remainingAfter = fresh.length - i - 1;
+    const availableHards = available.filter((x) => x.difficulty === "hard").length;
+
+    // Score each available entry — pick the best fit for this slot
+    let bestScore = -Infinity;
+    let bestIdx = 0;
+
+    for (let a = 0; a < available.length; a++) {
+      const e = available[a];
+      const isHard = e.difficulty === "hard";
+      let score = 0;
+
+      // ── Hard constraints (large penalties) ──
+      if (recentActors.has(e.actor)) score -= 1000;               // same actor within 14 days
+      if (isHard && prev?.difficulty === "hard") score -= 1000;   // back-to-back hard
+      if (isHard && weekHards >= 3) score -= 500;                 // week over hard budget
+
+      // ── Soft preferences ──
+      if (score >= 0) {
+        // Distribute hards: prefer placing one when week is under budget
+        if (isHard && weekHards < 2) score += 10;
+        if (!isHard && weekHards >= 2) score += 5;
+
+        // Avoid running out of normals (would force back-to-back hards later)
+        const hardsAfterThis = availableHards - (isHard ? 1 : 0);
+        const maxHardSlots = Math.ceil(remainingAfter / 2);
+        if (!isHard && hardsAfterThis > maxHardSlots) score -= 30;
+
+        // Avoid back-to-back pre-1980 films (rare era, feels repetitive)
+        if (prev && e.year < 1980 && prev.year < 1980) score -= 20;
+
+        // Small tiebreaker
+        score += a * 0.01;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = a;
+      }
+    }
+
+    result.push(available[bestIdx]);
+    available.splice(bestIdx, 1);
+  }
+
+  // ── Report ──
+  let b2b = 0, tooClose = 0;
+  for (let i = 0; i < result.length; i++) {
+    const globalIdx = startIdx + i;
+    const prev = i === 0 ? existing[existing.length - 1] : result[i - 1];
+    if (prev && result[i].difficulty === "hard" && prev.difficulty === "hard") b2b++;
+    // Check 14-day window
+    for (let j = Math.max(0, globalIdx - 13); j < globalIdx; j++) {
+      const entry = j < startIdx ? existing[j] : result[j - startIdx];
+      if (entry?.actor === result[i].actor) {
+        console.warn(`  ⚠ Same actor within 14 days: ${result[i].actor} at ${j} and ${globalIdx}`);
+        tooClose++;
+        break;
+      }
+    }
+  }
+  if (b2b === 0 && tooClose === 0) {
+    console.log("✓ Scheduling: no back-to-back hards, no same-actor within 14 days.");
+  }
+
+  // Show weekly hard distribution for the new entries
+  const firstWeek = Math.floor(startIdx / WEEK);
+  const lastWeek = Math.floor((startIdx + result.length - 1) / WEEK);
+  for (let w = firstWeek; w <= lastWeek; w++) {
+    const ws = w * WEEK;
+    const we = (w + 1) * WEEK;
+    let hards = 0;
+    for (let j = ws; j < we; j++) {
+      const entry = j < startIdx ? existing[j] : (j - startIdx < result.length ? result[j - startIdx] : null);
+      if (entry?.difficulty === "hard") hards++;
+    }
+    console.log(`  W${w + 1}: ${hards} hard`);
+  }
+
+  return result;
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   await loadEnv();
@@ -390,7 +518,8 @@ async function main() {
   const args = process.argv.slice(2);
   const gameName = args.find((a) => !a.startsWith("-"));
   const countFlag = args.find((a) => a.startsWith("--count="));
-  const count = countFlag ? parseInt(countFlag.split("=")[1], 10) : 10;
+  const defaultCount = gameName === "roles" ? 20 : 10;
+  const count = countFlag ? parseInt(countFlag.split("=")[1], 10) : defaultCount;
   const scoreAll = args.includes("--score-all");
   const rescoreAll = args.includes("--rescore-all");
 
@@ -491,10 +620,15 @@ async function main() {
       .join(", ");
     const pairList = existing.map(e => `${e.actor} / ${e.character}`).join(", ");
 
+    // Actors in the last 14 entries — avoid these to prevent same-actor clustering
+    const recentActors = [...new Set(existing.slice(-14).map(e => e.actor))].join(", ");
+
     existingBlock = `There are ${existing.length} existing entries. Do NOT duplicate any of these actor/character pairs: ${pairList}
 
 Actors near or at the cap (max 3): ${cappedActors || "none"}
-Movies at the cap (max 2): ${cappedMovies || "none"}`;
+Movies at the cap (max 2): ${cappedMovies || "none"}
+
+RECENTLY USED — do NOT use any of these actors (they appeared in the last 14 entries): ${recentActors}`;
   } else if (existing.length > 0) {
     existingBlock = `DO NOT include any of the following already-existing entries:\n${config.existingSummary(existing)}`;
   } else {
@@ -637,6 +771,21 @@ ${verifyList}`;
     await scoreCharacterPopularity(fresh, apiKey);
   }
 
+  // ─── Recent actor filter: reject actors from last 14 entries ────────────────
+  if (gameName === "roles" && existing.length > 0) {
+    const recentActorSet = new Set(existing.slice(-14).map(e => e.actor));
+    const beforeRecent = fresh.length;
+    fresh = fresh.filter((e) => {
+      if (recentActorSet.has(e.actor)) {
+        console.warn(`  ✗ Recent actor: ${e.actor} appeared in last 14 entries — skipping ${e.character}`);
+        return false;
+      }
+      return true;
+    });
+    const recentRemoved = beforeRecent - fresh.length;
+    if (recentRemoved > 0) console.log(`⚠ Recent-actor filter removed ${recentRemoved} entries.`);
+  }
+
   // ─── Actor cap: max 3 entries per actor across existing + new ───────────────
   if (gameName === "roles") {
     const actorCounts = {};
@@ -734,6 +883,12 @@ ${verifyList}`;
   }
 
   const skipped = dupeSkipped + (generated.length - dupeSkipped - fresh.length);
+
+  // Schedule new entries to avoid clustering issues (roles only)
+  if (gameName === "roles" && fresh.length > 1) {
+    console.log(`\nScheduling ${fresh.length} entries for optimal distribution...`);
+    fresh = scheduleNewEntries(existing, fresh);
+  }
 
   const merged = [...existing, ...fresh];
   await fs.mkdir(path.dirname(dataPath), { recursive: true });
