@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import Script from "next/script";
+import { FeedbackProvider } from "@/components/FeedbackContext";
+import FeedbackWidget from "@/components/FeedbackWidget";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -41,7 +43,10 @@ export default function RootLayout({
           </>
         )}
         <div className="film-grain" />
-        {children}
+        <FeedbackProvider>
+          {children}
+          <FeedbackWidget />
+        </FeedbackProvider>
       </body>
     </html>
   );

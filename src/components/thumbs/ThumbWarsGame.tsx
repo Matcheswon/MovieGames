@@ -9,6 +9,7 @@ import { saveGameResult, getTodayResult } from "@/lib/saveResult";
 import { Share2, X } from "lucide-react";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { ThumbsPlaytestResult } from "@/lib/playtest";
+import { useFeedbackContext } from "@/components/FeedbackContext";
 
 type Screen = "start" | "playing" | "results";
 type ScoreEntry = { siskelOk: number; ebertOk: number };
@@ -235,6 +236,14 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
     setPosterLoaded(false);
     setScreen("playing");
   }, [movies, mode]);
+
+  const { setGameContext } = useFeedbackContext();
+  useEffect(() => {
+    setGameContext({
+      game: "thumbs", puzzleNumber: puzzleNumber ?? null, dateKey: dateKey ?? null, mode, screen,
+    });
+    return () => setGameContext(null);
+  }, [puzzleNumber, dateKey, mode, screen, setGameContext]);
 
   // Auto-start in playtest mode
   useEffect(() => {

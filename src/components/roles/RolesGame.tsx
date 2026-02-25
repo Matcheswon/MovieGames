@@ -8,6 +8,7 @@ import { saveGameResult, getTodayResult } from "@/lib/saveResult";
 import ShareButton from "@/components/ShareButton";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
+import { useFeedbackContext } from "@/components/FeedbackContext";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
   ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
@@ -204,6 +205,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const allDone = [...allLetters].every(c => revealed.has(c));
   const isOver = screen === "solved" || screen === "failed";
   const blankPositions = getBlankPositions(puzzle.actor, puzzle.character, revealed);
+
+  const { setGameContext } = useFeedbackContext();
+  useEffect(() => {
+    setGameContext({
+      game: "roles", puzzleNumber, dateKey, screen,
+      movie: puzzle.movie, actor: puzzle.actor, character: puzzle.character,
+      year: puzzle.year, difficulty: puzzle.difficulty ?? "normal",
+    });
+    return () => setGameContext(null);
+  }, [puzzleNumber, dateKey, puzzle, screen, setGameContext]);
 
   useEffect(() => {
     guessesRemainingRef.current = guessesRemaining;

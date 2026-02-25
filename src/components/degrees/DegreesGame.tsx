@@ -7,6 +7,7 @@ import { DegreesPuzzle, DegreesChainPiece, getNyDateKey } from "@/lib/dailyUtils
 import { saveGameResult } from "@/lib/saveResult";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { DegreesPlaytestResult } from "@/lib/playtest";
+import { useFeedbackContext } from "@/components/FeedbackContext";
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:degrees:daily";
@@ -135,6 +136,14 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
   const allFilled = slots.every(Boolean);
   const isOver = screen === "solved" || screen === "failed";
   const degrees = puzzle.chain.filter(c => c.type === "movie").length;
+
+  const { setGameContext } = useFeedbackContext();
+  useEffect(() => {
+    setGameContext({
+      game: "degrees", puzzleNumber, dateKey, degrees, screen,
+    });
+    return () => setGameContext(null);
+  }, [puzzleNumber, dateKey, degrees, screen, setGameContext]);
 
   // Check if already played today
   useEffect(() => {

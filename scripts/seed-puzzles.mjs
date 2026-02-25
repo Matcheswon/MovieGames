@@ -110,8 +110,9 @@ const GAME_CONFIGS = {
           (uncommon >= 5 && pop <= 4) ||
           // Obscure overall — hard to guess if you don't recognize the names
           pop <= 5 ||
-          // Obscure character name — even if movie/actor are known
-          charPop <= 4;
+          // Obscure character name — but not if the actor is very famous
+          // and the letters are mostly common (easy to reveal by guessing)
+          (charPop <= 4 && (pop < 8 || uncommon >= 4));
 
         if (isHard) {
           entry.difficulty = "hard";
