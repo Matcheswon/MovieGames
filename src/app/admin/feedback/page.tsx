@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import DeleteFeedbackButton from "@/components/admin/DeleteFeedbackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -143,6 +144,10 @@ export default async function FeedbackPage() {
                     </pre>
                   </div>
                 )}
+
+                <div className="pt-2 border-t border-zinc-800/30">
+                  <DeleteFeedbackButton id={fb.id} />
+                </div>
               </div>
             </details>
           ))}

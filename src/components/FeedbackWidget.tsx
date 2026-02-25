@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquare, X, Send, CheckCircle } from "lucide-react";
 import { useFeedbackContext } from "./FeedbackContext";
-import { submitFeedback } from "@/app/feedback/actions";
 
 const CATEGORIES = ["Bug Report", "Puzzle Feedback", "General Feedback"] as const;
 
@@ -46,25 +45,37 @@ export default function FeedbackWidget() {
     setSending(true);
     setError(null);
 
-    const result = await submitFeedback({
-      email: email || undefined,
-      category,
-      message,
-      pageUrl: typeof window !== "undefined" ? window.location.pathname : undefined,
-      gameContext,
-    });
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email || undefined,
+          category,
+          message,
+          pageUrl: window.location.pathname,
+          gameContext,
+        }),
+      });
+      const result = await res.json();
 
-    setSending(false);
+      setSending(false);
 
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setSent(true);
-      setTimeout(() => {
-        setOpen(false);
-        reset();
-      }, 2000);
+      if (!res.ok || result.error) {
+        setError(result.error || "Something went wrong.");
+        return;
+      }
+    } catch {
+      setSending(false);
+      setError("Failed to send. Please try again.");
+      return;
     }
+
+    setSent(true);
+    setTimeout(() => {
+      setOpen(false);
+      reset();
+    }, 2000);
   }
 
   const pathname = usePathname();
@@ -75,11 +86,11 @@ export default function FeedbackWidget() {
   if (isPlaying && !open) return null;
 
   return (
-    <div ref={panelRef} className="fixed bottom-5 right-5 z-30 flex flex-col items-end gap-3">
+    <div ref={panelRef} className={`fixed z-30 ${open ? "inset-0 sm:inset-auto sm:bottom-5 sm:right-5 flex flex-col sm:items-end sm:gap-3" : "bottom-5 right-5 flex flex-col items-end gap-3"}`}>
       {/* Panel */}
       {open && (
         <div
-          className="w-80 animate-slideUp rounded-2xl border border-zinc-800/60 bg-zinc-900 shadow-2xl shadow-black/60 overflow-hidden"
+          className="flex-1 sm:flex-none sm:w-80 animate-slideUp sm:rounded-2xl border-0 sm:border border-zinc-800/60 bg-zinc-900 shadow-2xl shadow-black/60 overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
@@ -98,7 +109,7 @@ export default function FeedbackWidget() {
               <p className="text-sm text-zinc-300">Thanks for your feedback!</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 flex-1">
               {/* Email */}
               <input
                 type="email"
@@ -141,7 +152,7 @@ export default function FeedbackWidget() {
                 placeholder="What's on your mind?"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full resize-none rounded-lg border border-zinc-800/60 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-amber-500/40 transition-colors"
+                className="w-full resize-none rounded-lg border border-zinc-800/60 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-amber-500/40 transition-colors flex-1 sm:flex-none"
               />
 
               {error && (
@@ -168,13 +179,15 @@ export default function FeedbackWidget() {
         </div>
       )}
 
-      {/* Floating button */}
-      <button
-        onClick={() => { setOpen(!open); if (!open) reset(); }}
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800/60 bg-zinc-900 text-zinc-400 shadow-lg shadow-black/40 transition-all hover:border-amber-500/40 hover:text-amber-400 hover:shadow-amber-500/10"
-      >
-        {open ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-      </button>
+      {/* Floating button — hidden on mobile when panel is open (panel is fullscreen) */}
+      {!open && (
+        <button
+          onClick={() => { setOpen(true); reset(); }}
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800/60 bg-zinc-900 text-zinc-400 shadow-lg shadow-black/40 transition-all hover:border-amber-500/40 hover:text-amber-400 hover:shadow-amber-500/10"
+        >
+          <MessageSquare className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }
