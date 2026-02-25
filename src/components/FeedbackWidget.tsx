@@ -93,13 +93,13 @@ export default function FeedbackWidget() {
           className="flex-1 sm:flex-none sm:w-80 animate-slideUp sm:rounded-2xl border-0 sm:border border-zinc-800/60 bg-zinc-900 shadow-2xl shadow-black/60 overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))]">
             <span className="text-sm font-semibold text-zinc-200">Send Feedback</span>
             <button
               onClick={() => { setOpen(false); reset(); }}
-              className="text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors -mr-1"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
