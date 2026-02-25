@@ -49,3 +49,19 @@ export async function saveGameResult(result: GameResult) {
     onConflict: "user_id,game,date_key",
   });
 }
+
+export async function getTodayResult(game: string, dateKey: string) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("game_results")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("game", game)
+    .eq("date_key", dateKey)
+    .single();
+
+  return data;
+}

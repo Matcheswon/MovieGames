@@ -330,15 +330,17 @@ CALIBRATION EXAMPLES (use these as anchors — match these scores):
  9 = Extremely well-known name: TONY STARK, ROCKY BALBOA, KATNISS EVERDEEN, JACK SPARROW, WILLY WONKA, HANNIBAL LECTER
  8 = Very recognizable name: TYLER DURDEN, ELLE WOODS, PATRICK BATEMAN, LARA CROFT, JOHN MCCLANE, HERMIONE
  7 = Name a regular moviegoer would know: MAXIMUS, LOGAN, BRIDGET JONES, CLARICE STARLING, JASON BOURNE, CATWOMAN
- 5-6 = You might recall if prompted: AXEL FOLEY, PETER VENKMAN, MIRANDA PRIESTLY, JACK TORRANCE, PETER QUILL
- 3-4 = Hard to recall even if you saw the movie: AGENT J (Men in Black), LUKE HOBBS (Fast & Furious), ALAN PARRISH (Jumanji), ALONZO HARRIS (Training Day), MALCOLM CROWE (Sixth Sense), ANDY SACHS (Devil Wears Prada)
- 1-2 = Almost nobody remembers: SHEBA HART, EILIS LACEY, ADAM BELL, FERN (Nomadland)
+ 5-6 = You might recall if prompted: AXEL FOLEY, PETER VENKMAN, MIRANDA PRIESTLY, JACK TORRANCE, PETER QUILL, VINCENT VEGA (Pulp Fiction), MIA WALLACE (Pulp Fiction)
+ 3-4 = Hard to recall even if you saw the movie, but fans of the film would know: AGENT J (Men in Black), LUKE HOBBS (Fast & Furious), ALAN PARRISH (Jumanji), ALONZO HARRIS (Training Day), MALCOLM CROWE (Sixth Sense), ANDY SACHS (Devil Wears Prada), MICKEY KNOX (Natural Born Killers)
+ 1-2 = Almost nobody remembers — even fans would struggle: SHEBA HART, EILIS LACEY, ADAM BELL, FERN (Nomadland)
 
 IMPORTANT:
 - Characters whose name IS the movie title (FORREST GUMP, ROCKY, ERIN BROCKOVICH) → always HIGH
 - Franchise characters people say by name (KATNISS, JACK SPARROW, TONY STARK) → HIGH
 - Characters from HUGE movies whose names nobody actually says (Agent J, Luke Hobbs, Malcolm Crowe) → LOW (3-4)
+- Characters from cult classics or iconic genre films that fans would know (Mickey Knox) → 3-4 range, NOT 1-2
 - Ask yourself: "Would a fan of this movie say this character's name in conversation?" If not, score LOW
+- Reserve 1-2 for characters that even dedicated fans would struggle to name — truly forgettable names from any film
 
 Return ONLY a JSON array of integers, one per entry, in order. Example: [10, 6, 3]
 
@@ -823,17 +825,21 @@ ${verifyList}`;
     const movieCapped = beforeMovieCap - fresh.length;
     if (movieCapped > 0) console.log(`⚠ Movie cap removed ${movieCapped} entries.`);
 
-    // Quality gate: reject obscure character names nobody will guess
+    // Quality gate: reject entries where the combined popularity is too low.
+    // A well-known actor (high pop) can offset a lesser-known character name.
     const beforeQuality = fresh.length;
     fresh = fresh.filter((e) => {
       const cp = e.characterPopularity ?? 5;
       const p = e.popularity ?? 5;
-      if (cp <= 2) {
-        console.warn(`  ✗ Too obscure: ${e.actor} / ${e.character} (charPop ${cp}) — nobody will know this character`);
+      const combined = cp + p;
+      // Both scores rock-bottom — truly unknown
+      if (cp <= 1 && p <= 4) {
+        console.warn(`  ✗ Too obscure: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}) — nobody will know this`);
         return false;
       }
-      if (cp <= 3 && p <= 6) {
-        console.warn(`  ✗ Too niche: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}) — obscure actor + obscure character`);
+      // Low combined score — obscure actor + obscure character
+      if (combined <= 7 && cp <= 3) {
+        console.warn(`  ✗ Too niche: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}, combined ${combined})`);
         return false;
       }
       return true;

@@ -2165,5 +2165,96 @@
     "popularity": 9,
     "characterPopularity": 4,
     "difficulty": "hard"
+  },
+  {
+    "actor": "CARRIE-ANNE MOSS",
+    "character": "TRINITY",
+    "movie": "The Matrix",
+    "year": 1999,
+    "popularity": 7,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "CARRIE FISHER",
+    "character": "MARIE",
+    "movie": "When Harry Met Sally",
+    "year": 1989,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "SALLY FIELD",
+    "character": "MARY TODD LINCOLN",
+    "movie": "Lincoln",
+    "year": 2012,
+    "popularity": 9,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "DUSTIN HOFFMAN",
+    "character": "RAYMOND BABBITT",
+    "movie": "Rain Man",
+    "year": 1988,
+    "popularity": 10,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "PAUL NEWMAN",
+    "character": "FAST EDDIE FELSON",
+    "movie": "The Color of Money",
+    "year": 1986,
+    "popularity": 9,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "ANNA PAQUIN",
+    "character": "ROGUE",
+    "movie": "X-Men",
+    "year": 2000,
+    "popularity": 6,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "TOMMY LEE JONES",
+    "character": "SAMUEL GERARD",
+    "movie": "The Fugitive",
+    "year": 1993,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "BEN STILLER",
+    "character": "DEREK ZOOLANDER",
+    "movie": "Zoolander",
+    "year": 2001,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "MICHELLE PFEIFFER",
+    "character": "ELVIRA HANCOCK",
+    "movie": "Scarface",
+    "year": 1983,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "RACHEL MCADAMS",
+    "character": "REGINA GEORGE",
+    "movie": "Mean Girls",
+    "year": 2004,
+    "popularity": 8,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "LINDA BLAIR",
+    "character": "REGAN MACNEIL",
+    "movie": "The Exorcist",
+    "year": 1973,
+    "popularity": 6,
+    "characterPopularity": 5
   }
 ]

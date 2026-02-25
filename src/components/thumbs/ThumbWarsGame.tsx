@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
 import { getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult } from "@/lib/saveResult";
+import { saveGameResult, getTodayResult } from "@/lib/saveResult";
+import { Share2, X } from "lucide-react";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { ThumbsPlaytestResult } from "@/lib/playtest";
 
@@ -30,6 +31,8 @@ type ThumbsHistoryEntry = {
   score: number;
   outOf: number;
   timeSecs: number;
+  squares?: string;
+  perfectRounds?: number;
 };
 
 type DailyStreakData = {
@@ -196,6 +199,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   const [dailyStreak, setDailyStreak] = useState(0);
   const [bestDailyStreak, setBestDailyStreak] = useState(0);
   const [alreadyPlayed, setAlreadyPlayed] = useState<ThumbsHistoryEntry | null>(null);
+  const [resultShared, setResultShared] = useState(false);
   const [showOverview, setShowOverview] = useState(false);
   const dailyRecorded = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -238,6 +242,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   }, [playtestMode, screen, startGame]);
 
   // Load daily streak + detect already-played from localStorage
+  // Falls back to Supabase for cross-device detection (e.g. played on mobile, visiting on desktop)
   useEffect(() => {
     if (playtestMode || mode !== "daily") return;
     const data = readDailyStreak();
@@ -249,7 +254,37 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
     setBestDailyStreak(data.bestDailyStreak);
     if (dateKey) {
       const todayEntry = data.history.find(h => h.dateKey === dateKey);
-      if (todayEntry) setAlreadyPlayed(todayEntry);
+      if (todayEntry) {
+        setAlreadyPlayed(todayEntry);
+      } else {
+        // Cross-device: check Supabase for today's result
+        getTodayResult("thumbs", dateKey).then(result => {
+          if (!result) return;
+          const entry: ThumbsHistoryEntry = {
+            dateKey,
+            score: result.score ?? 0,
+            outOf: result.out_of ?? 0,
+            timeSecs: result.time_secs,
+          };
+          setAlreadyPlayed(entry);
+          // Backfill to localStorage
+          const streakData = readDailyStreak();
+          if (!streakData.history.some(h => h.dateKey === dateKey)) {
+            const newStreak = streakData.lastPlayedDate && isYesterday(streakData.lastPlayedDate, dateKey)
+              ? streakData.dailyStreak + 1
+              : 1;
+            const newBest = Math.max(newStreak, streakData.bestDailyStreak);
+            writeDailyStreak({
+              lastPlayedDate: dateKey,
+              dailyStreak: newStreak,
+              bestDailyStreak: newBest,
+              history: [...streakData.history, entry],
+            });
+            setDailyStreak(newStreak);
+            setBestDailyStreak(newBest);
+          }
+        });
+      }
     }
   }, [mode, dateKey, playtestMode]);
 
@@ -302,7 +337,9 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
       : 1;
     const newBest = Math.max(newStreak, data.bestDailyStreak);
     const total = scores.reduce((s, r) => s + r.siskelOk + r.ebertOk, 0);
-    const entry: ThumbsHistoryEntry = { dateKey, score: total, outOf: scores.length * 2, timeSecs: timer };
+    const sqr = scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("");
+    const perf = scores.filter(r => r.siskelOk && r.ebertOk).length;
+    const entry: ThumbsHistoryEntry = { dateKey, score: total, outOf: scores.length * 2, timeSecs: timer, squares: sqr, perfectRounds: perf };
     const alreadyLogged = data.history.some(h => h.dateKey === dateKey);
     writeDailyStreak({
       lastPlayedDate: dateKey,
@@ -391,6 +428,18 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   const getEbertResult = (): ThumbResult => !revealed ? null : ebertPick === movie?.ebert ? "correct" : "wrong";
 
   // ─── START SCREEN ───
+  const apShareText = alreadyPlayed
+    ? `\u{1F3AC} MovieNight THUMBS #${puzzleNumber}${alreadyPlayed.squares ? `\n${alreadyPlayed.squares}` : ""}\n${alreadyPlayed.score}/${alreadyPlayed.outOf} \u00B7 ${formatTime(alreadyPlayed.timeSecs)}${alreadyPlayed.perfectRounds ? ` \u00B7 ${alreadyPlayed.perfectRounds} perfect rounds` : ""}${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`
+    : "";
+  const handleShareResult = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ text: apShareText }); return; } catch {}
+    }
+    await navigator.clipboard?.writeText(apShareText);
+    setResultShared(true);
+    setTimeout(() => setResultShared(false), 2000);
+  };
+
   if (screen === "start") {
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">
@@ -464,7 +513,10 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
             <div className="relative w-full max-w-sm animate-slideUp"
               style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
               <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
-                <div className="p-6 text-center">
+                <div className="p-6 text-center relative">
+                  <button onClick={() => setAlreadyPlayed(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
+                    <X className="w-5 h-5" />
+                  </button>
                   <div className="flex items-center justify-center gap-2.5 mb-3">
                     <span className="text-xl">{"\u{1F44D}"}</span>
                     <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>THUMBS</h2>
@@ -490,9 +542,10 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
                       className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
                       Play Again
                     </button>
-                    <button onClick={() => setAlreadyPlayed(null)}
-                      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
-                      Dismiss
+                    <button onClick={handleShareResult}
+                      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5">
+                      <Share2 className="w-3.5 h-3.5" />
+                      {resultShared ? "Copied!" : "Share"}
                     </button>
                   </div>
                 </div>
@@ -510,7 +563,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
     const grade = pct >= 90 ? "S" : pct >= 75 ? "A" : pct >= 60 ? "B" : pct >= 40 ? "C" : "D";
     const gradeColor = pct >= 90 ? "text-amber-300" : pct >= 75 ? "text-emerald-300" : pct >= 60 ? "text-blue-300" : pct >= 40 ? "text-zinc-300" : "text-red-300";
     const flavorText = pct >= 90 ? "You belong in the balcony." : pct >= 75 ? "Two thumbs up for you." : pct >= 60 ? "Not bad \u2014 you know your critics." : pct >= 40 ? "Ebert would be gentle. Siskel\u2026 less so." : "Maybe stick to reading the reviews.";
-    const shareText = `\u{1F3AC} MovieNight THUMBS${mode === "daily" ? ` \u00B7 ${dateKey}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AC} MovieNight THUMBS${mode === "daily" ? ` #${puzzleNumber}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">

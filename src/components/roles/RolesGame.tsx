@@ -4,13 +4,14 @@ import React, { useState, useEffect, useRef, useCallback, type ReactNode } from 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RolesPuzzle, getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult } from "@/lib/saveResult";
+import { saveGameResult, getTodayResult } from "@/lib/saveResult";
+import ShareButton from "@/components/ShareButton";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
   ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
-  Share2, SkipForward, Sparkles, Target, ThumbsUp, Ticket, Type,
+  SkipForward, Sparkles, Target, ThumbsUp, Ticket, Type, X,
 } from "lucide-react";
 
 // ─── Daily streak persistence ───
@@ -61,30 +62,6 @@ function isYesterday(dateStr: string, todayStr: string): boolean {
   d.setDate(d.getDate() + 1);
   const next = d.toISOString().slice(0, 10);
   return next === todayStr;
-}
-
-function ShareButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ text });
-        return;
-      } catch {}
-    }
-    await navigator.clipboard?.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button onClick={handleShare}
-      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5">
-      <Share2 className="w-3.5 h-3.5" />
-      {copied ? "Copied!" : "Share"}
-    </button>
-  );
 }
 
 // Role Call effects — the wheel guesses FOR you now
@@ -192,6 +169,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [preRollChoice, setPreRollChoice] = useState<"spin" | "solve">("spin");
   const [preRollReady, setPreRollReady] = useState(false);
   const [alreadyPlayed, setAlreadyPlayed] = useState<RolesHistoryEntry | null>(null);
+
   const [fanfareLetter, setFanfareLetter] = useState<string | null>(null);
   const [fanfareCount, setFanfareCount] = useState(0);
   const [tileBlinking, setTileBlinking] = useState<string | null>(null);
@@ -358,6 +336,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   }, [revealed, screen, phase, allDone]);
 
   // Load daily streak + detect already-played from localStorage (skip in playtest)
+  // Falls back to Supabase for cross-device detection (e.g. played on mobile, visiting on desktop)
   useEffect(() => {
     if (playtestMode) return;
     const today = dateKey;
@@ -368,8 +347,38 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       }
     }
     const todayEntry = data.history.find(h => h.dateKey === today);
-    if (todayEntry) setAlreadyPlayed(todayEntry);
-  }, [dateKey, playtestMode]);
+    if (todayEntry) {
+      setAlreadyPlayed(todayEntry);
+    } else {
+      // Cross-device: check Supabase for today's result
+      getTodayResult("roles", today).then(result => {
+        if (!result) return;
+        const entry: RolesHistoryEntry = {
+          dateKey: today,
+          puzzleNumber,
+          solved: result.solved ?? false,
+          strikes: result.strikes ?? 0,
+          timeSecs: result.time_secs,
+          roundsUsed: result.rounds_used ?? undefined,
+        };
+        setAlreadyPlayed(entry);
+        // Backfill to localStorage
+        const streakData = readDailyStreak();
+        if (!streakData.history.some(h => h.dateKey === today)) {
+          const newStreak = streakData.lastPlayedDate && isYesterday(streakData.lastPlayedDate, today)
+            ? streakData.dailyStreak + 1
+            : 1;
+          writeDailyStreak({
+            lastPlayedDate: today,
+            dailyStreak: newStreak,
+            bestDailyStreak: Math.max(newStreak, streakData.bestDailyStreak),
+            history: [...streakData.history, entry],
+          });
+          setDailyStreak(newStreak);
+        }
+      });
+    }
+  }, [dateKey, playtestMode, puzzleNumber]);
 
   // Freshness guard: if server-rendered dateKey is stale, refresh the page (skip in playtest)
   useEffect(() => {
@@ -1309,6 +1318,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const strikesLeft = Math.max(0, MAX_STRIKES - strikes);
 
   // ─── START ───
+  const apShareText = alreadyPlayed
+    ? `\u{1F3AD} ROLES #${puzzleNumber}\n${alreadyPlayed.solved ? "\u2705 Solved" : "\u274C"}${alreadyPlayed.roundsUsed ? ` \u00B7 Round ${alreadyPlayed.roundsUsed}/${MAX_ROUNDS}` : ""}\n\u23F1 ${fmt(alreadyPlayed.timeSecs)} \u00B7 ${alreadyPlayed.strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`
+    : "";
   if (screen === "start") {
     return (
       <div className="h-dvh bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto">
@@ -1391,7 +1403,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             <div className="relative w-full max-w-sm animate-slideUp"
               style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
               <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
-                <div className="p-6 text-center">
+                <div className="p-6 text-center relative">
+                  <button onClick={() => setAlreadyPlayed(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
+                    <X className="w-5 h-5" />
+                  </button>
                   <div className="flex items-center justify-center gap-2.5 mb-3">
                     <Drama className="w-5 h-5 text-amber-400" />
                     <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h2>
@@ -1417,10 +1432,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                       className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
                       Play Again
                     </button>
-                    <button onClick={() => setAlreadyPlayed(null)}
-                      className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer">
-                      Dismiss
-                    </button>
+                    <ShareButton text={apShareText} />
                   </div>
                 </div>
               </div>
@@ -1435,7 +1447,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   if (isOver) {
     const won = screen === "solved";
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
-    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}${!playtestMode ? ` \u00B7 ${dateKey}` : ""}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${!playtestMode ? "" : ""}`;
     return (
       <Shell compact={playtestMode}>
         <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
