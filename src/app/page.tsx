@@ -69,12 +69,14 @@ export default async function Home() {
   } catch { /* silent */ }
   return (
     <div className="min-h-screen bg-cinematic">
-      <div className="mx-auto max-w-4xl px-5 md:px-8 py-12 md:py-20">
-        {/* Auth */}
-        <div className="flex justify-end mb-6 animate-fadeIn">
+      {/* Top bar */}
+      <div className="border-b border-zinc-800/40 bg-zinc-950/60 backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl px-5 md:px-8 flex justify-end items-center h-12">
           <AuthButton />
         </div>
+      </div>
 
+      <div className="mx-auto max-w-4xl px-5 md:px-8 py-12 md:py-20">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16 animate-fadeIn">
           <div className="flex items-center justify-center gap-2 mb-3">
