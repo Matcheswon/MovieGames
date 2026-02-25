@@ -1341,25 +1341,25 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             <div className="space-y-2.5 text-sm mb-4">
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center"><Clapperboard className="w-3.5 h-3.5 text-amber-400" /></span>
-                <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500">effects auto-spins each round</span></div>
+                <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500"> spin the wheel for an effect</span></div>
               </div>
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center"><Keyboard className="w-3.5 h-3.5 text-zinc-400" /></span>
-                <div><span className="text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-500">before time runs out</span></div>
+                <div><span className="text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-500"> before time runs out</span></div>
               </div>
             </div>
             <div className="bg-zinc-800/30 rounded-lg p-3 mb-4">
               <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Role Call effects</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Type className="w-3 h-3" /> Letter Spin</span>
-                <span className="text-red-400/80 flex items-center gap-1.5"><SkipForward className="w-3 h-3" /> Lose a Turn</span>
-                <span className="text-emerald-400/80 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> Double Spin</span>
-                <span className="text-red-400/80 flex items-center gap-1.5"><Hourglass className="w-3 h-3" /> Half Time</span>
-                <span className="text-emerald-400/80 flex items-center gap-1.5"><ALargeSmall className="w-3 h-3" /> Vowel Spin</span>
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Ticket className="w-3 h-3" /> Free Letter</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> Double Spin</span>
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Target className="w-3 h-3" /> Double Guess</span>
-                <span className="text-red-400/80 flex items-center gap-1.5"><Lock className="w-3 h-3" /> Keyboard Lock</span>
+                <span className="text-emerald-400/80 flex items-center gap-1.5"><ALargeSmall className="w-3 h-3" /> Vowel Spin</span>
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><ClockPlus className="w-3 h-3" /> +4 Seconds</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><SkipForward className="w-3 h-3" /> Lose a Turn</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><Lock className="w-3 h-3" /> Keyboard Lock</span>
+                <span className="text-red-400/80 flex items-center gap-1.5"><Hourglass className="w-3 h-3" /> Half Time</span>
               </div>
             </div>
             <p className="text-xs text-zinc-500 pt-3 border-t border-zinc-800/40">

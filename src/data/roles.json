@@ -2022,5 +2022,148 @@
     "popularity": 9,
     "characterPopularity": 3,
     "difficulty": "hard"
+  },
+  {
+    "actor": "JAMIE FOXX",
+    "character": "DJANGO",
+    "movie": "Django Unchained",
+    "year": 2012,
+    "popularity": 9,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "VAL KILMER",
+    "character": "ICEMAN",
+    "movie": "Top Gun",
+    "year": 1986,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "JEFF GOLDBLUM",
+    "character": "SETH BRUNDLE",
+    "movie": "The Fly",
+    "year": 1986,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "UMA THURMAN",
+    "character": "BEATRIX KIDDO",
+    "movie": "Kill Bill: Vol. 1",
+    "year": 2003,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "JAVIER BARDEM",
+    "character": "RAOUL SILVA",
+    "movie": "Skyfall",
+    "year": 2012,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "EMMA THOMPSON",
+    "character": "SYBILL TRELAWNEY",
+    "movie": "Harry Potter and the Prisoner of Azkaban",
+    "year": 2004,
+    "popularity": 8,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "EDWARD NORTON",
+    "character": "NARRATOR",
+    "movie": "Fight Club",
+    "year": 1999,
+    "popularity": 9,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "ELIJAH WOOD",
+    "character": "FRODO BAGGINS",
+    "movie": "The Lord of the Rings: The Fellowship of the Ring",
+    "year": 2001,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "CHRIS EVANS",
+    "character": "JOHNNY STORM",
+    "movie": "Fantastic Four",
+    "year": 2005,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "HEATH LEDGER",
+    "character": "ENNIS DEL MAR",
+    "movie": "Brokeback Mountain",
+    "year": 2005,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "JASON MOMOA",
+    "character": "AQUAMAN",
+    "movie": "Aquaman",
+    "year": 2018,
+    "popularity": 8,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "CHRIS HEMSWORTH",
+    "character": "JAMES HUNT",
+    "movie": "Rush",
+    "year": 2013,
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ANNE HATHAWAY",
+    "character": "MIA THERMOPOLIS",
+    "movie": "The Princess Diaries",
+    "year": 2001,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "CHRISTIAN BALE",
+    "character": "BRUCE WAYNE",
+    "movie": "Batman Begins",
+    "year": 2005,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "JOHN TRAVOLTA",
+    "character": "TONY MANERO",
+    "movie": "Saturday Night Fever",
+    "year": 1977,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "VIGGO MORTENSEN",
+    "character": "ARAGORN",
+    "movie": "The Lord of the Rings: The Return of the King",
+    "year": 2003,
+    "popularity": 8,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "WHOOPI GOLDBERG",
+    "character": "ODA MAE BROWN",
+    "movie": "Ghost",
+    "year": 1990,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   }
 ]
