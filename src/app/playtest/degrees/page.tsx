@@ -1,31 +1,33 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import RolesGame from "@/components/roles/RolesGame";
-import PlaytestDashboard from "@/components/playtest/PlaytestDashboard";
+import DegreesGame from "@/components/degrees/DegreesGame";
+import DegreesPlaytestDashboard from "@/components/playtest/DegreesPlaytestDashboard";
 import PlaytestBarWrapper from "@/components/playtest/PlaytestBarWrapper";
-import puzzlesData from "@/data/roles.json";
-import { RolesPuzzle } from "@/lib/dailyUtils";
+import degreesPuzzlesData from "@/data/degrees.json";
+import { DegreesPuzzle } from "@/lib/dailyUtils";
 import {
-  PlaytestResult,
+  DegreesPlaytestResult,
   readPlaytestSession,
   writePlaytestSession,
   clearPlaytestSession,
 } from "@/lib/playtest";
 
-const puzzles = puzzlesData as RolesPuzzle[];
+const puzzles = degreesPuzzlesData as DegreesPuzzle[];
+
+const PLAYTEST_KEY = "asdlkfjalhoeirwioeu32u49289slkh";
 
 /* ─── Puzzle Selector Dropdown ──────────────────────────────────────────────── */
 
 function PuzzleSelector({
   puzzles,
   currentIndex,
-  results,
+  playedSet,
   onSelect,
 }: {
-  puzzles: RolesPuzzle[];
+  puzzles: DegreesPuzzle[];
   currentIndex: number;
-  results: PlaytestResult[];
+  playedSet: Set<number>;
   onSelect: (index: number) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -33,21 +35,16 @@ function PuzzleSelector({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const playedSet = useMemo(() => new Set(results.map(r => r.puzzleIndex)), [results]);
+  const items = useMemo(() => puzzles.map((p, i) => ({ puzzle: p, index: i })), [puzzles]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return puzzles.map((p, i) => ({ puzzle: p, index: i }));
+    if (!query.trim()) return items;
     const q = query.toLowerCase();
-    return puzzles
-      .map((p, i) => ({ puzzle: p, index: i }))
-      .filter(({ puzzle }) =>
-        puzzle.actor.toLowerCase().includes(q) ||
-        puzzle.character.toLowerCase().includes(q) ||
-        puzzle.movie.toLowerCase().includes(q)
-      );
-  }, [puzzles, query]);
+    return items.filter(({ puzzle }) =>
+      puzzle.start.name.toLowerCase().includes(q) || puzzle.end.name.toLowerCase().includes(q)
+    );
+  }, [items, query]);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -60,7 +57,6 @@ function PuzzleSelector({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Focus input on open
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
@@ -74,7 +70,7 @@ function PuzzleSelector({
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        Go to…
+        Go to&hellip;
       </button>
 
       {open && (
@@ -85,7 +81,7 @@ function PuzzleSelector({
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search actor, character, or movie…"
+              placeholder="Search actor name&hellip;"
               className="w-full text-xs bg-zinc-800 border border-zinc-700/40 rounded px-2.5 py-1.5 text-zinc-200 placeholder-zinc-500 outline-none focus:border-amber-500/50"
             />
           </div>
@@ -107,19 +103,16 @@ function PuzzleSelector({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <span className="text-zinc-400 mr-1.5">#{index + 1}</span>
-                        <span className="text-zinc-200">{puzzle.actor}</span>
-                        <span className="text-zinc-600 mx-1">/</span>
-                        <span className="text-zinc-300">{puzzle.character}</span>
-                        {puzzle.difficulty === "hard" && (
-                          <span className="ml-1.5 text-[9px] text-red-400/70 font-medium">HARD</span>
-                        )}
+                        <span className="text-zinc-200">{puzzle.start.name}</span>
+                        <span className="text-zinc-600 mx-1">&rarr;</span>
+                        <span className="text-zinc-200">{puzzle.end.name}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {played && <span className="text-[9px] text-emerald-500/70">played</span>}
                         {isCurrent && <span className="text-[9px] text-amber-400">current</span>}
                       </div>
                     </div>
-                    <div className="text-[10px] text-zinc-600 mt-0.5">{puzzle.movie} ({puzzle.year})</div>
+                    <div className="text-[10px] text-zinc-600 mt-0.5">{puzzle.chain.length} pieces</div>
                   </button>
                 );
               })
@@ -131,52 +124,43 @@ function PuzzleSelector({
   );
 }
 
-/* ─── Main Playtest Page ────────────────────────────────────────────────────── */
+/* ─── Main Degrees Playtest Page ────────────────────────────────────────────── */
 
-export default function PlaytestRolesPage() {
+export default function PlaytestDegreesPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [view, setView] = useState<"playing" | "dashboard">("playing");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [results, setResults] = useState<PlaytestResult[]>([]);
+  const [results, setResults] = useState<DegreesPlaytestResult[]>([]);
   const [autoAdvance, setAutoAdvance] = useState(true);
-  const [buildVariant, setBuildVariant] = useState<"standard" | "experimental">("standard");
 
-  // Access gate: localhost OR secret key in URL
-  const PLAYTEST_KEY = "asdlkfjalhoeirwioeu32u49289slkh";
   useEffect(() => {
     const host = window.location.hostname;
     const params = new URLSearchParams(window.location.search);
     setAllowed(host === "localhost" || host === "127.0.0.1" || params.get("key") === PLAYTEST_KEY);
   }, []);
 
-  // Restore session from localStorage (clamp index to valid range)
   useEffect(() => {
-    const session = readPlaytestSession();
+    const session = readPlaytestSession<DegreesPlaytestResult>("degrees");
     if (session.results.length > 0) {
       setResults(session.results);
       setCurrentIndex(Math.min(session.currentIndex, puzzles.length - 1));
     }
   }, []);
 
-  const persist = useCallback((newResults: PlaytestResult[], newIndex: number) => {
-    writePlaytestSession({
-      results: newResults,
-      currentIndex: newIndex,
-      startedAt: new Date().toISOString(),
-    });
+  const persist = useCallback((newResults: DegreesPlaytestResult[], newIndex: number) => {
+    writePlaytestSession({ results: newResults, currentIndex: newIndex, startedAt: new Date().toISOString() }, "degrees");
   }, []);
 
-  const handleComplete = useCallback((result: PlaytestResult) => {
+  const playedSet = useMemo(() => new Set(results.map(r => r.puzzleIndex)), [results]);
+
+  const handleComplete = useCallback((result: DegreesPlaytestResult) => {
     setResults(prev => {
       const existing = prev.findIndex(r => r.puzzleIndex === result.puzzleIndex);
-      const updated = existing >= 0
-        ? prev.map((r, i) => i === existing ? result : r)
-        : [...prev, result];
-
+      const updated = existing >= 0 ? prev.map((r, i) => i === existing ? result : r) : [...prev, result];
       if (autoAdvance && currentIndex < puzzles.length - 1) {
-        const nextIndex = currentIndex + 1;
-        setTimeout(() => setCurrentIndex(nextIndex), 1500);
-        persist(updated, nextIndex);
+        const next = currentIndex + 1;
+        setTimeout(() => setCurrentIndex(next), 1500);
+        persist(updated, next);
       } else {
         persist(updated, currentIndex);
       }
@@ -193,8 +177,8 @@ export default function PlaytestRolesPage() {
   };
 
   const handleReset = () => {
-    if (confirm("Clear all playtest data and start over?")) {
-      clearPlaytestSession();
+    if (confirm("Clear all DEGREES playtest data and start over?")) {
+      clearPlaytestSession("degrees");
       setResults([]);
       setCurrentIndex(0);
     }
@@ -222,11 +206,11 @@ export default function PlaytestRolesPage() {
   }
 
   if (view === "dashboard") {
-    return <PlaytestDashboard results={results} totalPuzzles={puzzles.length} onBack={() => setView("playing")} />;
+    return <DegreesPlaytestDashboard results={results} totalPuzzles={puzzles.length} onBack={() => setView("playing")} />;
   }
 
   const puzzle = puzzles[currentIndex];
-  const playedThis = results.some(r => r.puzzleIndex === currentIndex);
+  const playedThis = playedSet.has(currentIndex);
 
   return (
     <div className="relative h-dvh bg-zinc-950 flex flex-col overflow-hidden">
@@ -236,6 +220,7 @@ export default function PlaytestRolesPage() {
           <div className="flex items-center justify-between mb-1.5 sm:mb-0">
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-amber-400 tracking-wider uppercase">Playtest</span>
+              <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded uppercase">Degrees</span>
               <span className="text-xs text-zinc-500">
                 Puzzle {currentIndex + 1} of {puzzles.length}
               </span>
@@ -250,17 +235,7 @@ export default function PlaytestRolesPage() {
                 className="accent-amber-500 w-3 h-3" />
               <span className="text-[10px] text-zinc-500">Auto-advance</span>
             </label>
-            <button
-                onClick={() => setBuildVariant(prev => prev === "experimental" ? "standard" : "experimental")}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                  buildVariant === "experimental"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                    : "bg-zinc-800 text-zinc-500 border border-zinc-700/40 hover:text-zinc-300"
-                }`}
-              >
-                PTR {buildVariant === "experimental" ? "ON" : "OFF"}
-              </button>
-            <PuzzleSelector puzzles={puzzles} currentIndex={currentIndex} results={results} onSelect={jumpTo} />
+            <PuzzleSelector puzzles={puzzles} currentIndex={currentIndex} playedSet={playedSet} onSelect={jumpTo} />
             <button onClick={handleSkip}
               className="px-2.5 py-1 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
               Skip
@@ -286,10 +261,7 @@ export default function PlaytestRolesPage() {
         {puzzle && (
           <div className="relative z-20 flex items-center justify-between px-4 py-1.5 bg-zinc-900/40 border-b border-zinc-800/30">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-zinc-600">{puzzle.movie} ({puzzle.year})</span>
-              {puzzle.difficulty === "hard" && (
-                <span className="text-[10px] text-red-400/70 font-medium">HARD (10 rounds)</span>
-              )}
+              <span className="text-[10px] text-zinc-600">{puzzle.start.name} &rarr; {puzzle.end.name} &middot; {puzzle.chain.length} pieces</span>
               {playedThis && <span className="text-[10px] text-emerald-500/70">Already played</span>}
             </div>
             <div className="flex items-center gap-1">
@@ -311,15 +283,14 @@ export default function PlaytestRolesPage() {
         )}
       </PlaytestBarWrapper>
 
-      {/* Game */}
+      {/* Game area */}
       <div className="flex-1 overflow-hidden">
         {puzzle ? (
-          <RolesGame
-            key={`${currentIndex}-${buildVariant}`}
+          <DegreesGame
+            key={currentIndex}
             puzzle={puzzle}
             puzzleNumber={currentIndex + 1}
-            dateKey={`playtest-${currentIndex}`}
-            variant={buildVariant}
+            dateKey={`playtest-degrees-${currentIndex}`}
             playtestMode
             onPlaytestComplete={handleComplete}
           />

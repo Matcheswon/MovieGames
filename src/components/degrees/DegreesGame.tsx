@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Drama, Film, Share2, Star, Check } from "lucide-react";
 import { DegreesPuzzle, DegreesChainPiece, getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult } from "@/lib/saveResult";
+import { saveGameResult, getGameStreak } from "@/lib/saveResult";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { DegreesPlaytestResult } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
@@ -51,11 +51,28 @@ function writeDailyStreak(data: DailyStreakData): void {
   window.localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(data));
 }
 
-function isYesterday(dateStr: string, todayStr: string): boolean {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + 1);
-  const next = d.toISOString().slice(0, 10);
-  return next === todayStr;
+function prevDateKey(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+function computeStreakFromDates(dateKeys: string[]): number {
+  if (dateKeys.length === 0) return 0;
+  const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
+  const today = getNyDateKey(new Date());
+  const yesterday = prevDateKey(today);
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
 }
 
 // ─── Shuffle ───
@@ -201,32 +218,26 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
     }
 
     // Save to localStorage
-    const today = getNyDateKey(new Date());
-    const streak = readDailyStreak();
-    if (streak.history.some(h => h.dateKey === dateKey)) return;
+    const streakData = readDailyStreak();
+    if (streakData.history.some(h => h.dateKey === dateKey)) return;
 
-    let newStreak = 1;
-    if (streak.lastPlayedDate === today) {
-      newStreak = streak.dailyStreak;
-    } else if (streak.lastPlayedDate && isYesterday(streak.lastPlayedDate, today)) {
-      newStreak = streak.dailyStreak + 1;
-    }
+    const newHistory = [...streakData.history, {
+      dateKey,
+      puzzleNumber,
+      solved,
+      attempts: finalAttempts,
+      timeSecs: timer,
+    }];
+    const newStreak = computeStreakFromDates(newHistory.map(h => h.dateKey));
 
-    const updated: DailyStreakData = {
-      lastPlayedDate: today,
+    writeDailyStreak({
+      lastPlayedDate: getNyDateKey(new Date()),
       dailyStreak: newStreak,
-      bestDailyStreak: Math.max(streak.bestDailyStreak, newStreak),
-      history: [...streak.history, {
-        dateKey,
-        puzzleNumber,
-        solved,
-        attempts: finalAttempts,
-        timeSecs: timer,
-      }],
-    };
-    writeDailyStreak(updated);
+      bestDailyStreak: Math.max(streakData.bestDailyStreak, newStreak),
+      history: newHistory,
+    });
 
-    // Save to Supabase
+    // Save to Supabase, then sync streak
     saveGameResult({
       game: "degrees",
       dateKey,
@@ -234,6 +245,11 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
       mistakes: finalAttempts,
       hints: 0,
       timeSecs: timer,
+    }).then(() => getGameStreak("degrees")).then(streak => {
+      if (streak > 0) {
+        const current = readDailyStreak();
+        writeDailyStreak({ ...current, dailyStreak: streak, bestDailyStreak: Math.max(streak, current.bestDailyStreak) });
+      }
     });
 
     // Anonymous analytics (all users, no auth required)

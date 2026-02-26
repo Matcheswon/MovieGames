@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { games } from "@/lib/games";
 import { GameDefinition } from "@/lib/types";
@@ -5,6 +6,20 @@ import AuthButton from "@/components/AuthButton";
 import puzzlesData from "@/data/roles.json";
 import { getDailyRolesPuzzle, RolesPuzzle } from "@/lib/dailyUtils";
 import { createClient } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Daily Movie Puzzle Game and Trivia Challenges",
+  description:
+    "Play daily movie puzzle games inspired by the films you love. Try movie roles, critic thumbs, and movie connections challenges online.",
+  path: "/",
+  keywords: [
+    "daily movie trivia game",
+    "movie trivia challenges",
+    "play daily movie quiz online",
+    "movie puzzle games online",
+  ],
+});
 
 function GameCard({ game }: { game: GameDefinition }) {
   const isLive = game.status === "live";
@@ -88,7 +103,7 @@ export default async function Home() {
             <span className="text-amber-400">Movie</span><span className="text-zinc-300">Night</span>
           </h1>
           <p className="text-sm md:text-base text-zinc-500 max-w-md mx-auto">
-            Test your movie knowledge with fast-paced trivia games about the films you love.
+            Play daily movie puzzle games and fast-paced movie trivia challenges about the films you love.
           </p>
         </div>
 

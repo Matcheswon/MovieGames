@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
 import { getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult, getTodayResult } from "@/lib/saveResult";
+import { saveGameResult, getTodayResult, getGameStreak } from "@/lib/saveResult";
 import { Share2, X } from "lucide-react";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { ThumbsPlaytestResult } from "@/lib/playtest";
@@ -67,11 +67,28 @@ function writeDailyStreak(data: DailyStreakData): void {
   window.localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(data));
 }
 
-function isYesterday(dateStr: string, todayStr: string): boolean {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + 1);
-  const next = d.toISOString().slice(0, 10);
-  return next === todayStr;
+function prevDateKey(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+function computeStreakFromDates(dateKeys: string[]): number {
+  if (dateKeys.length === 0) return 0;
+  const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
+  const today = getNyDateKey(new Date());
+  const yesterday = prevDateKey(today);
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
 }
 
 function ThumbBtn({
@@ -255,16 +272,18 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   useEffect(() => {
     if (playtestMode || mode !== "daily") return;
     const data = readDailyStreak();
-    if (data.lastPlayedDate && dateKey) {
-      if (data.lastPlayedDate === dateKey || isYesterday(data.lastPlayedDate, dateKey)) {
-        setDailyStreak(data.dailyStreak);
-      }
-    }
+    // Compute streak from history dates instead of trusting the counter
+    const localStreak = computeStreakFromDates(data.history.map(h => h.dateKey));
+    if (localStreak > 0) setDailyStreak(localStreak);
     setBestDailyStreak(data.bestDailyStreak);
     if (dateKey) {
       const todayEntry = data.history.find(h => h.dateKey === dateKey);
       if (todayEntry) {
         setAlreadyPlayed(todayEntry);
+        // Fetch authoritative streak from Supabase to fix localStorage drift
+        getGameStreak("thumbs").then(streak => {
+          if (streak > 0) setDailyStreak(streak);
+        });
       } else {
         // Cross-device: check Supabase for today's result
         getTodayResult("thumbs", dateKey).then(result => {
@@ -279,19 +298,22 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
           // Backfill to localStorage
           const streakData = readDailyStreak();
           if (!streakData.history.some(h => h.dateKey === dateKey)) {
-            const newStreak = streakData.lastPlayedDate && isYesterday(streakData.lastPlayedDate, dateKey)
-              ? streakData.dailyStreak + 1
-              : 1;
-            const newBest = Math.max(newStreak, streakData.bestDailyStreak);
             writeDailyStreak({
               lastPlayedDate: dateKey,
-              dailyStreak: newStreak,
-              bestDailyStreak: newBest,
+              dailyStreak: streakData.dailyStreak,
+              bestDailyStreak: streakData.bestDailyStreak,
               history: [...streakData.history, entry],
             });
-            setDailyStreak(newStreak);
-            setBestDailyStreak(newBest);
           }
+          // Use authoritative streak from Supabase
+          getGameStreak("thumbs").then(streak => {
+            if (streak > 0) {
+              setDailyStreak(streak);
+              const updated = readDailyStreak();
+              writeDailyStreak({ ...updated, lastPlayedDate: dateKey, dailyStreak: streak, bestDailyStreak: Math.max(streak, updated.bestDailyStreak) });
+              setBestDailyStreak(Math.max(streak, updated.bestDailyStreak));
+            }
+          });
         });
       }
     }
@@ -335,31 +357,24 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
 
     if (mode !== "daily" || !dateKey) return;
     const data = readDailyStreak();
-    if (data.lastPlayedDate === dateKey) {
-      // Already recorded today — just sync state
-      setDailyStreak(data.dailyStreak);
-      setBestDailyStreak(data.bestDailyStreak);
-      return;
-    }
-    const newStreak = data.lastPlayedDate && isYesterday(data.lastPlayedDate, dateKey)
-      ? data.dailyStreak + 1
-      : 1;
-    const newBest = Math.max(newStreak, data.bestDailyStreak);
     const total = scores.reduce((s, r) => s + r.siskelOk + r.ebertOk, 0);
     const sqr = scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("");
     const perf = scores.filter(r => r.siskelOk && r.ebertOk).length;
     const entry: ThumbsHistoryEntry = { dateKey, score: total, outOf: scores.length * 2, timeSecs: timer, squares: sqr, perfectRounds: perf };
     const alreadyLogged = data.history.some(h => h.dateKey === dateKey);
+    const newHistory = alreadyLogged ? data.history : [...data.history, entry];
+    const newStreak = computeStreakFromDates(newHistory.map(h => h.dateKey));
+    const newBest = Math.max(newStreak, data.bestDailyStreak);
     writeDailyStreak({
       lastPlayedDate: dateKey,
       dailyStreak: newStreak,
       bestDailyStreak: newBest,
-      history: alreadyLogged ? data.history : [...data.history, entry],
+      history: newHistory,
     });
     setDailyStreak(newStreak);
     setBestDailyStreak(newBest);
 
-    // Save to Supabase (if logged in)
+    // Save to Supabase (if logged in), then sync streak
     if (dateKey) {
       saveGameResult({
         game: "thumbs",
@@ -367,6 +382,13 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
         score: total,
         outOf: scores.length * 2,
         timeSecs: timer,
+      }).then(() => getGameStreak("thumbs")).then(streak => {
+        if (streak > 0) {
+          setDailyStreak(streak);
+          const updated = readDailyStreak();
+          writeDailyStreak({ ...updated, dailyStreak: streak, bestDailyStreak: Math.max(streak, updated.bestDailyStreak) });
+          setBestDailyStreak(Math.max(streak, updated.bestDailyStreak));
+        }
       });
     }
 

@@ -1,14 +1,19 @@
 "use client";
 
+// PTR (Public Test Realm) features are gated by `isExperimental` (variant === "experimental").
+// See docs/PTR-FEATURES.md for the full manifest of what differs between standard and PTR builds.
+// When adding/removing PTR features, UPDATE THAT FILE.
+
 import React, { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RolesPuzzle, getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult, getTodayResult } from "@/lib/saveResult";
+import { saveGameResult, getTodayResult, getGameStreak } from "@/lib/saveResult";
 import ShareButton from "@/components/ShareButton";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
+import { useExperimentalFeatures } from "./useExperimentalFeatures";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
   ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
@@ -58,12 +63,31 @@ function writeDailyStreak(data: DailyStreakData): void {
   window.localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(data));
 }
 
-function isYesterday(dateStr: string, todayStr: string): boolean {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + 1);
-  const next = d.toISOString().slice(0, 10);
-  return next === todayStr;
+function prevDateKey(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
 }
+
+/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+function computeStreakFromDates(dateKeys: string[]): number {
+  if (dateKeys.length === 0) return 0;
+  const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
+  const today = getNyDateKey(new Date());
+  const yesterday = prevDateKey(today);
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+
 
 // Role Call effects — the wheel guesses FOR you now
 const CALL_SHEET: { label: string; desc: string; icon: ReactNode; type: string; good: boolean }[] = [
@@ -120,10 +144,11 @@ function getBlankPositions(actor: string, character: string, revealed: Set<strin
   return p;
 }
 
-export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode, onPlaytestComplete, maxRounds: maxRoundsProp }: {
+export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode, onPlaytestComplete, maxRounds: maxRoundsProp, variant }: {
   puzzle: RolesPuzzle; puzzleNumber: number; dateKey: string;
   playtestMode?: boolean; onPlaytestComplete?: (result: PlaytestResult) => void;
   maxRounds?: number;
+  variant?: "standard" | "experimental";
 }) {
   const uniqueLetterCount = new Set(
     [...puzzle.actor, ...puzzle.character].filter(ch => isGuessableChar(ch)).map(ch => normalizeLetter(ch))
@@ -182,6 +207,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [gameWinPopup, setGameWinPopup] = useState(false);
   const [buyingVowel, setBuyingVowel] = useState(false);
   const [vowelNudge, setVowelNudge] = useState(false);
+  const [effectBannerVisible, setEffectBannerVisible] = useState(false);
 
   const rand = useRef(rng(puzzleNumber));
   const rollSeqRef = useRef<typeof CALL_SHEET[number][]>([]);
@@ -195,6 +221,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   const windUpRef = useRef(false);
   const fanfareKeyRef = useRef(0);
+  const effectBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isExperimental = variant === "experimental";
+  const experimental = useExperimentalFeatures(
+    isExperimental, puzzle, revealed, wrongGuesses, normalizeLetter, isGuessableChar,
+  );
 
   const kbLocked = strikes >= MAX_STRIKES || roundKbLock;
   const allLetters = new Set(
@@ -303,7 +335,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
     setFanfareLetter(null); setFanfareCount(0);
     setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
+    setEffectBannerVisible(false);
+    if (effectBannerTimerRef.current) { clearTimeout(effectBannerTimerRef.current); effectBannerTimerRef.current = null; }
     dailyRecorded.current = false;
+    experimental.reset();
     setScreen("playing");
   }, [puzzleNumber]);
 
@@ -326,6 +361,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         setGuessTimer(next);
         if (next <= 0) {
           if (guessRef.current) { clearInterval(guessRef.current); guessRef.current = null; }
+          experimental.onTimeout();
           setGuessResolving(true);
           setPhase("round-ending");
           setTimeout(() => advance(), 0);
@@ -352,14 +388,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (playtestMode) return;
     const today = dateKey;
     const data = readDailyStreak();
-    if (data.lastPlayedDate) {
-      if (data.lastPlayedDate === today || isYesterday(data.lastPlayedDate, today)) {
-        setDailyStreak(data.dailyStreak);
-      }
-    }
+    // Compute streak from history dates instead of trusting the counter
+    const localStreak = computeStreakFromDates(data.history.map(h => h.dateKey));
+    if (localStreak > 0) setDailyStreak(localStreak);
     const todayEntry = data.history.find(h => h.dateKey === today);
     if (todayEntry) {
       setAlreadyPlayed(todayEntry);
+      // Fetch authoritative streak from Supabase to fix localStorage drift
+      getGameStreak("roles").then(streak => {
+        if (streak > 0) setDailyStreak(streak);
+      });
     } else {
       // Cross-device: check Supabase for today's result
       getTodayResult("roles", today).then(result => {
@@ -376,17 +414,22 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         // Backfill to localStorage
         const streakData = readDailyStreak();
         if (!streakData.history.some(h => h.dateKey === today)) {
-          const newStreak = streakData.lastPlayedDate && isYesterday(streakData.lastPlayedDate, today)
-            ? streakData.dailyStreak + 1
-            : 1;
           writeDailyStreak({
             lastPlayedDate: today,
-            dailyStreak: newStreak,
-            bestDailyStreak: Math.max(newStreak, streakData.bestDailyStreak),
+            dailyStreak: streakData.dailyStreak,
+            bestDailyStreak: streakData.bestDailyStreak,
             history: [...streakData.history, entry],
           });
-          setDailyStreak(newStreak);
         }
+        // Use authoritative streak from Supabase
+        getGameStreak("roles").then(streak => {
+          if (streak > 0) {
+            setDailyStreak(streak);
+            // Sync localStorage with correct value
+            const updated = readDailyStreak();
+            writeDailyStreak({ ...updated, lastPlayedDate: today, dailyStreak: streak, bestDailyStreak: Math.max(streak, updated.bestDailyStreak) });
+          }
+        });
       });
     }
   }, [dateKey, playtestMode, puzzleNumber]);
@@ -434,6 +477,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (screen !== "solved" && screen !== "failed") return;
     if (dailyRecorded.current) return;
     dailyRecorded.current = true;
+    experimental.onGameEnd(screen === "solved");
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
 
     // In playtest mode, fire callback instead of saving to localStorage/Supabase
@@ -458,14 +502,6 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
     const today = dateKey;
     const data = readDailyStreak();
-    if (data.lastPlayedDate === today) {
-      setDailyStreak(data.dailyStreak);
-      return;
-    }
-    const newStreak = data.lastPlayedDate && isYesterday(data.lastPlayedDate, today)
-      ? data.dailyStreak + 1
-      : 1;
-    const newBest = Math.max(newStreak, data.bestDailyStreak);
     const entry: RolesHistoryEntry = {
       dateKey: today,
       puzzleNumber,
@@ -475,15 +511,17 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       roundsUsed,
     };
     const alreadyLogged = data.history.some(h => h.dateKey === today);
+    const newHistory = alreadyLogged ? data.history : [...data.history, entry];
+    const localStreak = computeStreakFromDates(newHistory.map(h => h.dateKey));
     writeDailyStreak({
       lastPlayedDate: today,
-      dailyStreak: newStreak,
-      bestDailyStreak: newBest,
-      history: alreadyLogged ? data.history : [...data.history, entry],
+      dailyStreak: localStreak,
+      bestDailyStreak: Math.max(localStreak, data.bestDailyStreak),
+      history: newHistory,
     });
-    setDailyStreak(newStreak);
+    setDailyStreak(localStreak);
 
-    // Save to Supabase (if logged in)
+    // Save to Supabase (if logged in), then sync streak
     const won = screen === "solved";
     saveGameResult({
       game: "roles",
@@ -492,6 +530,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       strikes,
       roundsUsed,
       timeSecs: totalTime,
+    }).then(() => getGameStreak("roles")).then(streak => {
+      if (streak > 0) {
+        setDailyStreak(streak);
+        const updated = readDailyStreak();
+        writeDailyStreak({ ...updated, dailyStreak: streak, bestDailyStreak: Math.max(streak, updated.bestDailyStreak) });
+      }
     });
 
     // Anonymous analytics (all users, no auth required)
@@ -559,17 +603,19 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       if (a.word !== b.word) return a.word === "actor" ? -1 : 1;
       return a.index - b.index;
     });
+    const totalReveal = revealOrder.length;
     let revIdx = 0;
     const revealAll = () => {
       if (revIdx >= revealOrder.length) {
         setRevealed(p => { const n = new Set(p); n.add(letter); return n; });
-        setTimeout(() => { setTilesPopping(new Set()); setTilesLit(new Set()); onDone(); }, 400);
+        setTimeout(() => { setTilesPopping(new Set()); setTilesLit(new Set()); experimental.clearTileHeat(); onDone(); }, 400);
         return;
       }
       const pos = revealOrder[revIdx];
       const key = `${pos.word}-${pos.index}`;
       setTilesLit(prev => { const n = new Set(prev); n.delete(key); return n; });
       setTilesPopping(prev => { const n = new Set(prev); n.add(key); return n; });
+      if (totalReveal > 1) experimental.setTileHeat(key, revIdx / (totalReveal - 1));
       revIdx++;
       setTimeout(revealAll, 250);
     };
@@ -583,6 +629,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setGuessResolving(false);
     setRoundKbLock(false); setGuessTime(BASE_TIME); setLostTurn(false); setFreeLetterActive(false); setBuyingVowel(false);
     setLastGuess(null); setTileBlinking(null); setTilesPopping(new Set()); setTilesLit(new Set());
+    experimental.clearTileHeat();
     const next = roundRef.current + 1;
     if (next >= MAX_ROUNDS) {
       if (totalRef.current) clearInterval(totalRef.current);
@@ -592,6 +639,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setGuessesRemaining(0);
       guessesRemainingRef.current = 0;
       setPhase("guessing");
+      experimental.onSolveModeEntered();
       setSolveMode(true);
       return;
     }
@@ -601,7 +649,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setPhase("round-ending");
       setGuessesRemaining(1);
       guessesRemainingRef.current = 1;
-      setTimeout(() => { setPreRollChoice("spin"); setPhase("pre-roll"); }, 400);
+      setTimeout(() => { setPreRollChoice("spin"); setPreRollReady(false); setPhase("pre-roll"); }, 400);
     }
   };
 
@@ -609,6 +657,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   const handlePreRollSolve = () => {
     if (solveAttempts <= 0) return;
+    experimental.onSolveModeEntered();
     setPhase("guessing");
     setSolveMode(true);
     setSolveCursor(0);
@@ -777,7 +826,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         setTimeout(() => {
           setTilesPopping(new Set()); setTilesLit(new Set());
           setRevealingIdx(-1);
-          setTimeout(() => { setPreRollChoice("spin"); setPhase("pre-roll"); }, 600);
+          setTimeout(() => { setPreRollChoice("spin"); setPreRollReady(false); setPhase("pre-roll"); }, 600);
         }, 400);
         return;
       }
@@ -851,6 +900,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       if (a.word !== b.word) return a.word === "actor" ? -1 : 1;
       return a.index - b.index;
     });
+    const totalDoubleReveal = revealOrder.length;
     let revIdx = 0;
 
     const revealAll = () => {
@@ -861,7 +911,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           return n;
         });
         setTimeout(() => {
-          setTilesPopping(new Set()); setTilesLit(new Set());
+          setTilesPopping(new Set()); setTilesLit(new Set()); experimental.clearTileHeat();
           setRevealingIdx(-1);
           // Fanfare with total count of hits
           const hitCount = allPositions.length;
@@ -881,6 +931,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       const key = `${pos.word}-${pos.index}`;
       setTilesLit(prev => { const n = new Set(prev); n.delete(key); return n; });
       setTilesPopping(prev => { const n = new Set(prev); n.add(key); return n; });
+      if (totalDoubleReveal > 1) experimental.setTileHeat(key, revIdx / (totalDoubleReveal - 1));
       revIdx++;
       setTimeout(revealAll, 250);
     };
@@ -943,6 +994,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             // Landed on the result — hold it briefly, then reveal
             setTimeout(() => {
               setRollAnimIdx(-1); setRollResult(eff); setPhase("reveal-flash");
+              if (isExperimental) {
+                setEffectBannerVisible(true);
+                if (effectBannerTimerRef.current) clearTimeout(effectBannerTimerRef.current);
+                effectBannerTimerRef.current = setTimeout(() => setEffectBannerVisible(false), 3000);
+              }
               setTimeout(() => applyRollEffect(eff), 900);
             }, 350);
             return;
@@ -1077,6 +1133,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
     if (isCorrect) {
       const count = (puzzle.actor + puzzle.character).split("").filter((c) => normalizeLetter(c) === u).length;
+      experimental.onCorrectGuess(u, count, guessTimerRef.current, guessTime);
       setLastGuess({ letter: u, correct: true });
       setTimeout(() => {
         staggerRevealLetter(u, () => {
@@ -1097,6 +1154,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     }
 
     // Wrong guess — hold amber suspense beat, then reveal miss
+    experimental.onWrongGuess();
     setTimeout(() => {
       setStrikes(newStrikes); setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false, freePass: isFreePass });
@@ -1146,6 +1204,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
     if (isCorrect) {
       const count = (puzzle.actor + puzzle.character).split("").filter((c) => normalizeLetter(c) === u).length;
+      experimental.onCorrectGuess(u, count, guessTimerRef.current, guessTime);
       setLastGuess({ letter: u, correct: true });
       setTimeout(() => {
         staggerRevealLetter(u, () => {
@@ -1161,6 +1220,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       }, 600);
     } else {
       // Wrong vowel — no strike, just consumes the round
+      experimental.onWrongGuess();
       setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false, fromBuy: true });
       setPressedKey(null);
@@ -1227,9 +1287,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   };
 
   // ─── TILES ───
-  // Pick the largest tile tier where both names fit in ≤2 rows on a ~300px mobile screen.
-  // Cap the container to the same effective width on desktop so wrapping stays consistent.
-  const { tileSize, tileMaxWidth } = (() => {
+  // Pick the largest tile tier where both names fit in ≤2 rows on a ~340px mobile screen.
+  const tileSize = (() => {
     const tiers = [
       { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", wordGap: "gap-x-4", tilePx: 44 },
       { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", wordGap: "gap-x-3", tilePx: 34 },
@@ -1238,7 +1297,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", wordGap: "gap-x-1.5", tilePx: 22 },
       { w: "w-4", h: "h-6", text: "text-[9px]", gap: "gap-px", wordGap: "gap-x-1", tilePx: 17 },
     ];
-    const MOBILE = 300;
+    const MOBILE = 340;
     function rowCount(phrase: string, perRow: number): number {
       const words = phrase.split(" ");
       if (words.some(w => w.length > perRow)) return 99;
@@ -1253,12 +1312,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     for (const tier of tiers) {
       const perRow = Math.floor(MOBILE / tier.tilePx);
       if (rowCount(puzzle.actor, perRow) <= 2 && rowCount(puzzle.character, perRow) <= 2) {
-        return { tileSize: tier, tileMaxWidth: perRow * tier.tilePx };
+        return tier;
       }
     }
-    const last = tiers[tiers.length - 1];
-    const perRow = Math.floor(MOBILE / last.tilePx);
-    return { tileSize: last, tileMaxWidth: perRow * last.tilePx };
+    return tiers[tiers.length - 1];
   })();
 
   const renderTiles = (word: string, wordKey: string) => {
@@ -1274,7 +1331,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (current.length) segments.push(current);
 
     return (
-      <div className={`flex flex-wrap gap-y-1.5 ${tileSize.wordGap} items-center`} style={{ maxWidth: tileMaxWidth }}>
+      <div className={`flex flex-wrap gap-y-1.5 ${tileSize.wordGap} items-center`}>
         {segments.map((seg, si) => (
           <React.Fragment key={si}>
             <div className={`flex ${tileSize.gap}`}>
@@ -1293,10 +1350,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 const isSolveTyped = solveMode && solveVal && !show;
                 const clickable = solveMode && !show;
 
+                const heatLevel = isExperimental ? (experimental.tileHeatMap.get(posKey) ?? 0) : 0;
+
                 let cls;
                 if (isBlink) cls = "animate-tileBlink border-2 border-amber-400/60";
                 else if (isLit && !isPop) cls = "bg-amber-500/15 border border-amber-400/40";
-                else if (isPop && !revealed.has(normalizedCh)) cls = "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 animate-tilePop";
+                else if (isPop && !revealed.has(normalizedCh)) cls = heatLevel > 0
+                  ? "text-amber-100 border-2 border-amber-400/60 animate-tilePop"
+                  : "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 animate-tilePop";
                 else if (isNew) cls = "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 scale-110";
                 else if (show) cls = screen === "solved" ? "bg-emerald-500/15 text-emerald-200 border border-emerald-500/30"
                   : screen === "failed" ? "bg-red-500/10 text-red-300/80 border border-red-500/20"
@@ -1305,10 +1366,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 else if (isSolveTyped) cls = "bg-zinc-800/50 text-zinc-200 border border-zinc-500/40";
                 else cls = "bg-zinc-800/50 border border-zinc-600/30";
 
+                const heatStyle: React.CSSProperties = isPop && heatLevel > 0 ? {
+                  background: `rgba(251,191,36,${0.2 + heatLevel * 0.35})`,
+                  boxShadow: `0 0 ${8 + heatLevel * 18}px rgba(251,191,36,${0.15 + heatLevel * 0.45})`,
+                  transform: `scale(${1.18 + heatLevel * 0.17})`,
+                } : {};
+
                 return (
                   <div key={i} onClick={() => clickable && handleTileClick(wordKey, i)}
                     className={`${tileSize.w} ${tileSize.h} rounded flex items-center justify-center ${tileSize.text} font-bold transition-all duration-200 ${cls} ${clickable ? "cursor-pointer" : ""}`}
-                    style={{ fontFamily: "'DM Mono', monospace" }}>
+                    style={{ fontFamily: "'DM Mono', monospace", ...heatStyle }}>
                     {show ? ch : isSolveTyped ? solveVal : ""}
                   </div>
                 );
@@ -1458,7 +1525,17 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   if (isOver) {
     const won = screen === "solved";
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
-    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${!playtestMode ? "" : ""}`;
+    const badgeEmojis = isExperimental
+      ? [
+          experimental.badges.fullReveal ? "\u{1F31F} Full Reveal" : "",
+          experimental.badges.quickDraw ? "\u26A1 Quick Draw" : "",
+        ].filter(Boolean).join(" ")
+      : "";
+    const scoreText = isExperimental ? `\n\u{1F3AF} ${experimental.score}/${experimental.maxPossibleScore} pts` : "";
+    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${scoreText}${badgeEmojis ? `\n${badgeEmojis}` : ""}`;
+
+    const resultStatCols = isExperimental ? (playtestMode ? "grid-cols-4" : "grid-cols-5") : (playtestMode ? "grid-cols-3" : "grid-cols-4");
+
     return (
       <Shell compact={playtestMode}>
         <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
@@ -1487,7 +1564,25 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 )}
               </div>
             </div>
-            <div className={`grid ${playtestMode ? "grid-cols-3" : "grid-cols-4"} gap-2 mb-5 text-center`}>
+
+            {/* Badges */}
+            {isExperimental && (experimental.badges.fullReveal || experimental.badges.quickDraw) && (
+              <div className="flex items-center gap-2 mb-4">
+                {experimental.badges.fullReveal && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-medium text-emerald-300">
+                    <Sparkles className="w-3.5 h-3.5" /> Full Reveal
+                  </span>
+                )}
+                {experimental.badges.quickDraw && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-medium text-amber-300">
+                    <Flame className="w-3.5 h-3.5" /> Quick Draw
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Stats grid */}
+            <div className={`grid ${resultStatCols} gap-2 mb-5 text-center`}>
               {[
                 { v: fmt(totalTime), l: "Time" },
                 { v: `${roundsUsed}/${MAX_ROUNDS}`, l: "Rounds" },
@@ -1498,6 +1593,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">{s.l}</p>
                 </div>
               ))}
+              {isExperimental && (
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5 text-center">
+                  <p className="text-lg font-bold text-amber-400">{experimental.score}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">Score</p>
+                </div>
+              )}
               {!playtestMode && (
                 <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5 text-center">
                   <p className="text-lg font-bold text-amber-400 inline-flex items-center justify-center gap-1 w-full">{dailyStreak}<Flame className="w-4 h-4" /></p>
@@ -1505,6 +1606,42 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 </div>
               )}
             </div>
+
+            {/* Letter Cloud */}
+            {isExperimental && (
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 mb-5">
+                <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500 mb-2.5">Letter Cloud</p>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(letter => {
+                    const entry = experimental.letterCloud.get(letter);
+                    const count = entry?.count ?? 0;
+                    const status = entry?.status ?? "unused";
+                    // Size: scale from 0.7 to 1.4 based on occurrence count (0→5+)
+                    const scale = count === 0 ? 0.65 : Math.min(1.4, 0.75 + count * 0.13);
+                    const cls = status === "correct"
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                      : status === "wrong"
+                      ? "bg-red-500/15 text-red-400/60 border-red-500/20"
+                      : count > 0
+                      ? "bg-zinc-800/50 text-zinc-500 border-zinc-700/30"
+                      : "bg-zinc-800/20 text-zinc-700 border-zinc-800/20";
+                    return (
+                      <span key={letter}
+                        className={`rounded flex items-center justify-center text-xs font-bold border transition-all ${cls}`}
+                        style={{
+                          fontFamily: "'DM Mono', monospace",
+                          width: `${scale * 1.75}rem`,
+                          height: `${scale * 1.75}rem`,
+                          fontSize: `${scale * 0.75}rem`,
+                        }}>
+                        {letter}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {playtestMode ? (
               <div className="text-center text-xs text-zinc-600">Game recorded. Advancing automatically&hellip;</div>
             ) : (
@@ -1552,6 +1689,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <span className="text-xs text-zinc-500">#{puzzleNumber}</span>
             </div>
             <div className="flex items-center gap-3">
+              {isExperimental && experimental.hotStreak > 0 && (
+                <div className={`flex items-center gap-1 transition-all ${
+                  experimental.hotStreak >= 7 ? "text-orange-300 animate-pulse" :
+                  experimental.hotStreak >= 5 ? "text-amber-300" :
+                  experimental.hotStreak >= 3 ? "text-amber-400" : "text-amber-500/70"
+                }`}>
+                  <Flame className="w-3.5 h-3.5" />
+                  <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1">
                 {Array.from({ length: MAX_STRIKES }).map((_, i) => (
                   <span key={i} className={`text-sm transition-all ${i < strikes ? "text-red-400" : "text-zinc-800"}`}>{"\u2715"}</span>
@@ -1586,12 +1733,20 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               );
             })}
           </div>
-          {(() => {
-            const turnsLeft = MAX_ROUNDS - round - 1;
-            if (turnsLeft <= 0) return <p className="text-sm text-red-400 font-bold mt-1.5">Last round!</p>;
-            if (turnsLeft <= 2) return <p className="text-sm text-amber-500/80 font-semibold mt-1.5">{turnsLeft + 1} rounds left</p>;
-            return <p className="text-sm text-zinc-500 mt-1.5">Round {round + 1} of {MAX_ROUNDS} {isHard ? <span className="text-red-400/70 font-medium">· Hard</span> : <span className="text-zinc-600">· Normal</span>}</p>;
-          })()}
+          <div className="flex items-center justify-between mt-1.5">
+            {(() => {
+              const turnsLeft = MAX_ROUNDS - round - 1;
+              if (turnsLeft <= 0) return <p className="text-sm text-red-400 font-bold">Last round!</p>;
+              if (turnsLeft <= 2) return <p className="text-sm text-amber-500/80 font-semibold">{turnsLeft + 1} rounds left</p>;
+              return <p className="text-sm text-zinc-500">Round {round + 1} of {MAX_ROUNDS} {isHard ? <span className="text-red-400/70 font-medium">· Hard</span> : <span className="text-zinc-600">· Normal</span>}</p>;
+            })()}
+            {isExperimental && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold text-amber-400 tabular-nums">{experimental.score}</span>
+                <span className="text-[10px] text-zinc-600">/ {experimental.maxPossibleScore} pts</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Board */}
@@ -1671,13 +1826,15 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     </div>
                   )}
 
+                  {/* PTR: Effect announcement — floating overlay, no layout impact */}
+
                   {isGuessing && (
                     <div className="animate-fadeIn w-full pointer-events-auto">
                       <div className="mx-auto flex w-full max-w-[320px] flex-col items-center gap-1.5 text-center">
                         {!kbLocked ? (
-                          <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 whitespace-nowrap">
-                            Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
-                          </p>
+                            <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 whitespace-nowrap">
+                              Guess {guessesRemaining > 1 ? `${guessesRemaining} letters` : "a letter"}
+                            </p>
                         ) : (
                           <div className="flex flex-col items-center gap-2">
                             <p className="text-xs text-zinc-400 whitespace-nowrap">Keyboard locked</p>
@@ -1746,6 +1903,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPickDouble && (
                     <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
+                      {isExperimental && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="w-4 h-4 text-emerald-400" />
+                          <p className="text-sm font-bold text-emerald-300 uppercase tracking-widest" style={{ fontFamily: "'DM Mono', monospace" }}>Double Guess</p>
+                        </div>
+                      )}
                       <p className="text-base font-bold uppercase tracking-[0.2em] text-amber-400 mb-1">Pick {2 - pickedLetters.length} Letter{2 - pickedLetters.length !== 1 ? "s" : ""}</p>
                       <p className="text-xs text-zinc-500">No strikes for misses</p>
                       {pickedLetters.length > 0 && (
@@ -1787,6 +1950,29 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               );
             })()}
           </div>
+
+          {/* PTR: Floating effect overlay — no layout impact */}
+          {isExperimental && rollResult && (
+            <div className="absolute bottom-1 inset-x-0 z-20 flex justify-center pointer-events-none px-4">
+              {effectBannerVisible ? (
+                <div key={`eff-${round}`} className={`animate-fadeIn flex items-center gap-2 py-1.5 px-3 rounded-lg text-xs border backdrop-blur-sm ${
+                  rollResult.good
+                    ? "bg-emerald-500/10 border-emerald-500/30"
+                    : "bg-red-500/10 border-red-500/30"
+                }`}>
+                  <span className={rollResult.good ? "text-emerald-300" : "text-red-300"}>{rollResult.icon}</span>
+                  <span className={`font-bold uppercase tracking-widest ${rollResult.good ? "text-emerald-300" : "text-red-300"}`} style={{ fontFamily: "'DM Mono', monospace" }}>{rollResult.label}</span>
+                  <span className={`text-[10px] ${rollResult.good ? "text-emerald-400/60" : "text-red-400/60"}`}>{rollResult.desc}</span>
+                </div>
+              ) : (rollResult.type === "free_letter" || rollResult.type === "bonus_time" || rollResult.type === "half_time") ? (
+                <p className={`text-[10px] font-medium ${rollResult.good ? "text-emerald-400/60" : "text-red-400/60"}`}>
+                  {rollResult.type === "free_letter" && "Free Letter — miss without a strike"}
+                  {rollResult.type === "bonus_time" && "+4s — extra time"}
+                  {rollResult.type === "half_time" && "Half Time — 4 seconds"}
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <div className={`relative z-30 shrink-0 bg-gradient-to-t from-zinc-950 via-zinc-950/96 to-transparent pt-2 transition-transform duration-250 ${keyboardDocked ? "translate-y-0" : "translate-y-8"}`}>
@@ -1796,6 +1982,17 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <div key={fanfareKeyRef.current} className="absolute bottom-0 inset-x-0 flex justify-center pointer-events-none">
                 <p className="animate-floatUp text-lg font-bold text-emerald-400 drop-shadow-lg">
                   There {fanfareCount === 1 ? "is" : "are"} {fanfareCount} {fanfareLetter}{fanfareCount > 1 ? "\u2019s" : ""}!
+                </p>
+              </div>
+            )}
+            {isExperimental && experimental.streakMilestone && (
+              <div key={`streak-${experimental.streakMilestone}`} className="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none">
+                <p className={`animate-floatUp text-base font-extrabold drop-shadow-lg ${
+                  experimental.streakMilestone >= 7 ? "text-orange-300" :
+                  experimental.streakMilestone >= 5 ? "text-amber-300" : "text-amber-400"
+                }`}>
+                  {experimental.streakMilestone >= 7 ? "ON FIRE!" :
+                   experimental.streakMilestone >= 5 ? "Hot Streak!" : "Streak \u00D73!"}
                 </p>
               </div>
             )}

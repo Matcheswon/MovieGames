@@ -1,8 +1,23 @@
+import type { Metadata } from "next";
 import { ThumbWarsGame } from "@/components/thumbs/ThumbWarsGame";
 import { getEligibleRatings } from "@/lib/ratingUtils";
 import { getDailyMovies } from "@/lib/dailyUtils";
 import { getMovieFromTmdb, searchMoviePoster } from "@/lib/tmdb";
 import { ThumbWarsMovie } from "@/lib/types";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Daily Movie Critic Quiz - Siskel and Ebert Thumbs",
+  description:
+    "Play the daily movie critic quiz and guess Siskel and Ebert thumbs up or thumbs down for 10 movies as fast as you can.",
+  path: "/play/thumbs/daily",
+  keywords: [
+    "movie critic quiz",
+    "siskel and ebert quiz",
+    "thumbs up thumbs down movie quiz",
+    "daily movie trivia game",
+  ],
+});
 
 export const dynamic = "force-dynamic";
 

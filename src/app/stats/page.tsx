@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserStats } from "@/lib/supabase/stats";
 import MigrateLocalStats from "@/components/MigrateLocalStats";
+import { buildNoIndexMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildNoIndexMetadata(
+  "Your Stats",
+  "Private player stats for MovieNight."
+);
 
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60);

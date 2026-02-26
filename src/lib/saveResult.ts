@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { getNyDateKey } from "@/lib/dailyUtils";
 
 type ThumbsResult = {
   game: "thumbs";
@@ -64,4 +65,42 @@ export async function getTodayResult(game: string, dateKey: string) {
     .single();
 
   return data;
+}
+
+function prevDateKey(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Fetch current streak for a game from Supabase (client-side). Returns 0 if not logged in. */
+export async function getGameStreak(game: string): Promise<number> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+
+  const { data } = await supabase
+    .from("game_results")
+    .select("date_key")
+    .eq("user_id", user.id)
+    .eq("game", game)
+    .order("date_key", { ascending: false });
+
+  if (!data || data.length === 0) return 0;
+
+  const sorted = [...new Set(data.map(r => r.date_key))].sort((a, b) => b.localeCompare(a));
+  const today = getNyDateKey(new Date());
+  const yesterday = prevDateKey(today);
+
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
 }

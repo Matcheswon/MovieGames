@@ -94,8 +94,10 @@ const GAME_CONFIGS = {
         const isHard =
           // Very short puzzles — few letters means less info per guess, mechanically hard
           totalLetters < 14 ||
+          // Most unique letters are uncommon — common guesses miss, hard regardless of fame
+          (uncommon >= 7 && uncommon / uniqueLetters > 0.5) ||
           // Popularity override: pop >= 8 means everyone knows the names,
-          // so letter mechanics alone shouldn't make it "hard"
+          // so moderate letter mechanics alone shouldn't make it "hard"
           pop < 8 && (
           // High unique + enough uncommon letters to be genuinely hard
           (uniqueLetters >= 15 && uncommon >= 5) ||
@@ -103,8 +105,6 @@ const GAME_CONFIGS = {
           totalLetters >= 29 ||
           // Short but brutal (high unique-to-total ratio)
           (totalLetters < 20 && uniqueLetters > 12)) ||
-          // Moderate unique but heavily uncommon (most guesses miss) — exempt if very popular
-          (uniqueLetters >= 13 && uncommon >= 7 && pop < 8) ||
           // Borderline letter difficulty + low popularity → tips to hard
           (uniqueLetters >= 13 && pop <= 5) ||
           (uncommon >= 5 && pop <= 4) ||
@@ -252,18 +252,24 @@ async function scorePopularity(entries, apiKey) {
 
     const prompt = `Rate each actor/movie combination on a POPULARITY score from 1-10.
 
+The TARGET AUDIENCE is people in their 20s-40s today (born ~1985-2005). Score based on how well-known the actor and movie are to THIS demographic — not to film historians or older generations. A classic that "everyone should know" does NOT mean this audience actually knows it.
+
 This measures how well-known the ACTOR is to everyday people AND how mainstream the MOVIE is. Focus primarily on the actor's fame — a household-name actor in a lesser-known movie still scores higher than an unknown actor in a blockbuster.
 
 CALIBRATION EXAMPLES (use these as anchors — match these scores):
-10 = Household name + mega-hit: Tom Hanks in Forrest Gump, Leonardo DiCaprio in Titanic, Arnold Schwarzenegger in The Terminator, Robin Williams in Aladdin
- 9 = A-list celebrity + very well-known movie: Brad Pitt in Fight Club, Jim Carrey in The Truman Show, Samuel L. Jackson in Pulp Fiction, Angelina Jolie in Tomb Raider, Ryan Gosling in Drive, John Travolta in Pulp Fiction, Hugh Jackman in Logan, Julia Roberts in Pretty Woman
- 8 = Famous actor + well-known movie: Christian Bale in American Psycho, Joaquin Phoenix in Walk the Line, Cameron Diaz in There's Something About Mary, Jamie Lee Curtis in Halloween, Timothée Chalamet in Dune, Liam Neeson in Schindler's List
- 7 = Recognizable actor OR famous actor in a lesser film: Russell Crowe in Gladiator, Orlando Bloom in Pirates of the Caribbean, Jeff Bridges in The Big Lebowski, Renée Zellweger in Bridget Jones's Diary
- 5-6 = Known to regular moviegoers: Saoirse Ronan in Little Women, Frances McDormand in Fargo, Vera Farmiga in The Conjuring
+10 = Household name + mega-hit: Tom Hanks in Forrest Gump, Leonardo DiCaprio in Titanic, Will Smith in Men in Black, Robin Williams in Aladdin
+ 9 = A-list celebrity + very well-known movie: Brad Pitt in Fight Club, Jim Carrey in The Truman Show, Samuel L. Jackson in Pulp Fiction, Ryan Gosling in Drive, Hugh Jackman in Logan, Julia Roberts in Pretty Woman, Keanu Reeves in John Wick
+ 8 = Famous actor + well-known movie: Christian Bale in American Psycho, Cameron Diaz in There's Something About Mary, Timothée Chalamet in Dune, Liam Neeson in Schindler's List
+ 7 = Recognizable actor OR famous actor in a lesser film: Russell Crowe in Gladiator, Orlando Bloom in Pirates of the Caribbean, Jeff Bridges in The Big Lebowski, Renée Zellweger in Bridget Jones's Diary, Joaquin Phoenix in Walk the Line
+ 5-6 = Known to regular moviegoers but not mainstream: Saoirse Ronan in Little Women, Frances McDormand in Fargo, Vera Farmiga in The Conjuring
+ 4-5 = Pre-1980 classics that younger audiences may not know: Gregory Peck in To Kill a Mockingbird, Paul Newman in The Color of Money, Gene Hackman in Superman, Jimmy Stewart in It's a Wonderful Life, Audrey Hepburn in Breakfast at Tiffany's
  3-4 = Niche: Peter O'Toole in Lawrence of Arabia, Kate Beckinsale in Underworld
  1-2 = Very obscure
 
-IMPORTANT: Most A-list actors (Brad Pitt, Angelina Jolie, Jim Carrey, Ryan Gosling, Samuel L. Jackson, Johnny Depp, Will Smith, Tom Cruise, etc.) should be 9+ regardless of which movie. Do NOT underrate famous actors because a specific movie is less mainstream.
+IMPORTANT:
+- Modern A-list actors (Brad Pitt, Ryan Gosling, Samuel L. Jackson, Johnny Depp, Tom Cruise, etc.) should be 9+ regardless of which movie
+- Do NOT inflate scores for pre-1980 films just because they are "classics" — most people under 40 have not seen them
+- Actors who peaked before 1990 (Paul Newman, Gene Hackman, Gregory Peck, Jimmy Stewart) are NOT household names to today's audience — score them 4-6 unless the movie itself transcended generations (e.g. The Wizard of Oz)
 
 Return ONLY a JSON array of integers, one per entry, in order. Example: [10, 8, 7]
 

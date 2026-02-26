@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Stars Mode (Coming Soon)",
+  description:
+    "Stars Mode is an upcoming movie rating puzzle. This preview page is not indexed while the game is still under development.",
+  path: "/play/stars",
+  noIndex: true,
+});
 
 export default function StarsPage() {
   return (

@@ -3,6 +3,7 @@ import { DM_Sans, Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import { FeedbackProvider } from "@/components/FeedbackContext";
 import FeedbackWidget from "@/components/FeedbackWidget";
+import { DEFAULT_SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN } from "@/lib/seo";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -17,8 +18,47 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "MovieNight",
-  description: "A suite of movie mini-games."
+  metadataBase: SITE_ORIGIN,
+  title: {
+    default: "Daily Movie Puzzle Games",
+    template: "%s | MovieNight",
+  },
+  description: DEFAULT_SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  category: "games",
+  keywords: [
+    "daily movie puzzle game",
+    "movie trivia games",
+    "movie quiz",
+    "film trivia",
+    "movie guessing game",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: "MovieNight - Daily Movie Puzzle Games",
+    description: DEFAULT_SITE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary",
+    title: "MovieNight - Daily Movie Puzzle Games",
+    description: DEFAULT_SITE_DESCRIPTION,
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  referrer: "origin-when-cross-origin",
+  themeColor: "#09090b",
 };
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;

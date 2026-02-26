@@ -21,15 +21,15 @@
     "movie": "The Dark Knight",
     "year": 2008,
     "easter_egg": "Why so serious?",
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 10,
+    "characterPopularity": 10
   },
   {
     "actor": "BRAD PITT",
     "character": "TYLER DURDEN",
     "movie": "Fight Club",
     "year": 1999,
-    "popularity": 7,
+    "popularity": 9,
     "characterPopularity": 8
   },
   {
@@ -38,15 +38,15 @@
     "movie": "The Shining",
     "year": 1980,
     "easter_egg": "Here's Johnny",
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 7,
+    "characterPopularity": 5
   },
   {
     "actor": "MARLON BRANDO",
     "character": "VITO CORLEONE",
     "movie": "The Godfather",
     "year": 1972,
-    "popularity": 9,
+    "popularity": 6,
     "characterPopularity": 9
   },
   {
@@ -54,7 +54,7 @@
     "character": "INDIANA JONES",
     "movie": "Raiders of the Lost Ark",
     "year": 1981,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 10
   },
   {
@@ -62,7 +62,7 @@
     "character": "MIRANDA PRIESTLY",
     "movie": "The Devil Wears Prada",
     "year": 2006,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 6
   },
   {
@@ -70,7 +70,7 @@
     "character": "TONY MONTANA",
     "movie": "Scarface",
     "year": 1983,
-    "popularity": 7,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -78,15 +78,15 @@
     "character": "MAVERICK",
     "movie": "Top Gun",
     "year": 1986,
-    "popularity": 8,
-    "characterPopularity": 9
+    "popularity": 9,
+    "characterPopularity": 7
   },
   {
     "actor": "JACK BLACK",
     "character": "DEWEY FINN",
     "movie": "School of Rock",
     "year": 2003,
-    "popularity": 7,
+    "popularity": 8,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -95,7 +95,7 @@
     "character": "TONY STARK",
     "movie": "Iron Man",
     "year": 2008,
-    "popularity": 9,
+    "popularity": 10,
     "characterPopularity": 9
   },
   {
@@ -103,7 +103,7 @@
     "character": "NEO",
     "movie": "The Matrix",
     "year": 1999,
-    "popularity": 8,
+    "popularity": 10,
     "characterPopularity": 9
   },
   {
@@ -111,8 +111,8 @@
     "character": "ANNIE REED",
     "movie": "Sleepless in Seattle",
     "year": 1993,
-    "popularity": 7,
-    "characterPopularity": 3,
+    "popularity": 6,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -120,7 +120,7 @@
     "character": "HANNIBAL LECTER",
     "movie": "The Silence of the Lambs",
     "year": 1991,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 9
   },
   {
@@ -128,7 +128,7 @@
     "character": "MARTY MCFLY",
     "movie": "Back to the Future",
     "year": 1985,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 9
   },
   {
@@ -136,15 +136,15 @@
     "character": "HERMIONE",
     "movie": "Harry Potter and the Philosopher's Stone",
     "year": 2001,
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 10,
+    "characterPopularity": 8
   },
   {
     "actor": "WILL SMITH",
     "character": "CHRIS GARDNER",
     "movie": "The Pursuit of Happyness",
     "year": 2006,
-    "popularity": 8,
+    "popularity": 10,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -153,7 +153,7 @@
     "character": "JOHN MCCLANE",
     "movie": "Die Hard",
     "year": 1988,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -161,15 +161,16 @@
     "character": "JAMES BOND",
     "movie": "Dr. No",
     "year": 1962,
-    "popularity": 9,
-    "characterPopularity": 10
+    "popularity": 5,
+    "characterPopularity": 10,
+    "difficulty": "hard"
   },
   {
     "actor": "SANDRA BULLOCK",
     "character": "GRACIE HART",
     "movie": "Miss Congeniality",
     "year": 2000,
-    "popularity": 7,
+    "popularity": 8,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -178,8 +179,8 @@
     "character": "WILLY WONKA",
     "movie": "Willy Wonka & the Chocolate Factory",
     "year": 1971,
-    "popularity": 9,
-    "characterPopularity": 10
+    "popularity": 6,
+    "characterPopularity": 9
   },
   {
     "actor": "LEONARDO DICAPRIO",
@@ -187,7 +188,7 @@
     "movie": "Titanic",
     "year": 1997,
     "popularity": 10,
-    "characterPopularity": 8
+    "characterPopularity": 7
   },
   {
     "actor": "SIGOURNEY WEAVER",
@@ -202,8 +203,8 @@
     "character": "ED WOOD",
     "movie": "Ed Wood",
     "year": 1994,
-    "popularity": 4,
-    "characterPopularity": 4,
+    "popularity": 7,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -220,7 +221,7 @@
     "character": "RED",
     "movie": "The Shawshank Redemption",
     "year": 1994,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 6
   },
   {
@@ -229,23 +230,22 @@
     "movie": "Walk the Line",
     "year": 2005,
     "popularity": 6,
-    "characterPopularity": 9,
-    "difficulty": "hard"
+    "characterPopularity": 10
   },
   {
     "actor": "MATT DAMON",
     "character": "JASON BOURNE",
     "movie": "The Bourne Identity",
     "year": 2002,
-    "popularity": 8,
-    "characterPopularity": 9
+    "popularity": 9,
+    "characterPopularity": 7
   },
   {
     "actor": "SYLVESTER STALLONE",
     "character": "ROCKY BALBOA",
     "movie": "Rocky",
     "year": 1976,
-    "popularity": 9,
+    "popularity": 6,
     "characterPopularity": 9
   },
   {
@@ -262,7 +262,8 @@
     "movie": "Project Hail Mary",
     "year": 2026,
     "popularity": 9,
-    "characterPopularity": 6
+    "characterPopularity": 2,
+    "difficulty": "hard"
   },
   {
     "actor": "LIAM NEESON",
@@ -270,23 +271,23 @@
     "movie": "Schindler's List",
     "year": 1993,
     "popularity": 8,
-    "characterPopularity": 8
+    "characterPopularity": 6
   },
   {
     "actor": "KATE WINSLET",
     "character": "ROSE DEWITT",
     "movie": "Titanic",
     "year": 1997,
-    "popularity": 9,
-    "characterPopularity": 5
+    "popularity": 10,
+    "characterPopularity": 4
   },
   {
     "actor": "JANE FONDA",
     "character": "BARBARELLA",
     "movie": "Barbarella",
     "year": 1968,
-    "popularity": 5,
-    "characterPopularity": 5,
+    "popularity": 3,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -295,15 +296,15 @@
     "movie": "Batman Returns",
     "year": 1992,
     "popularity": 7,
-    "characterPopularity": 8
+    "characterPopularity": 7
   },
   {
     "actor": "ARNOLD SCHWARZENEGGER",
     "character": "TERMINATOR",
     "movie": "The Terminator",
     "year": 1984,
-    "popularity": 10,
-    "characterPopularity": 8
+    "popularity": 8,
+    "characterPopularity": 7
   },
   {
     "actor": "ROBIN WILLIAMS",
@@ -311,7 +312,7 @@
     "movie": "Aladdin",
     "year": 1992,
     "popularity": 10,
-    "characterPopularity": 9
+    "characterPopularity": 8
   },
   {
     "actor": "DANIEL RADCLIFFE",
@@ -335,7 +336,7 @@
     "character": "PRINCESS LEIA",
     "movie": "Star Wars",
     "year": 1977,
-    "popularity": 10,
+    "popularity": 8,
     "characterPopularity": 10
   },
   {
@@ -343,25 +344,24 @@
     "character": "MALCOLM X",
     "movie": "Malcolm X",
     "year": 1992,
-    "popularity": 7,
-    "characterPopularity": 9,
-    "difficulty": "hard"
+    "popularity": 8,
+    "characterPopularity": 9
   },
   {
     "actor": "MARK HAMILL",
     "character": "LUKE SKYWALKER",
     "movie": "Star Wars",
     "year": 1977,
-    "popularity": 10,
-    "characterPopularity": 10
+    "popularity": 7,
+    "characterPopularity": 9
   },
   {
     "actor": "PETER SELLERS",
     "character": "INSPECTOR CLOUSEAU",
     "movie": "The Pink Panther",
     "year": 1963,
-    "popularity": 7,
-    "characterPopularity": 8,
+    "popularity": 3,
+    "characterPopularity": 7,
     "difficulty": "hard"
   },
   {
@@ -370,31 +370,34 @@
     "movie": "Spider-Man",
     "year": 2002,
     "popularity": 9,
-    "characterPopularity": 10
+    "characterPopularity": 9,
+    "difficulty": "hard"
   },
   {
     "actor": "MATTHEW BRODERICK",
     "character": "FERRIS BUELLER",
     "movie": "Ferris Bueller's Day Off",
     "year": 1986,
-    "popularity": 9,
-    "characterPopularity": 10
+    "popularity": 7,
+    "characterPopularity": 9,
+    "difficulty": "hard"
   },
   {
     "actor": "VIVIEN LEIGH",
     "character": "SCARLETT O'HARA",
     "movie": "Gone with the Wind",
     "year": 1939,
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 4,
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "MICHAEL DOUGLAS",
     "character": "GORDON GEKKO",
     "movie": "Wall Street",
     "year": 1987,
-    "popularity": 7,
-    "characterPopularity": 7,
+    "popularity": 5,
+    "characterPopularity": 5,
     "difficulty": "hard"
   },
   {
@@ -402,7 +405,7 @@
     "character": "BARBIE",
     "movie": "Barbie",
     "year": 2023,
-    "popularity": 8,
+    "popularity": 10,
     "characterPopularity": 10
   },
   {
@@ -410,8 +413,8 @@
     "character": "BEETLEJUICE",
     "movie": "Beetlejuice",
     "year": 1988,
-    "popularity": 8,
-    "characterPopularity": 10
+    "popularity": 7,
+    "characterPopularity": 9
   },
   {
     "actor": "BILL SKARSGÅRD",
@@ -419,9 +422,8 @@
     "movie": "It",
     "year": 2017,
     "easter_egg": "We all float down here",
-    "popularity": 6,
-    "characterPopularity": 8,
-    "difficulty": "hard"
+    "popularity": 8,
+    "characterPopularity": 8
   },
   {
     "actor": "KEANU REEVES",
@@ -436,16 +438,17 @@
     "character": "HOLLY GOLIGHTLY",
     "movie": "Breakfast at Tiffany's",
     "year": 1961,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 4,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "GARY OLDMAN",
     "character": "SIRIUS BLACK",
     "movie": "Harry Potter and the Prisoner of Azkaban",
     "year": 2004,
-    "popularity": 7,
-    "characterPopularity": 7,
+    "popularity": 8,
+    "characterPopularity": 8,
     "difficulty": "hard"
   },
   {
@@ -453,8 +456,9 @@
     "character": "GEORGE BAILEY",
     "movie": "It's a Wonderful Life",
     "year": 1946,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 4,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "JULIA ROBERTS",
@@ -470,40 +474,41 @@
     "character": "ETHAN HUNT",
     "movie": "Mission: Impossible",
     "year": 1996,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 10,
+    "characterPopularity": 7
   },
   {
     "actor": "MICHAEL B. JORDAN",
     "character": "ERIK KILLMONGER",
     "movie": "Black Panther",
     "year": 2018,
-    "popularity": 7,
-    "characterPopularity": 6,
-    "difficulty": "hard"
+    "popularity": 9,
+    "characterPopularity": 6
   },
   {
     "actor": "CHARLTON HESTON",
     "character": "MOSES",
     "movie": "The Ten Commandments",
     "year": 1956,
-    "popularity": 8,
-    "characterPopularity": 9
+    "popularity": 3,
+    "characterPopularity": 9,
+    "difficulty": "hard"
   },
   {
     "actor": "GREGORY PECK",
     "character": "ATTICUS FINCH",
     "movie": "To Kill a Mockingbird",
     "year": 1962,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 4,
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "ADAM DRIVER",
     "character": "KYLO REN",
     "movie": "The Force Awakens",
     "year": 2015,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -511,8 +516,8 @@
     "character": "JULES WINNFIELD",
     "movie": "Pulp Fiction",
     "year": 1994,
-    "popularity": 7,
-    "characterPopularity": 6,
+    "popularity": 9,
+    "characterPopularity": 5,
     "difficulty": "hard"
   },
   {
@@ -520,23 +525,23 @@
     "character": "KATNISS EVERDEEN",
     "movie": "The Hunger Games",
     "year": 2012,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 10,
+    "characterPopularity": 9
   },
   {
     "actor": "MACAULAY CULKIN",
     "character": "KEVIN MCCALLISTER",
     "movie": "Home Alone",
     "year": 1990,
-    "popularity": 10,
-    "characterPopularity": 7
+    "popularity": 8,
+    "characterPopularity": 6
   },
   {
     "actor": "GEENA DAVIS",
     "character": "THELMA DICKINSON",
     "movie": "Thelma & Louise",
     "year": 1991,
-    "popularity": 7,
+    "popularity": 6,
     "characterPopularity": 5,
     "difficulty": "hard"
   },
@@ -545,15 +550,15 @@
     "character": "BLACK WIDOW",
     "movie": "The Avengers",
     "year": 2012,
-    "popularity": 9,
-    "characterPopularity": 8
+    "popularity": 10,
+    "characterPopularity": 7
   },
   {
     "actor": "ANTONIO BANDERAS",
     "character": "ZORRO",
     "movie": "The Mask of Zorro",
     "year": 1998,
-    "popularity": 8,
+    "popularity": 7,
     "characterPopularity": 9
   },
   {
@@ -561,7 +566,7 @@
     "character": "ROGER MURTAUGH",
     "movie": "Lethal Weapon",
     "year": 1987,
-    "popularity": 8,
+    "popularity": 5,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -570,8 +575,9 @@
     "character": "CLEOPATRA",
     "movie": "Cleopatra",
     "year": 1963,
-    "popularity": 7,
-    "characterPopularity": 9
+    "popularity": 3,
+    "characterPopularity": 9,
+    "difficulty": "hard"
   },
   {
     "actor": "MERYL STREEP",
@@ -579,7 +585,7 @@
     "movie": "Mamma Mia!",
     "year": 2008,
     "popularity": 8,
-    "characterPopularity": 4,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -587,15 +593,16 @@
     "character": "MARIA VON TRAPP",
     "movie": "The Sound of Music",
     "year": 1965,
-    "popularity": 9,
-    "characterPopularity": 7
+    "popularity": 4,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "TOM HANKS",
     "character": "JOE FOX",
     "movie": "You've Got Mail",
     "year": 1998,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -604,7 +611,7 @@
     "character": "DOCTOR STRANGE",
     "movie": "Doctor Strange",
     "year": 2016,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 8
   },
   {
@@ -612,7 +619,7 @@
     "character": "STEVE ROGERS",
     "movie": "Captain America: The First Avenger",
     "year": 2011,
-    "popularity": 9,
+    "popularity": 10,
     "characterPopularity": 7
   },
   {
@@ -620,8 +627,8 @@
     "character": "TRAVIS BICKLE",
     "movie": "Taxi Driver",
     "year": 1976,
-    "popularity": 8,
-    "characterPopularity": 7
+    "popularity": 6,
+    "characterPopularity": 6
   },
   {
     "actor": "DENZEL WASHINGTON",
@@ -629,7 +636,7 @@
     "movie": "Training Day",
     "year": 2001,
     "popularity": 8,
-    "characterPopularity": 3,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -638,8 +645,9 @@
     "movie": "Dirty Harry",
     "year": 1971,
     "easter_egg": "Do you feel lucky, punk?",
-    "popularity": 8,
-    "characterPopularity": 7
+    "popularity": 5,
+    "characterPopularity": 5,
+    "difficulty": "hard"
   },
   {
     "actor": "RENÉE ZELLWEGER",
@@ -647,49 +655,48 @@
     "movie": "Bridget Jones's Diary",
     "year": 2001,
     "popularity": 7,
-    "characterPopularity": 8
+    "characterPopularity": 7
   },
   {
     "actor": "NATALIE PORTMAN",
     "character": "MATHILDA",
     "movie": "Leon: The Professional",
     "year": 1994,
-    "popularity": 6,
-    "characterPopularity": 4,
-    "difficulty": "hard"
+    "popularity": 7,
+    "characterPopularity": 5
   },
   {
     "actor": "LINDA HAMILTON",
     "character": "SARAH CONNOR",
     "movie": "Terminator 2: Judgment Day",
     "year": 1991,
-    "popularity": 8,
-    "characterPopularity": 7
+    "popularity": 6,
+    "characterPopularity": 8
   },
   {
     "actor": "KATHLEEN TURNER",
     "character": "JESSICA RABBIT",
     "movie": "Who Framed Roger Rabbit",
     "year": 1988,
-    "popularity": 7,
-    "characterPopularity": 8
+    "popularity": 5,
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "HARRISON FORD",
     "character": "RICK DECKARD",
     "movie": "Blade Runner",
     "year": 1982,
-    "popularity": 6,
-    "characterPopularity": 4,
-    "difficulty": "hard"
+    "popularity": 7,
+    "characterPopularity": 6
   },
   {
     "actor": "TOM HIDDLESTON",
     "character": "LOKI",
     "movie": "Thor",
     "year": 2011,
-    "popularity": 7,
-    "characterPopularity": 8
+    "popularity": 8,
+    "characterPopularity": 9
   },
   {
     "actor": "TILDA SWINTON",
@@ -705,8 +712,9 @@
     "character": "MARTIN RIGGS",
     "movie": "Lethal Weapon",
     "year": 1987,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 5,
+    "characterPopularity": 5,
+    "difficulty": "hard"
   },
   {
     "actor": "VIOLA DAVIS",
@@ -722,15 +730,15 @@
     "character": "AXEL FOLEY",
     "movie": "Beverly Hills Cop",
     "year": 1984,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 6,
+    "characterPopularity": 5
   },
   {
     "actor": "JEFF BRIDGES",
     "character": "THE DUDE",
     "movie": "The Big Lebowski",
     "year": 1998,
-    "popularity": 6,
+    "popularity": 7,
     "characterPopularity": 8
   },
   {
@@ -738,16 +746,17 @@
     "character": "JOHNNY CASTLE",
     "movie": "Dirty Dancing",
     "year": 1987,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 6,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "LEONARDO DICAPRIO",
     "character": "CALVIN CANDIE",
     "movie": "Django Unchained",
     "year": 2012,
-    "popularity": 7,
-    "characterPopularity": 3,
+    "popularity": 9,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -755,8 +764,8 @@
     "character": "PATRICK BATEMAN",
     "movie": "American Psycho",
     "year": 2000,
-    "popularity": 6,
-    "characterPopularity": 7
+    "popularity": 8,
+    "characterPopularity": 8
   },
   {
     "actor": "SAOIRSE RONAN",
@@ -771,8 +780,8 @@
     "character": "ELINOR DASHWOOD",
     "movie": "Sense and Sensibility",
     "year": 1995,
-    "popularity": 7,
-    "characterPopularity": 3,
+    "popularity": 5,
+    "characterPopularity": 5,
     "difficulty": "hard"
   },
   {
@@ -780,24 +789,25 @@
     "character": "ROOSTER COGBURN",
     "movie": "True Grit",
     "year": 1969,
-    "popularity": 8,
-    "characterPopularity": 5
+    "popularity": 4,
+    "characterPopularity": 5,
+    "difficulty": "hard"
   },
   {
     "actor": "CATE BLANCHETT",
     "character": "GALADRIEL",
     "movie": "The Lord of the Rings: The Fellowship of the Ring",
     "year": 2001,
-    "popularity": 7,
-    "characterPopularity": 6
+    "popularity": 8,
+    "characterPopularity": 7
   },
   {
     "actor": "CHARLIZE THERON",
     "character": "AILEEN",
     "movie": "Monster",
     "year": 2003,
-    "popularity": 6,
-    "characterPopularity": 3,
+    "popularity": 7,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -805,16 +815,16 @@
     "character": "LARA CROFT",
     "movie": "Lara Croft: Tomb Raider",
     "year": 2001,
-    "popularity": 6,
-    "characterPopularity": 7
+    "popularity": 8,
+    "characterPopularity": 8
   },
   {
     "actor": "CLINT EASTWOOD",
     "character": "BLONDIE",
     "movie": "The Good, the Bad and the Ugly",
     "year": 1966,
-    "popularity": 6,
-    "characterPopularity": 5,
+    "popularity": 4,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -822,7 +832,7 @@
     "character": "PAUL ATREIDES",
     "movie": "Dune",
     "year": 2021,
-    "popularity": 6,
+    "popularity": 8,
     "characterPopularity": 6
   },
   {
@@ -830,8 +840,8 @@
     "character": "PATSEY",
     "movie": "12 Years a Slave",
     "year": 2013,
-    "popularity": 5,
-    "characterPopularity": 3,
+    "popularity": 6,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -840,15 +850,15 @@
     "movie": "Pirates of the Caribbean: The Curse of the Black Pearl",
     "year": 2003,
     "popularity": 7,
-    "characterPopularity": 5
+    "characterPopularity": 6
   },
   {
     "actor": "EDWARD NORTON",
     "character": "DEREK VINYARD",
     "movie": "American History X",
     "year": 1998,
-    "popularity": 5,
-    "characterPopularity": 3,
+    "popularity": 7,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -864,8 +874,8 @@
     "character": "SEBASTIAN WILDER",
     "movie": "La La Land",
     "year": 2016,
-    "popularity": 6,
-    "characterPopularity": 2,
+    "popularity": 9,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -873,25 +883,26 @@
     "character": "LAURIE STRODE",
     "movie": "Halloween",
     "year": 1978,
-    "popularity": 6,
-    "characterPopularity": 6
+    "popularity": 5,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "RAMI MALEK",
     "character": "FREDDIE MERCURY",
     "movie": "Bohemian Rhapsody",
     "year": 2018,
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 8,
+    "characterPopularity": 10,
+    "difficulty": "hard"
   },
   {
     "actor": "CAMERON DIAZ",
     "character": "MARY JENSEN",
     "movie": "There's Something About Mary",
     "year": 1998,
-    "popularity": 6,
-    "characterPopularity": 5,
-    "difficulty": "hard"
+    "popularity": 8,
+    "characterPopularity": 5
   },
   {
     "actor": "DONALD SUTHERLAND",
@@ -899,15 +910,16 @@
     "movie": "The Hunger Games",
     "year": 2012,
     "popularity": 7,
-    "characterPopularity": 7
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "CATE BLANCHETT",
     "character": "ELIZABETH",
     "movie": "Elizabeth",
     "year": 1998,
-    "popularity": 5,
-    "characterPopularity": 4,
+    "popularity": 6,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -915,15 +927,15 @@
     "character": "ELVIS PRESLEY",
     "movie": "Elvis",
     "year": 2022,
-    "popularity": 6,
-    "characterPopularity": 9
+    "popularity": 7,
+    "characterPopularity": 10
   },
   {
     "actor": "MATTHEW MCCONAUGHEY",
     "character": "MARK HANNA",
     "movie": "The Wolf of Wall Street",
     "year": 2013,
-    "popularity": 5,
+    "popularity": 9,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -950,14 +962,14 @@
     "movie": "The Other Boleyn Girl",
     "year": 2008,
     "popularity": 7,
-    "characterPopularity": 6
+    "characterPopularity": 5
   },
   {
     "actor": "TIMOTHÉE CHALAMET",
     "character": "ELIO PERLMAN",
     "movie": "Call Me By Your Name",
     "year": 2017,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -974,8 +986,8 @@
     "character": "EVELYN SALT",
     "movie": "Salt",
     "year": 2010,
-    "popularity": 7,
-    "characterPopularity": 2,
+    "popularity": 8,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -983,24 +995,25 @@
     "character": "MARIE ANTOINETTE",
     "movie": "Marie Antoinette",
     "year": 2006,
-    "popularity": 5,
-    "characterPopularity": 8
+    "popularity": 6,
+    "characterPopularity": 7
   },
   {
     "actor": "CYNTHIA ERIVO",
     "character": "HARRIET TUBMAN",
     "movie": "Harriet",
     "year": 2019,
-    "popularity": 6,
-    "characterPopularity": 8
+    "popularity": 4,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "DANIEL DAY-LEWIS",
     "character": "DANIEL PLAINVIEW",
     "movie": "There Will Be Blood",
     "year": 2007,
-    "popularity": 5,
-    "characterPopularity": 3,
+    "popularity": 6,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -1008,15 +1021,16 @@
     "character": "MARGE GUNDERSON",
     "movie": "Fargo",
     "year": 1996,
-    "popularity": 6,
-    "characterPopularity": 5
+    "popularity": 5,
+    "characterPopularity": 5,
+    "difficulty": "hard"
   },
   {
     "actor": "EDDIE REDMAYNE",
     "character": "NEWT SCAMANDER",
     "movie": "Fantastic Beasts and Where to Find Them",
     "year": 2016,
-    "popularity": 8,
+    "popularity": 7,
     "characterPopularity": 6
   },
   {
@@ -1024,8 +1038,8 @@
     "character": "EILIS LACEY",
     "movie": "Brooklyn",
     "year": 2015,
-    "popularity": 4,
-    "characterPopularity": 1,
+    "popularity": 5,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -1033,7 +1047,7 @@
     "character": "CAROL DANVERS",
     "movie": "Captain Marvel",
     "year": 2019,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 7
   },
   {
@@ -1042,22 +1056,22 @@
     "movie": "Creed",
     "year": 2015,
     "popularity": 8,
-    "characterPopularity": 7
+    "characterPopularity": 6
   },
   {
     "actor": "JULIA ROBERTS",
     "character": "ERIN BROCKOVICH",
     "movie": "Erin Brockovich",
     "year": 2000,
-    "popularity": 7,
-    "characterPopularity": 9
+    "popularity": 9,
+    "characterPopularity": 10
   },
   {
     "actor": "MICHAEL FASSBENDER",
     "character": "DAVID",
     "movie": "Prometheus",
     "year": 2012,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1066,15 +1080,16 @@
     "character": "TRUMAN BURBANK",
     "movie": "The Truman Show",
     "year": 1998,
-    "popularity": 6,
-    "characterPopularity": 7
+    "popularity": 9,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "CHRIS PRATT",
     "character": "PETER QUILL",
     "movie": "Guardians of the Galaxy",
     "year": 2014,
-    "popularity": 8,
+    "popularity": 10,
     "characterPopularity": 5
   },
   {
@@ -1082,8 +1097,9 @@
     "character": "HUGH GLASS",
     "movie": "The Revenant",
     "year": 2015,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 10,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "MARION COTILLARD",
@@ -1099,7 +1115,7 @@
     "character": "LOGAN",
     "movie": "Logan",
     "year": 2017,
-    "popularity": 7,
+    "popularity": 9,
     "characterPopularity": 7
   },
   {
@@ -1107,7 +1123,7 @@
     "character": "BUDDY HOBBS",
     "movie": "Elf",
     "year": 2003,
-    "popularity": 9,
+    "popularity": 10,
     "characterPopularity": 6
   },
   {
@@ -1116,14 +1132,14 @@
     "movie": "Ghostbusters",
     "year": 1984,
     "popularity": 8,
-    "characterPopularity": 6
+    "characterPopularity": 5
   },
   {
     "actor": "LUPITA NYONG'O",
     "character": "RED",
     "movie": "Us",
     "year": 2019,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1132,7 +1148,7 @@
     "character": "THOR",
     "movie": "Thor",
     "year": 2011,
-    "popularity": 8,
+    "popularity": 10,
     "characterPopularity": 10
   },
   {
@@ -1140,7 +1156,7 @@
     "character": "GWEN STACY",
     "movie": "The Amazing Spider-Man",
     "year": 2012,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 7
   },
   {
@@ -1148,7 +1164,7 @@
     "character": "LOUISE BANKS",
     "movie": "Arrival",
     "year": 2016,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1158,14 +1174,14 @@
     "movie": "Mad Max: Fury Road",
     "year": 2015,
     "popularity": 8,
-    "characterPopularity": 3
+    "characterPopularity": 8
   },
   {
     "actor": "PIERCE BROSNAN",
     "character": "JAMES BOND",
     "movie": "GoldenEye",
     "year": 1995,
-    "popularity": 9,
+    "popularity": 7,
     "characterPopularity": 10
   },
   {
@@ -1174,14 +1190,15 @@
     "movie": "Chicago",
     "year": 2002,
     "popularity": 6,
-    "characterPopularity": 4
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "JESSICA CHASTAIN",
     "character": "MAYA",
     "movie": "Zero Dark Thirty",
     "year": 2012,
-    "popularity": 5,
+    "popularity": 6,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1191,7 +1208,7 @@
     "movie": "Ant-Man",
     "year": 2015,
     "popularity": 9,
-    "characterPopularity": 5
+    "characterPopularity": 6
   },
   {
     "actor": "ANNE HATHAWAY",
@@ -1207,15 +1224,16 @@
     "movie": "La Vie en Rose",
     "year": 2007,
     "popularity": 5,
-    "characterPopularity": 7
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "JACOB TREMBLAY",
     "character": "JACK NEWSOME",
     "movie": "Room",
     "year": 2015,
-    "popularity": 4,
-    "characterPopularity": 3,
+    "popularity": 5,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -1224,47 +1242,50 @@
     "movie": "No Country for Old Men",
     "year": 2007,
     "popularity": 7,
-    "characterPopularity": 5
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "MICHAEL KEATON",
     "character": "BRUCE WAYNE",
     "movie": "Batman",
     "year": 1989,
-    "popularity": 10,
-    "characterPopularity": 8
+    "popularity": 7,
+    "characterPopularity": 10,
+    "difficulty": "hard"
   },
   {
     "actor": "JOHN GOODMAN",
     "character": "WALTER SOBCHAK",
     "movie": "The Big Lebowski",
     "year": 1998,
-    "popularity": 8,
-    "characterPopularity": 7
+    "popularity": 7,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "ANGELINA JOLIE",
     "character": "CHRISTINE COLLINS",
     "movie": "Changeling",
     "year": 2008,
-    "popularity": 5,
-    "characterPopularity": 2,
-    "difficulty": "hard"
+    "popularity": 8,
+    "characterPopularity": 2
   },
   {
     "actor": "AUSTIN BUTLER",
     "character": "FEYD-RAUTHA",
     "movie": "Dune: Part Two",
     "year": 2024,
-    "popularity": 7,
-    "characterPopularity": 4
+    "popularity": 8,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "ZENDAYA",
     "character": "MJ",
     "movie": "Spider-Man: No Way Home",
     "year": 2021,
-    "popularity": 9,
+    "popularity": 10,
     "characterPopularity": 7
   },
   {
@@ -1272,7 +1293,7 @@
     "character": "HANNA SCHMITZ",
     "movie": "The Reader",
     "year": 2008,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1281,7 +1302,7 @@
     "character": "MIA WALLACE",
     "movie": "Pulp Fiction",
     "year": 1994,
-    "popularity": 5,
+    "popularity": 8,
     "characterPopularity": 6
   },
   {
@@ -1289,8 +1310,8 @@
     "character": "CLIFF BOOTH",
     "movie": "Once Upon a Time in Hollywood",
     "year": 2019,
-    "popularity": 9,
-    "characterPopularity": 6
+    "popularity": 10,
+    "characterPopularity": 5
   },
   {
     "actor": "BILL MURRAY",
@@ -1298,7 +1319,8 @@
     "movie": "Groundhog Day",
     "year": 1993,
     "popularity": 8,
-    "characterPopularity": 4
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "DIANE KEATON",
@@ -1323,7 +1345,8 @@
     "movie": "Ghostbusters",
     "year": 1984,
     "popularity": 7,
-    "characterPopularity": 3
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "JIM CARREY",
@@ -1331,14 +1354,14 @@
     "movie": "Dumb and Dumber",
     "year": 1994,
     "popularity": 9,
-    "characterPopularity": 7
+    "characterPopularity": 6
   },
   {
     "actor": "CATE BLANCHETT",
     "character": "SHEBA HART",
     "movie": "Notes on a Scandal",
     "year": 2006,
-    "popularity": 5,
+    "popularity": 6,
     "characterPopularity": 1,
     "difficulty": "hard"
   },
@@ -1347,24 +1370,27 @@
     "character": "ANDY SACHS",
     "movie": "The Devil Wears Prada",
     "year": 2006,
-    "popularity": 7,
-    "characterPopularity": 4
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "ROBIN WILLIAMS",
     "character": "ALAN PARRISH",
     "movie": "Jumanji",
     "year": 1995,
-    "popularity": 10,
-    "characterPopularity": 4
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "MICHELLE YEOH",
     "character": "EVELYN WANG",
     "movie": "Everything Everywhere All at Once",
     "year": 2022,
-    "popularity": 7,
-    "characterPopularity": 6
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "VIOLA DAVIS",
@@ -1381,22 +1407,24 @@
     "movie": "Men in Black",
     "year": 1997,
     "popularity": 10,
-    "characterPopularity": 4
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "VAL KILMER",
     "character": "JIM MORRISON",
     "movie": "The Doors",
     "year": 1991,
-    "popularity": 4,
-    "characterPopularity": 7
+    "popularity": 5,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "SAOIRSE RONAN",
     "character": "CHRISTINE MCPHERSON",
     "movie": "Lady Bird",
     "year": 2017,
-    "popularity": 7,
+    "popularity": 6,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1413,8 +1441,9 @@
     "character": "ROSALYN ROSENFELD",
     "movie": "American Hustle",
     "year": 2013,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 8,
+    "characterPopularity": 2,
+    "difficulty": "hard"
   },
   {
     "actor": "DWAYNE JOHNSON",
@@ -1422,14 +1451,15 @@
     "movie": "Fast Five",
     "year": 2011,
     "popularity": 10,
-    "characterPopularity": 6
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "JAKE GYLLENHAAL",
     "character": "ADAM BELL",
     "movie": "Enemy",
     "year": 2014,
-    "popularity": 4,
+    "popularity": 7,
     "characterPopularity": 1,
     "difficulty": "hard"
   },
@@ -1438,16 +1468,18 @@
     "character": "ANNIE PORTER",
     "movie": "Speed",
     "year": 1994,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 8,
+    "characterPopularity": 2,
+    "difficulty": "hard"
   },
   {
     "actor": "WHOOPI GOLDBERG",
     "character": "DELORIS VAN CARTIER",
     "movie": "Sister Act",
     "year": 1992,
-    "popularity": 9,
-    "characterPopularity": 4
+    "popularity": 7,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "JOSEPH GORDON-LEVITT",
@@ -1455,14 +1487,15 @@
     "movie": "Inception",
     "year": 2010,
     "popularity": 8,
-    "characterPopularity": 3
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "ADRIEN BRODY",
     "character": "DMITRI",
     "movie": "The Grand Budapest Hotel",
     "year": 2014,
-    "popularity": 5,
+    "popularity": 7,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1471,8 +1504,9 @@
     "character": "MALCOLM CROWE",
     "movie": "The Sixth Sense",
     "year": 1999,
-    "popularity": 10,
-    "characterPopularity": 4
+    "popularity": 9,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "MATTHEW MCCONAUGHEY",
@@ -1480,23 +1514,24 @@
     "movie": "Interstellar",
     "year": 2014,
     "popularity": 9,
-    "characterPopularity": 3
+    "characterPopularity": 5
   },
   {
     "actor": "SALLY FIELD",
     "character": "NORMA RAE WEBSTER",
     "movie": "Norma Rae",
     "year": 1979,
-    "popularity": 7,
-    "characterPopularity": 7
+    "popularity": 4,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "TOM HIDDLESTON",
     "character": "JAMES CONRAD",
     "movie": "Kong: Skull Island",
     "year": 2017,
-    "popularity": 6,
-    "characterPopularity": 1,
+    "popularity": 7,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -1504,33 +1539,35 @@
     "character": "MOLLY JENSEN",
     "movie": "Ghost",
     "year": 1990,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "JEFF GOLDBLUM",
     "character": "IAN MALCOLM",
     "movie": "Jurassic Park",
     "year": 1993,
-    "popularity": 9,
-    "characterPopularity": 5
+    "popularity": 8,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "DANIEL CRAIG",
     "character": "BENOIT BLANC",
     "movie": "Knives Out",
     "year": 2019,
-    "popularity": 7,
-    "characterPopularity": 2,
-    "difficulty": "hard"
+    "popularity": 9,
+    "characterPopularity": 7
   },
   {
     "actor": "KEVIN COSTNER",
     "character": "RAY KINSELLA",
     "movie": "Field of Dreams",
     "year": 1989,
-    "popularity": 8,
-    "characterPopularity": 3
+    "popularity": 5,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "EDDIE MURPHY",
@@ -1538,23 +1575,24 @@
     "movie": "Shrek",
     "year": 2001,
     "popularity": 10,
-    "characterPopularity": 8
+    "characterPopularity": 9
   },
   {
     "actor": "CHRIS TUCKER",
     "character": "RUBY RHOD",
     "movie": "The Fifth Element",
     "year": 1997,
-    "popularity": 8,
-    "characterPopularity": 3
+    "popularity": 6,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "JESSICA ALBA",
     "character": "NANCY CALLAHAN",
     "movie": "Sin City",
     "year": 2005,
-    "popularity": 4,
-    "characterPopularity": 2,
+    "popularity": 6,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -1563,22 +1601,24 @@
     "movie": "Psycho",
     "year": 1960,
     "popularity": 4,
-    "characterPopularity": 9
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "DIANE LANE",
     "character": "CHERRY VALANCE",
     "movie": "The Outsiders",
     "year": 1983,
-    "popularity": 6,
-    "characterPopularity": 4
+    "popularity": 5,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "NICOLE KIDMAN",
     "character": "SATINE",
     "movie": "Moulin Rouge!",
     "year": 2001,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 5
   },
   {
@@ -1586,7 +1626,7 @@
     "character": "DRIVER",
     "movie": "Drive",
     "year": 2011,
-    "popularity": 5,
+    "popularity": 9,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -1595,15 +1635,16 @@
     "character": "CHANI",
     "movie": "Dune: Part Two",
     "year": 2024,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 10,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "HALLE BERRY",
     "character": "STORM",
     "movie": "X-Men",
     "year": 2000,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 7
   },
   {
@@ -1611,8 +1652,8 @@
     "character": "HANS GRUBER",
     "movie": "Die Hard",
     "year": 1988,
-    "popularity": 8,
-    "characterPopularity": 4
+    "popularity": 7,
+    "characterPopularity": 7
   },
   {
     "actor": "KATE HUDSON",
@@ -1620,7 +1661,7 @@
     "movie": "How to Lose a Guy in 10 Days",
     "year": 2003,
     "popularity": 7,
-    "characterPopularity": 2,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -1629,23 +1670,24 @@
     "movie": "The Lego Movie",
     "year": 2014,
     "popularity": 9,
-    "characterPopularity": 4
+    "characterPopularity": 5
   },
   {
     "actor": "DANIEL KALUUYA",
     "character": "CHRIS WASHINGTON",
     "movie": "Get Out",
     "year": 2017,
-    "popularity": 7,
-    "characterPopularity": 3
+    "popularity": 8,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "OSCAR ISAAC",
     "character": "NATHAN BATEMAN",
     "movie": "Ex Machina",
     "year": 2014,
-    "popularity": 4,
-    "characterPopularity": 3,
+    "popularity": 7,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -1653,8 +1695,8 @@
     "character": "LYDIA DEETZ",
     "movie": "Beetlejuice",
     "year": 1988,
-    "popularity": 7,
-    "characterPopularity": 5
+    "popularity": 6,
+    "characterPopularity": 6
   },
   {
     "actor": "JULIA ROBERTS",
@@ -1662,32 +1704,33 @@
     "movie": "Notting Hill",
     "year": 1999,
     "popularity": 9,
-    "characterPopularity": 3
+    "characterPopularity": 3,
+    "difficulty": "hard"
   },
   {
     "actor": "GERARD BUTLER",
     "character": "KING LEONIDAS",
     "movie": "300",
     "year": 2007,
-    "popularity": 7,
-    "characterPopularity": 5
+    "popularity": 8,
+    "characterPopularity": 7
   },
   {
     "actor": "EMMA STONE",
     "character": "MIA DOLAN",
     "movie": "La La Land",
     "year": 2016,
-    "popularity": 6,
-    "characterPopularity": 3,
-    "difficulty": "hard"
+    "popularity": 9,
+    "characterPopularity": 4
   },
   {
     "actor": "SIGOURNEY WEAVER",
     "character": "GRACE AUGUSTINE",
     "movie": "Avatar",
     "year": 2009,
-    "popularity": 9,
-    "characterPopularity": 3
+    "popularity": 8,
+    "characterPopularity": 2,
+    "difficulty": "hard"
   },
   {
     "actor": "WILL FERRELL",
@@ -1695,22 +1738,24 @@
     "movie": "Anchorman",
     "year": 2004,
     "popularity": 9,
-    "characterPopularity": 8
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "SHARON STONE",
     "character": "CATHERINE TRAMELL",
     "movie": "Basic Instinct",
     "year": 1992,
-    "popularity": 8,
-    "characterPopularity": 4
+    "popularity": 5,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "BRIE LARSON",
     "character": "JOY NEWSOME",
     "movie": "Room",
     "year": 2015,
-    "popularity": 5,
+    "popularity": 6,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1719,8 +1764,8 @@
     "character": "ANDY DUFRESNE",
     "movie": "The Shawshank Redemption",
     "year": 1994,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 7,
+    "characterPopularity": 7
   },
   {
     "actor": "DWAYNE JOHNSON",
@@ -1735,7 +1780,7 @@
     "character": "MARY JANE WATSON",
     "movie": "Spider-Man",
     "year": 2002,
-    "popularity": 7,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -1752,24 +1797,25 @@
     "character": "ODIN",
     "movie": "Thor",
     "year": 2011,
-    "popularity": 9,
-    "characterPopularity": 6
+    "popularity": 7,
+    "characterPopularity": 7
   },
   {
     "actor": "JAMIE FOXX",
     "character": "RAY CHARLES",
     "movie": "Ray",
     "year": 2004,
-    "popularity": 6,
-    "characterPopularity": 9
+    "popularity": 7,
+    "characterPopularity": 9,
+    "difficulty": "hard"
   },
   {
     "actor": "JAKE GYLLENHAAL",
     "character": "LOUIS BLOOM",
     "movie": "Nightcrawler",
     "year": 2014,
-    "popularity": 5,
-    "characterPopularity": 2,
+    "popularity": 7,
+    "characterPopularity": 3,
     "difficulty": "hard"
   },
   {
@@ -1777,7 +1823,7 @@
     "character": "CAPTAIN JACK SPARROW",
     "movie": "Pirates of the Caribbean: The Curse of the Black Pearl",
     "year": 2003,
-    "popularity": 9,
+    "popularity": 10,
     "characterPopularity": 9
   },
   {
@@ -1785,7 +1831,7 @@
     "character": "SEVERUS SNAPE",
     "movie": "Harry Potter and the Sorcerer's Stone",
     "year": 2001,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 9
   },
   {
@@ -1793,7 +1839,7 @@
     "character": "MARGARET THATCHER",
     "movie": "The Iron Lady",
     "year": 2011,
-    "popularity": 8,
+    "popularity": 7,
     "characterPopularity": 8
   },
   {
@@ -1802,7 +1848,7 @@
     "movie": "Black Panther",
     "year": 2018,
     "popularity": 7,
-    "characterPopularity": 3,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -1810,16 +1856,17 @@
     "character": "SALLY ALBRIGHT",
     "movie": "When Harry Met Sally",
     "year": 1989,
-    "popularity": 7,
-    "characterPopularity": 6
+    "popularity": 5,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "JOHN TRAVOLTA",
     "character": "VINCENT VEGA",
     "movie": "Pulp Fiction",
     "year": 1994,
-    "popularity": 7,
-    "characterPopularity": 6
+    "popularity": 8,
+    "characterPopularity": 5
   },
   {
     "actor": "FLORENCE PUGH",
@@ -1834,7 +1881,7 @@
     "character": "CAROL AIRD",
     "movie": "Carol",
     "year": 2015,
-    "popularity": 5,
+    "popularity": 6,
     "characterPopularity": 2,
     "difficulty": "hard"
   },
@@ -1843,8 +1890,9 @@
     "character": "MARIA",
     "movie": "West Side Story",
     "year": 1961,
-    "popularity": 6,
-    "characterPopularity": 5
+    "popularity": 2,
+    "characterPopularity": 7,
+    "difficulty": "hard"
   },
   {
     "actor": "GWYNETH PALTROW",
@@ -1852,15 +1900,15 @@
     "movie": "Iron Man",
     "year": 2008,
     "popularity": 8,
-    "characterPopularity": 5
+    "characterPopularity": 7
   },
   {
     "actor": "PETER O'TOOLE",
     "character": "LAWRENCE",
     "movie": "Lawrence of Arabia",
     "year": 1962,
-    "popularity": 4,
-    "characterPopularity": 5,
+    "popularity": 3,
+    "characterPopularity": 8,
     "difficulty": "hard"
   },
   {
@@ -1869,14 +1917,14 @@
     "movie": "The Avengers",
     "year": 2012,
     "popularity": 10,
-    "characterPopularity": 7
+    "characterPopularity": 8
   },
   {
     "actor": "NAOMI WATTS",
     "character": "ANN DARROW",
     "movie": "King Kong",
     "year": 2005,
-    "popularity": 8,
+    "popularity": 7,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -1886,14 +1934,14 @@
     "movie": "The Dark Knight",
     "year": 2008,
     "popularity": 9,
-    "characterPopularity": 6
+    "characterPopularity": 7
   },
   {
     "actor": "INGRID BERGMAN",
     "character": "ILSA LUND",
     "movie": "Casablanca",
     "year": 1942,
-    "popularity": 7,
+    "popularity": 4,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -1902,7 +1950,7 @@
     "character": "OBI-WAN KENOBI",
     "movie": "Star Wars: Episode I - The Phantom Menace",
     "year": 1999,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 10
   },
   {
@@ -1910,8 +1958,9 @@
     "character": "LEX LUTHOR",
     "movie": "Superman",
     "year": 1978,
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 5,
+    "characterPopularity": 8,
+    "difficulty": "hard"
   },
   {
     "actor": "MICHELLE YEOH",
@@ -1927,16 +1976,16 @@
     "character": "DANIEL LARUSSO",
     "movie": "The Karate Kid",
     "year": 1984,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 7,
+    "characterPopularity": 7
   },
   {
     "actor": "HALLE BERRY",
     "character": "JINX JOHNSON",
     "movie": "Die Another Day",
     "year": 2002,
-    "popularity": 9,
-    "characterPopularity": 3,
+    "popularity": 8,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -1944,7 +1993,7 @@
     "character": "AUSTIN POWERS",
     "movie": "Austin Powers: International Man of Mystery",
     "year": 1997,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 9
   },
   {
@@ -1961,15 +2010,15 @@
     "character": "ANNIE WILKES",
     "movie": "Misery",
     "year": 1990,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 6,
+    "characterPopularity": 7
   },
   {
     "actor": "EDDIE MURPHY",
     "character": "SHERMAN KLUMP",
     "movie": "The Nutty Professor",
     "year": 1996,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 5
   },
   {
@@ -1977,7 +2026,7 @@
     "character": "DOC BROWN",
     "movie": "Back to the Future",
     "year": 1985,
-    "popularity": 10,
+    "popularity": 8,
     "characterPopularity": 9
   },
   {
@@ -1994,7 +2043,7 @@
     "character": "REY",
     "movie": "Star Wars: The Force Awakens",
     "year": 2015,
-    "popularity": 9,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -2002,9 +2051,8 @@
     "character": "JAKE LAMOTTA",
     "movie": "Raging Bull",
     "year": 1980,
-    "popularity": 9,
-    "characterPopularity": 4,
-    "difficulty": "hard"
+    "popularity": 6,
+    "characterPopularity": 5
   },
   {
     "actor": "ANDREW GARFIELD",
@@ -2019,7 +2067,7 @@
     "character": "MELVIN UDALL",
     "movie": "As Good as It Gets",
     "year": 1997,
-    "popularity": 9,
+    "popularity": 7,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -2029,23 +2077,23 @@
     "movie": "Django Unchained",
     "year": 2012,
     "popularity": 9,
-    "characterPopularity": 7
+    "characterPopularity": 8
   },
   {
     "actor": "VAL KILMER",
     "character": "ICEMAN",
     "movie": "Top Gun",
     "year": 1986,
-    "popularity": 8,
-    "characterPopularity": 6
+    "popularity": 7,
+    "characterPopularity": 7
   },
   {
     "actor": "JEFF GOLDBLUM",
     "character": "SETH BRUNDLE",
     "movie": "The Fly",
     "year": 1986,
-    "popularity": 8,
-    "characterPopularity": 3,
+    "popularity": 7,
+    "characterPopularity": 4,
     "difficulty": "hard"
   },
   {
@@ -2054,15 +2102,15 @@
     "movie": "Kill Bill: Vol. 1",
     "year": 2003,
     "popularity": 8,
-    "characterPopularity": 6
+    "characterPopularity": 7
   },
   {
     "actor": "JAVIER BARDEM",
     "character": "RAOUL SILVA",
     "movie": "Skyfall",
     "year": 2012,
-    "popularity": 9,
-    "characterPopularity": 3,
+    "popularity": 8,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -2070,8 +2118,9 @@
     "character": "SYBILL TRELAWNEY",
     "movie": "Harry Potter and the Prisoner of Azkaban",
     "year": 2004,
-    "popularity": 8,
-    "characterPopularity": 5
+    "popularity": 7,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "EDWARD NORTON",
@@ -2079,7 +2128,7 @@
     "movie": "Fight Club",
     "year": 1999,
     "popularity": 9,
-    "characterPopularity": 5
+    "characterPopularity": 6
   },
   {
     "actor": "ELIJAH WOOD",
@@ -2087,7 +2136,7 @@
     "movie": "The Lord of the Rings: The Fellowship of the Ring",
     "year": 2001,
     "popularity": 9,
-    "characterPopularity": 9
+    "characterPopularity": 10
   },
   {
     "actor": "CHRIS EVANS",
@@ -2103,15 +2152,14 @@
     "movie": "Brokeback Mountain",
     "year": 2005,
     "popularity": 9,
-    "characterPopularity": 3,
-    "difficulty": "hard"
+    "characterPopularity": 3
   },
   {
     "actor": "JASON MOMOA",
     "character": "AQUAMAN",
     "movie": "Aquaman",
     "year": 2018,
-    "popularity": 8,
+    "popularity": 9,
     "characterPopularity": 8
   },
   {
@@ -2119,7 +2167,7 @@
     "character": "JAMES HUNT",
     "movie": "Rush",
     "year": 2013,
-    "popularity": 9,
+    "popularity": 7,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -2128,9 +2176,8 @@
     "character": "MIA THERMOPOLIS",
     "movie": "The Princess Diaries",
     "year": 2001,
-    "popularity": 9,
-    "characterPopularity": 4,
-    "difficulty": "hard"
+    "popularity": 8,
+    "characterPopularity": 6
   },
   {
     "actor": "CHRISTIAN BALE",
@@ -2138,15 +2185,15 @@
     "movie": "Batman Begins",
     "year": 2005,
     "popularity": 9,
-    "characterPopularity": 9
+    "characterPopularity": 10
   },
   {
     "actor": "JOHN TRAVOLTA",
     "character": "TONY MANERO",
     "movie": "Saturday Night Fever",
     "year": 1977,
-    "popularity": 9,
-    "characterPopularity": 4,
+    "popularity": 5,
+    "characterPopularity": 5,
     "difficulty": "hard"
   },
   {
@@ -2154,15 +2201,15 @@
     "character": "ARAGORN",
     "movie": "The Lord of the Rings: The Return of the King",
     "year": 2003,
-    "popularity": 8,
-    "characterPopularity": 8
+    "popularity": 9,
+    "characterPopularity": 9
   },
   {
     "actor": "WHOOPI GOLDBERG",
     "character": "ODA MAE BROWN",
     "movie": "Ghost",
     "year": 1990,
-    "popularity": 9,
+    "popularity": 6,
     "characterPopularity": 4,
     "difficulty": "hard"
   },
@@ -2171,7 +2218,7 @@
     "character": "TRINITY",
     "movie": "The Matrix",
     "year": 1999,
-    "popularity": 7,
+    "popularity": 8,
     "characterPopularity": 8
   },
   {
@@ -2179,8 +2226,8 @@
     "character": "MARIE",
     "movie": "When Harry Met Sally",
     "year": 1989,
-    "popularity": 8,
-    "characterPopularity": 3,
+    "popularity": 4,
+    "characterPopularity": 2,
     "difficulty": "hard"
   },
   {
@@ -2188,15 +2235,16 @@
     "character": "MARY TODD LINCOLN",
     "movie": "Lincoln",
     "year": 2012,
-    "popularity": 9,
-    "characterPopularity": 6
+    "popularity": 5,
+    "characterPopularity": 6,
+    "difficulty": "hard"
   },
   {
     "actor": "DUSTIN HOFFMAN",
     "character": "RAYMOND BABBITT",
     "movie": "Rain Man",
     "year": 1988,
-    "popularity": 10,
+    "popularity": 6,
     "characterPopularity": 6
   },
   {
@@ -2204,15 +2252,16 @@
     "character": "FAST EDDIE FELSON",
     "movie": "The Color of Money",
     "year": 1986,
-    "popularity": 9,
-    "characterPopularity": 5
+    "popularity": 4,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   },
   {
     "actor": "ANNA PAQUIN",
     "character": "ROGUE",
     "movie": "X-Men",
     "year": 2000,
-    "popularity": 6,
+    "popularity": 7,
     "characterPopularity": 7
   },
   {
@@ -2220,7 +2269,7 @@
     "character": "SAMUEL GERARD",
     "movie": "The Fugitive",
     "year": 1993,
-    "popularity": 9,
+    "popularity": 7,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -2229,15 +2278,15 @@
     "character": "DEREK ZOOLANDER",
     "movie": "Zoolander",
     "year": 2001,
-    "popularity": 9,
-    "characterPopularity": 9
+    "popularity": 8,
+    "characterPopularity": 8
   },
   {
     "actor": "MICHELLE PFEIFFER",
     "character": "ELVIRA HANCOCK",
     "movie": "Scarface",
     "year": 1983,
-    "popularity": 9,
+    "popularity": 7,
     "characterPopularity": 3,
     "difficulty": "hard"
   },
@@ -2246,15 +2295,162 @@
     "character": "REGINA GEORGE",
     "movie": "Mean Girls",
     "year": 2004,
-    "popularity": 8,
-    "characterPopularity": 8
+    "popularity": 9,
+    "characterPopularity": 9
   },
   {
     "actor": "LINDA BLAIR",
     "character": "REGAN MACNEIL",
     "movie": "The Exorcist",
     "year": 1973,
-    "popularity": 6,
+    "popularity": 4,
+    "characterPopularity": 5,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "JENNIFER ANISTON",
+    "character": "JOANNA",
+    "movie": "Office Space",
+    "year": 1999,
+    "popularity": 8,
+    "characterPopularity": 3
+  },
+  {
+    "actor": "SHIA LABEOUF",
+    "character": "SAM WITWICKY",
+    "movie": "Transformers",
+    "year": 2007,
+    "popularity": 8,
     "characterPopularity": 5
+  },
+  {
+    "actor": "DREW BARRYMORE",
+    "character": "JOSIE GELLER",
+    "movie": "Never Been Kissed",
+    "year": 1999,
+    "popularity": 7,
+    "characterPopularity": 2,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "EWAN MCGREGOR",
+    "character": "MARK RENTON",
+    "movie": "Trainspotting",
+    "year": 1996,
+    "popularity": 7,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "KEVIN SPACEY",
+    "character": "LESTER BURNHAM",
+    "movie": "American Beauty",
+    "year": 1999,
+    "popularity": 7,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "LIAM NEESON",
+    "character": "BRYAN MILLS",
+    "movie": "Taken",
+    "year": 2008,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "NICOLE KIDMAN",
+    "character": "ALICE HARFORD",
+    "movie": "Eyes Wide Shut",
+    "year": 1999,
+    "popularity": 8,
+    "characterPopularity": 2,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "RUSSELL CROWE",
+    "character": "JOHN NASH",
+    "movie": "A Beautiful Mind",
+    "year": 2001,
+    "popularity": 7,
+    "characterPopularity": 2,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ORLANDO BLOOM",
+    "character": "LEGOLAS",
+    "movie": "The Lord of the Rings: The Two Towers",
+    "year": 2002,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "PIERCE BROSNAN",
+    "character": "SAM CARMICHAEL",
+    "movie": "Mamma Mia!",
+    "year": 2008,
+    "popularity": 7,
+    "characterPopularity": 3
+  },
+  {
+    "actor": "DANIEL DAY-LEWIS",
+    "character": "BILL THE BUTCHER",
+    "movie": "Gangs of New York",
+    "year": 2002,
+    "popularity": 7,
+    "characterPopularity": 5,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "GWYNETH PALTROW",
+    "character": "EMMA WOODHOUSE",
+    "movie": "Emma",
+    "year": 1996,
+    "popularity": 7,
+    "characterPopularity": 6,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "GERARD BUTLER",
+    "character": "MIKE BANNING",
+    "movie": "Olympus Has Fallen",
+    "year": 2013,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "DANIEL RADCLIFFE",
+    "character": "WALLACE",
+    "movie": "What If",
+    "year": 2013,
+    "popularity": 6,
+    "characterPopularity": 2
+  },
+  {
+    "actor": "FRANCES MCDORMAND",
+    "character": "MILDRED HAYES",
+    "movie": "Three Billboards Outside Ebbing, Missouri",
+    "year": 2017,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "HUGH GRANT",
+    "character": "WILLIAM THACKER",
+    "movie": "Notting Hill",
+    "year": 1999,
+    "popularity": 8,
+    "characterPopularity": 3
+  },
+  {
+    "actor": "ARNOLD SCHWARZENEGGER",
+    "character": "JOHN MATRIX",
+    "movie": "Commando",
+    "year": 1985,
+    "popularity": 6,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   }
 ]
