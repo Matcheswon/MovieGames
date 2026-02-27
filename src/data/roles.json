@@ -2452,5 +2452,128 @@
     "popularity": 6,
     "characterPopularity": 4,
     "difficulty": "hard"
+  },
+  {
+    "actor": "PAUL BETTANY",
+    "character": "VISION",
+    "movie": "Avengers: Age of Ultron",
+    "year": 2015,
+    "popularity": 8,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "WINONA RYDER",
+    "character": "KIM BOGGS",
+    "movie": "Edward Scissorhands",
+    "year": 1990,
+    "popularity": 7,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "RACHEL WEISZ",
+    "character": "EVELYN CARNAHAN",
+    "movie": "The Mummy",
+    "year": 1999,
+    "popularity": 7,
+    "characterPopularity": 5,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "HALEY JOEL OSMENT",
+    "character": "COLE SEAR",
+    "movie": "The Sixth Sense",
+    "year": 1999,
+    "popularity": 7,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "MICHAEL CAINE",
+    "character": "ALFRED PENNYWORTH",
+    "movie": "Batman Begins",
+    "year": 2005,
+    "popularity": 8,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "DANNY DEVITO",
+    "character": "PENGUIN",
+    "movie": "Batman Returns",
+    "year": 1992,
+    "popularity": 6,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "JENNIFER CONNELLY",
+    "character": "ALICIA NASH",
+    "movie": "A Beautiful Mind",
+    "year": 2001,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "TONI COLLETTE",
+    "character": "ANNIE GRAHAM",
+    "movie": "Hereditary",
+    "year": 2018,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ALICIA SILVERSTONE",
+    "character": "CHER HOROWITZ",
+    "movie": "Clueless",
+    "year": 1995,
+    "popularity": 7,
+    "characterPopularity": 8,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "CARRIE-ANNE MOSS",
+    "character": "NATALIE",
+    "movie": "Memento",
+    "year": 2000,
+    "popularity": 6,
+    "characterPopularity": 2,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "TOM HARDY",
+    "character": "MAX ROCKATANSKY",
+    "movie": "Mad Max: Fury Road",
+    "year": 2015,
+    "popularity": 9,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "BILL PAXTON",
+    "character": "HUDSON",
+    "movie": "Aliens",
+    "year": 1986,
+    "popularity": 5,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "COLIN FIRTH",
+    "character": "MARK DARCY",
+    "movie": "Bridget Jones's Diary",
+    "year": 2001,
+    "popularity": 7,
+    "characterPopularity": 7,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "CAMERON DIAZ",
+    "character": "AMANDA WOODS",
+    "movie": "The Holiday",
+    "year": 2006,
+    "popularity": 8,
+    "characterPopularity": 3,
+    "difficulty": "hard"
   }
 ]
