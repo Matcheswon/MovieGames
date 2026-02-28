@@ -22,6 +22,7 @@ import {
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
+const BONUS_PLAYED_KEY = "moviegames:roles:bonus-played";
 
 type RolesHistoryEntry = {
   dateKey: string;
@@ -151,11 +152,12 @@ function getBlankPositions(actor: string, character: string, revealed: Set<strin
   return p;
 }
 
-export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode, onPlaytestComplete, maxRounds: maxRoundsProp, variant }: {
+export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode, onPlaytestComplete, maxRounds: maxRoundsProp, variant, bonusMode }: {
   puzzle: RolesPuzzle; puzzleNumber: number; dateKey: string;
   playtestMode?: boolean; onPlaytestComplete?: (result: PlaytestResult) => void;
   maxRounds?: number;
   variant?: "standard" | "experimental";
+  bonusMode?: boolean;
 }) {
   const uniqueLetterCount = new Set(
     [...puzzle.actor, ...puzzle.character].filter(ch => isGuessableChar(ch)).map(ch => normalizeLetter(ch))
@@ -195,6 +197,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [guessResolving, setGuessResolving] = useState(false);
   const [freeLetterActive, setFreeLetterActive] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
+  const [bonusPlayedToday, setBonusPlayedToday] = useState(false);
   const [lostRounds, setLostRounds] = useState(new Set<number>());
   const lostRoundsRef = useRef(new Set<number>());
   const addLostRound = (r: number) => {
@@ -447,7 +450,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // Load daily streak + detect already-played from localStorage (skip in playtest)
   // Falls back to Supabase for cross-device detection (e.g. played on mobile, visiting on desktop)
   useEffect(() => {
-    if (playtestMode) return;
+    if (playtestMode || bonusMode) return;
+    // Check if bonus round was already played today
+    if (typeof window !== "undefined") {
+      const bonusDate = window.localStorage.getItem(BONUS_PLAYED_KEY);
+      if (bonusDate === dateKey) setBonusPlayedToday(true);
+    }
     const today = dateKey;
     const data = readDailyStreak();
     // Compute streak from history dates instead of trusting the counter
@@ -500,7 +508,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   // Freshness guard: if server-rendered dateKey is stale, refresh the page (skip in playtest)
   useEffect(() => {
-    if (playtestMode) return;
+    if (playtestMode || bonusMode) return;
     const clientDate = getNyDateKey(new Date());
     if (clientDate !== dateKey) {
       router.refresh();
@@ -547,6 +555,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     dailyRecorded.current = true;
     experimental.onGameEnd(screen === "solved");
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
+
+    // In bonus mode, mark as played today but skip streak/Supabase saves
+    if (bonusMode) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(BONUS_PLAYED_KEY, getNyDateKey(new Date()));
+      }
+      return;
+    }
 
     // In playtest mode, fire callback instead of saving to localStorage/Supabase
     if (playtestMode) {
@@ -1500,14 +1516,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             ROLES
           </h1>
           <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-600 mb-2">
-            Daily Puzzle &middot; #{puzzleNumber}
+            {bonusMode ? "Bonus Round" : <>Daily Puzzle &middot; #{puzzleNumber}</>}
           </p>
-          {dailyStreak > 0 && (
+          {!bonusMode && dailyStreak > 0 && (
             <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn inline-flex items-center gap-1.5 justify-center w-full">
               <Flame className="w-4 h-4" /> {dailyStreak} day streak
             </p>
           )}
-          {dailyStreak === 0 && <div className="mb-6" />}
+          {(bonusMode || dailyStreak === 0) && <div className="mb-6" />}
 
           <div className="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-5 mb-7 text-left">
             <p className="text-sm text-zinc-300 leading-relaxed mb-4">
@@ -1630,23 +1646,38 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         ].filter(Boolean).join(" ")
       : "";
     const scoreText = isExperimental ? `\n\u{1F3AF} ${experimental.score}/${experimental.maxPossibleScore} pts` : "";
-    const shareText = `\u{1F3AD} ROLES #${puzzleNumber}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${scoreText}${badgeEmojis ? `\n${badgeEmojis}` : ""}`;
+    const roundBlocks = Array.from({ length: MAX_ROUNDS }, (_, i) =>
+      solvedRound === i ? "\u{1F7E9}" :
+      strikeRounds.has(i) ? "\u{1F7E5}" :
+      lostRounds.has(i) ? "\u2B1C" :
+      i <= round ? "\u{1F7E8}" :
+      "\u2B1B"
+    ).join("");
+    const shareText = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}\n${roundBlocks}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${!bonusMode && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${scoreText}${badgeEmojis ? `\n${badgeEmojis}` : ""}`;
 
-    const resultStatCols = isExperimental ? (playtestMode ? "grid-cols-4" : "grid-cols-5") : (playtestMode ? "grid-cols-3" : "grid-cols-4");
+    const showStreak = !playtestMode && !bonusMode;
+    const resultStatCols = isExperimental
+      ? (showStreak ? "grid-cols-5" : "grid-cols-4")
+      : (showStreak ? "grid-cols-4" : "grid-cols-3");
 
     return (
       <Shell compact={playtestMode}>
         <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
           <div className="animate-slideUp w-full max-w-sm py-8">
+            {!playtestMode && (
+              <Link href="/" className="inline-flex items-center gap-1.5 mb-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+                <ArrowLeft className="w-3 h-3" /> Back to Dashboard
+              </Link>
+            )}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
                 <Drama className="w-5 h-5 text-amber-400" />
                 <h1 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
+                <span className="text-xs text-zinc-500">{bonusMode ? `Bonus · #${puzzleNumber}` : `#${puzzleNumber}`}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-lg font-extrabold ${won ? "text-emerald-300" : "text-zinc-400"}`}
                   style={{ fontFamily: "'Playfair Display', serif" }}>{won ? "Solved" : "Not this time"}</span>
-                <span className="text-sm text-zinc-500">#{puzzleNumber}</span>
               </div>
             </div>
             {/* Round bars */}
@@ -1709,7 +1740,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">Score</p>
                 </div>
               )}
-              {!playtestMode && (
+              {!playtestMode && !bonusMode && (
                 <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5 text-center">
                   <p className="text-lg font-bold text-amber-400 inline-flex items-center justify-center gap-1 w-full">{dailyStreak}<Flame className="w-4 h-4" /></p>
                   <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">Streak</p>
@@ -1756,7 +1787,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <div className="text-center text-xs text-zinc-600">Game recorded. Advancing automatically&hellip;</div>
             ) : (
               <>
-                <p className="text-xs text-zinc-500 text-center mb-3">Check back tomorrow for a new puzzle.</p>
+                {bonusMode || bonusPlayedToday ? (
+                  <p className="text-sm text-zinc-400 text-center mb-3">Come back tomorrow for a new puzzle.</p>
+                ) : (
+                  <Link href="/play/roles/bonus"
+                    className="text-sm text-amber-400 hover:text-amber-300 transition-colors text-center mb-3 block">
+                    Play a bonus round &rarr;
+                  </Link>
+                )}
 
                 <div className="flex gap-3 mb-5">
                   <ShareButton text={shareText} />
@@ -1774,6 +1812,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   </div>
                   <ChevronRight className="w-5 h-5 text-sky-400/40 group-hover:text-sky-300/70 transition-colors" />
                 </Link>
+
               </>
             )}
           </div>
@@ -1797,7 +1836,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             <div className="flex items-center gap-2.5">
               <span className="text-lg">{"\u{1F3AD}"}</span>
               <h1 className="text-lg font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
-              <span className="text-xs text-zinc-500">#{puzzleNumber}</span>
+              <span className="text-xs text-zinc-500">{bonusMode ? `Bonus · #${puzzleNumber}` : `#${puzzleNumber}`}</span>
             </div>
             <div className="flex items-center gap-3">
               {isExperimental && experimental.hotStreak > 0 && (
@@ -1810,10 +1849,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
                 </div>
               )}
-              <div className="flex items-center gap-1">
-                {Array.from({ length: MAX_STRIKES }).map((_, i) => (
-                  <span key={i} className={`text-sm transition-all ${i < strikes ? "text-red-400" : "text-zinc-800"}`}>{"\u2715"}</span>
-                ))}
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: MAX_STRIKES }).map((_, i) => {
+                  const isActive = i < strikes;
+                  const isLatest = i === strikes - 1;
+                  return (
+                    <span key={`${i}-${strikes}`} className={`text-base transition-all ${
+                      isActive
+                        ? `text-red-400${isLatest ? " animate-strike-pop" : ""}`
+                        : "text-zinc-800"
+                    }`}>{"\u2715"}</span>
+                  );
+                })}
               </div>
               {phase !== "pick-letters" && phase !== "revealing-picks" && (
                 <span className="text-sm text-zinc-400 font-mono tabular-nums">{fmt(totalTime)}</span>

@@ -71,6 +71,17 @@ a {
   to { width: 0%; }
 }
 
+@keyframes strikePop {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+  25% { transform: scale(1.8); filter: drop-shadow(0 0 8px rgba(248,113,113,0.8)); }
+  50% { transform: scale(0.9); filter: drop-shadow(0 0 4px rgba(248,113,113,0.4)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0 transparent); }
+}
+
+.animate-strike-pop {
+  animation: strikePop 0.4s ease-out;
+}
+
 .bg-cinematic {
   background: radial-gradient(ellipse at 50% 0%, #1a1510 0%, #09090b 60%);
 }
