@@ -276,6 +276,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isOver || screen !== "playing") return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const key = e.key.toUpperCase();
       if (key === "BACKSPACE" && (phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0) { e.preventDefault(); handlePickBackspace(); return; }
       if (key === "ENTER" && phase === "pick-letters" && pickedLetters.length >= 3) { e.preventDefault(); revealPicked(pickedLetters); return; }
@@ -1980,15 +1981,17 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   {isSolvePanel && (
                     <div className={`animate-fadeIn w-full pointer-events-auto ${finalSolveMode ? "mt-0" : "space-y-2 mt-2"}`}>
                       {finalSolveMode ? (
-                        <div className="mx-auto flex w-full max-w-[300px] flex-col items-center gap-3 text-center">
+                        <div className="mx-auto flex w-full max-w-[340px] flex-col items-center gap-1.5 text-center">
                           <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-400/90">{finalSolvePhrase}</p>
-                          <p className="text-sm text-zinc-300">
-                            Rounds over. Submit your final solve with ENTER. <span className="text-zinc-500">{strikesLeft} strike{strikesLeft === 1 ? "" : "s"} left</span>
-                          </p>
-                          <button onClick={() => triggerGameOver("Threw in the towel!")}
-                            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-transparent border border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300 transition-all active:scale-[0.97] cursor-pointer">
-                            Give Up
-                          </button>
+                          <div className="flex items-center gap-2.5">
+                            <p className="text-xs text-zinc-400">
+                              Take your best guess{" \u00b7 "}<span className="text-zinc-600">{strikesLeft} strike{strikesLeft === 1 ? "" : "s"} left</span>
+                            </p>
+                            <button onClick={() => triggerGameOver("Threw in the towel!")}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-transparent border border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300 transition-all active:scale-[0.97] cursor-pointer shrink-0">
+                              Give Up
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
@@ -2028,19 +2031,19 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPickDouble && (
                     <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
-                      <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 mb-3">Pick 2 Letters</p>
-                      <div className="flex justify-center gap-3">
+                      <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 mb-[clamp(8px,1.5vh,12px)]">Pick 2 Letters</p>
+                      <div className="flex justify-center gap-[clamp(8px,1.5vh,12px)]">
                         {Array.from({ length: 2 }).map((_, i) => {
                           const letter = pickedLetters[i];
                           return (
                             <div
                               key={i}
-                              className={`w-12 h-14 rounded-lg flex items-center justify-center text-xl font-bold border-2 transition-all duration-300 ${
+                              className={`rounded-lg flex items-center justify-center font-bold border-2 transition-all duration-300 ${
                                 letter
                                   ? "bg-zinc-800 text-zinc-200 border-zinc-500/60"
                                   : "bg-zinc-800/30 border-zinc-500/40 border-dashed"
                               }`}
-                              style={{ fontFamily: "'DM Mono', monospace" }}
+                              style={{ fontFamily: "'DM Mono', monospace", width: "clamp(36px,6vh,48px)", height: "clamp(42px,7vh,56px)", fontSize: "clamp(16px,2.5vh,20px)" }}
                             >
                               {letter ?? ""}
                             </div>
@@ -2052,10 +2055,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPickStart && (
                     <div className="animate-fadeIn flex flex-col items-center pointer-events-auto">
-                      <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 mb-3">
+                      <p className="text-sm font-bold uppercase tracking-[0.2em] text-amber-400 mb-[clamp(8px,1.5vh,12px)]">
                         {phase === "revealing-picks" ? "Revealing..." : "Pick 3 Letters"}
                       </p>
-                      <div className="flex justify-center gap-3">
+                      <div className="flex justify-center gap-[clamp(8px,1.5vh,12px)]">
                         {Array.from({ length: 3 }).map((_, i) => {
                           const letter = pickedLetters[i];
                           const isHighlighted = phase === "revealing-picks" && revealingIdx >= i;
@@ -2063,14 +2066,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                           return (
                             <div
                               key={i}
-                              className={`w-12 h-14 rounded-lg flex items-center justify-center text-xl font-bold border-2 transition-all duration-300 ${
+                              className={`rounded-lg flex items-center justify-center font-bold border-2 transition-all duration-300 ${
                                 isHighlighted
                                   ? "bg-amber-500/30 text-amber-200 border-amber-400/50 scale-110"
                                   : letter
                                     ? "bg-zinc-800 text-zinc-200 border-zinc-500/60"
                                     : "bg-zinc-800/30 border-zinc-500/40 border-dashed"
                               }`}
-                              style={{ fontFamily: "'DM Mono', monospace" }}
+                              style={{ fontFamily: "'DM Mono', monospace", width: "clamp(36px,6vh,48px)", height: "clamp(42px,7vh,56px)", fontSize: "clamp(16px,2.5vh,20px)" }}
                             >
                               {letter ?? ""}
                             </div>

@@ -62,7 +62,7 @@ function PuzzleSelector({
   }, [open]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="sm:relative">
       <button
         onClick={() => setOpen(!open)}
         className="px-2.5 py-1 rounded text-[10px] font-medium bg-zinc-800 text-amber-400/80 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1"
@@ -74,7 +74,7 @@ function PuzzleSelector({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-80 max-h-80 bg-zinc-900 border border-zinc-700/60 rounded-lg shadow-xl overflow-hidden z-50">
+        <div className="fixed inset-x-3 top-20 max-h-80 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1 sm:w-80 sm:max-h-80 bg-zinc-900 border border-zinc-700/60 rounded-lg shadow-xl overflow-hidden z-50">
           <div className="p-2 border-b border-zinc-800">
             <input
               ref={inputRef}
@@ -216,18 +216,16 @@ export default function PlaytestDegreesPage() {
     <div className="relative h-dvh bg-zinc-950 flex flex-col overflow-hidden">
       <PlaytestBarWrapper>
         {/* Top bar */}
-        <div className="relative z-20 px-4 py-2 pr-8 bg-zinc-900/80 border-b border-zinc-800/50">
-          <div className="flex items-center justify-between mb-1.5 sm:mb-0">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-amber-400 tracking-wider uppercase">Playtest</span>
-              <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded uppercase">Degrees</span>
-              <span className="text-xs text-zinc-500">
-                Puzzle {currentIndex + 1} of {puzzles.length}
-              </span>
-              <span className="text-[10px] text-zinc-600">
-                ({results.length} played)
-              </span>
-            </div>
+        <div className="relative z-20 px-4 py-2 pr-8 bg-zinc-900/80 border-b border-zinc-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-bold text-amber-400 tracking-wider uppercase">Playtest</span>
+            <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded uppercase">Degrees</span>
+            <span className="text-xs text-zinc-500">
+              Puzzle {currentIndex + 1} of {puzzles.length}
+            </span>
+            <span className="text-[10px] text-zinc-600">
+              ({results.length} played)
+            </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <label className="flex items-center gap-1.5 cursor-pointer">

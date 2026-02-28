@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "roles:audit": "node scripts/audit-roles.mjs",
     "import:ratings": "node scripts/import-ratings.mjs",
     "seed:roles": "node scripts/seed-puzzles.mjs roles",
     "seed:roles:more": "node scripts/seed-puzzles.mjs roles --count=30",

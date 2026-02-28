@@ -16,6 +16,81 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+const ROLE_COMMON_LETTERS = new Set("ETAOINSHRL");
+const ROLE_GUESS_ORDER = new Set("TREAIOSLDMN");
+const TARGET_HARDS_PER_WEEK = 1;
+const MAX_HARDS_PER_WEEK = 2;
+const MIN_NORMAL_BETWEEN_HARD = 3; // "3 fun, then 1 tough" cadence
+const MAX_MOVIE_ENTRIES = 3;
+
+function coverageRatio(set, guessed) {
+  if (set.size === 0) return 1;
+  let hit = 0;
+  for (const ch of set) {
+    if (guessed.has(ch)) hit++;
+  }
+  return hit / set.size;
+}
+
+function getRolesMetrics(entry) {
+  const actorLetters = (entry.actor ?? "").replace(/[^A-Z]/gi, "");
+  const charLetters = (entry.character ?? "").replace(/[^A-Z]/gi, "");
+  const totalLetters = actorLetters.length + charLetters.length;
+  const uniqueSet = new Set((actorLetters + charLetters).toUpperCase());
+  const uniqueLetters = uniqueSet.size;
+  const uncommon = [...uniqueSet].filter((l) => !ROLE_COMMON_LETTERS.has(l)).length;
+  const pop = entry.popularity ?? 8;
+  const charPop = entry.characterPopularity ?? pop;
+
+  const actorSet = new Set(actorLetters.toUpperCase().split("").filter(Boolean));
+  const charSet = new Set(charLetters.toUpperCase().split("").filter(Boolean));
+  const actorCoverage = coverageRatio(actorSet, ROLE_GUESS_ORDER);
+  const charCoverage = coverageRatio(charSet, ROLE_GUESS_ORDER);
+  const comboCoverage = coverageRatio(uniqueSet, ROLE_GUESS_ORDER);
+
+  const styleRisk =
+    (1 - actorCoverage) * 0.5 +
+    (1 - charCoverage) * 0.25 +
+    (1 - comboCoverage) * 0.1 +
+    (charPop <= 4 ? 0.2 : 0) +
+    (pop <= 6 ? 0.1 : 0);
+
+  return {
+    actorLetters,
+    charLetters,
+    totalLetters,
+    uniqueLetters,
+    uniqueSet,
+    uncommon,
+    pop,
+    charPop,
+    styleRisk,
+  };
+}
+
+function getNotFunReason(entry) {
+  const { pop, charPop, styleRisk } = getRolesMetrics(entry);
+
+  // Character name is likely too deep-cut for broad players.
+  if (charPop <= 2 && pop <= 7) {
+    return `character is too obscure (charPop ${charPop}, pop ${pop})`;
+  }
+  // Pairing is broadly niche.
+  if (charPop + pop <= 7 && charPop <= 3) {
+    return `combined recognition is too low (combined ${charPop + pop})`;
+  }
+  // Mechanically punishing + weak character recall = frustrating losses.
+  if (styleRisk >= 0.62 && charPop <= 4) {
+    return `too punishing for letter flow (style risk ${styleRisk.toFixed(3)})`;
+  }
+  // Very spiky puzzle regardless of fame.
+  if (styleRisk >= 0.67) {
+    return `extreme style risk (${styleRisk.toFixed(3)})`;
+  }
+
+  return null;
+}
+
 // ─── Game configs ─────────────────────────────────────────────────────────────
 //
 // To add a new game:
@@ -43,7 +118,7 @@ const GAME_CONFIGS = {
       "Mix genders and nationalities",
       "Avoid superhero alter-egos (e.g. no SPIDER-MAN, prefer PETER PARKER)",
       "ACTOR CAP: No actor should appear more than 3 times total across all entries (existing + new). If an actor already appears 3 times in the existing entries list, do NOT add another entry for them.",
-      "MOVIE CAP: No movie should appear more than 2 times total across all entries. If a movie already has 2 entries, do NOT add another character from that movie.",
+      "MOVIE CAP: No movie should appear more than 3 times total across all entries. If a movie already has 3 entries, do NOT add another character from that movie.",
       "Each entry must be unique — a different actor AND character than any existing entry",
       "Double-check your work: verify that each actor ACTUALLY played the listed character in the listed movie. Do not guess or hallucinate pairings.",
     ],
@@ -58,10 +133,16 @@ const GAME_CONFIGS = {
     existingSummary: (entries) => entries.map(e => `${e.actor} as ${e.character} (${e.movie})`).join("\n"),
     validate: (entry) => {
       const issues = [];
-      const actorLetters = entry.actor.replace(/[^A-Z]/gi, "");
-      const charLetters = entry.character.replace(/[^A-Z]/gi, "");
-      const totalLetters = actorLetters.length + charLetters.length;
-      const uniqueLetters = new Set((actorLetters + charLetters).toUpperCase()).size;
+      const {
+        actorLetters,
+        charLetters,
+        totalLetters,
+        uniqueLetters,
+        uncommon,
+        pop,
+        charPop,
+        styleRisk,
+      } = getRolesMetrics(entry);
 
       // Hard reject — truly impossible puzzles
       if (uniqueLetters > 18) {
@@ -81,38 +162,20 @@ const GAME_CONFIGS = {
       }
 
       // Auto-tag difficulty (not a rejection — sets the field on the entry)
-      // Factor in letter frequency: common letters (ETAOINSHRL) are guessed
-      // early and reveal more tiles, making puzzles easier even with high unique counts.
-      // Also factor in popularity: obscure pairings are harder for players.
+      // "Hard" should mean occasional challenge, not a constant solve tax.
       if (issues.length === 0) {
-        const COMMON = new Set("ETAOINSHRL");
-        const uniqueSet = new Set((actorLetters + charLetters).toUpperCase());
-        const uncommon = [...uniqueSet].filter(l => !COMMON.has(l)).length;
-        const pop = entry.popularity ?? 10; // assume popular if not scored yet
-        const charPop = entry.characterPopularity ?? pop; // fall back to overall popularity
-
         const isHard =
-          // Very short puzzles — few letters means less info per guess, mechanically hard
-          totalLetters < 14 ||
-          // Most unique letters are uncommon — common guesses miss, hard regardless of fame
-          (uncommon >= 7 && uncommon / uniqueLetters > 0.5) ||
-          // Popularity override: pop >= 8 means everyone knows the names,
-          // so moderate letter mechanics alone shouldn't make it "hard"
-          pop < 8 && (
-          // High unique + enough uncommon letters to be genuinely hard
-          (uniqueLetters >= 15 && uncommon >= 5) ||
-          // Very long puzzles
-          totalLetters >= 29 ||
-          // Short but brutal (high unique-to-total ratio)
-          (totalLetters < 20 && uniqueLetters > 12)) ||
-          // Borderline letter difficulty + low popularity → tips to hard
-          (uniqueLetters >= 13 && pop <= 5) ||
-          (uncommon >= 5 && pop <= 4) ||
-          // Obscure overall — hard to guess if you don't recognize the names
-          pop <= 5 ||
-          // Obscure character name — but not if the actor is very famous
-          // and the letters are mostly common (easy to reveal by guessing)
-          (charPop <= 4 && (pop < 8 || uncommon >= 4));
+          // True mechanical difficulty.
+          (uniqueLetters >= 16 && uncommon >= 6) ||
+          totalLetters >= 30 ||
+          (uncommon >= 8 && uncommon / Math.max(uniqueLetters, 1) > 0.55) ||
+          // Knowledge-based difficulty.
+          (charPop <= 3 && pop <= 7) ||
+          (charPop <= 4 && pop <= 7 && uniqueLetters >= 13) ||
+          // Player letter-flow difficulty (TREAIOSLDMN strategy).
+          (styleRisk >= 0.66 && charPop <= 4) ||
+          (styleRisk >= 0.58 && charPop <= 3) ||
+          styleRisk >= 0.74;
 
         if (isHard) {
           entry.difficulty = "hard";
@@ -396,8 +459,9 @@ ${list}`;
 //
 // Reorders `fresh` entries so that when appended to `existing`, the result has:
 //   • No back-to-back hard puzzles (including the seam)
+//   • At least 3 normal puzzles between hard puzzles
 //   • No same-actor within 14 days (including the seam with existing entries)
-//   • ~2-3 hard puzzles per week
+//   • ~1-2 hard puzzles per week
 //
 function scheduleNewEntries(existing, fresh) {
   if (fresh.length <= 1) return fresh;
@@ -453,17 +517,30 @@ function scheduleNewEntries(existing, fresh) {
       // ── Hard constraints (large penalties) ──
       if (recentActors.has(e.actor)) score -= 1000;               // same actor within 14 days
       if (isHard && prev?.difficulty === "hard") score -= 1000;   // back-to-back hard
-      if (isHard && weekHards >= 3) score -= 500;                 // week over hard budget
+      if (isHard && weekHards >= MAX_HARDS_PER_WEEK) score -= 500; // week over hard budget
+
+      // Enforce spacing: need at least N normal puzzles between hards.
+      if (isHard) {
+        for (let gap = 1; gap <= MIN_NORMAL_BETWEEN_HARD; gap++) {
+          const prevIdx = globalIdx - gap;
+          if (prevIdx < 0) break;
+          const prevEntry = prevIdx < startIdx ? existing[prevIdx] : result[prevIdx - startIdx];
+          if (prevEntry?.difficulty === "hard") {
+            score -= 1000;
+            break;
+          }
+        }
+      }
 
       // ── Soft preferences ──
       if (score >= 0) {
         // Distribute hards: prefer placing one when week is under budget
-        if (isHard && weekHards < 2) score += 10;
-        if (!isHard && weekHards >= 2) score += 5;
+        if (isHard && weekHards < TARGET_HARDS_PER_WEEK) score += 10;
+        if (!isHard && weekHards >= TARGET_HARDS_PER_WEEK) score += 5;
 
-        // Avoid running out of normals (would force back-to-back hards later)
+        // Avoid running out of normals (would force hard clustering later)
         const hardsAfterThis = availableHards - (isHard ? 1 : 0);
-        const maxHardSlots = Math.ceil(remainingAfter / 2);
+        const maxHardSlots = Math.ceil(remainingAfter / (MIN_NORMAL_BETWEEN_HARD + 1));
         if (!isHard && hardsAfterThis > maxHardSlots) score -= 30;
 
         // Avoid back-to-back pre-1980 films (rare era, feels repetitive)
@@ -484,11 +561,24 @@ function scheduleNewEntries(existing, fresh) {
   }
 
   // ── Report ──
-  let b2b = 0, tooClose = 0;
+  let b2b = 0;
+  let hardSpacingViolations = 0;
+  let tooClose = 0;
   for (let i = 0; i < result.length; i++) {
     const globalIdx = startIdx + i;
     const prev = i === 0 ? existing[existing.length - 1] : result[i - 1];
     if (prev && result[i].difficulty === "hard" && prev.difficulty === "hard") b2b++;
+    if (result[i].difficulty === "hard") {
+      for (let gap = 1; gap <= MIN_NORMAL_BETWEEN_HARD; gap++) {
+        const prevIdx = globalIdx - gap;
+        if (prevIdx < 0) break;
+        const prevEntry = prevIdx < startIdx ? existing[prevIdx] : result[prevIdx - startIdx];
+        if (prevEntry?.difficulty === "hard") {
+          hardSpacingViolations++;
+          break;
+        }
+      }
+    }
     // Check 14-day window
     for (let j = Math.max(0, globalIdx - 13); j < globalIdx; j++) {
       const entry = j < startIdx ? existing[j] : result[j - startIdx];
@@ -499,8 +589,8 @@ function scheduleNewEntries(existing, fresh) {
       }
     }
   }
-  if (b2b === 0 && tooClose === 0) {
-    console.log("✓ Scheduling: no back-to-back hards, no same-actor within 14 days.");
+  if (b2b === 0 && hardSpacingViolations === 0 && tooClose === 0) {
+    console.log(`✓ Scheduling: hard spacing OK (${MIN_NORMAL_BETWEEN_HARD} normals between hards), no same-actor within 14 days.`);
   }
 
   // Show weekly hard distribution for the new entries
@@ -624,7 +714,7 @@ async function main() {
       .map(([a, c]) => `${a} (${c})`)
       .join(", ");
     const cappedMovies = Object.entries(movieCounts)
-      .filter(([, c]) => c >= 2)
+      .filter(([, c]) => c >= MAX_MOVIE_ENTRIES)
       .map(([m, c]) => `${m} (${c})`)
       .join(", ");
     const pairList = existing.map(e => `${e.actor} / ${e.character}`).join(", ");
@@ -635,7 +725,7 @@ async function main() {
     existingBlock = `There are ${existing.length} existing entries. Do NOT duplicate any of these actor/character pairs: ${pairList}
 
 Actors near or at the cap (max 3): ${cappedActors || "none"}
-Movies at the cap (max 2): ${cappedMovies || "none"}
+Movies at the cap (max ${MAX_MOVIE_ENTRIES}): ${cappedMovies || "none"}
 
 RECENTLY USED — do NOT use any of these actors (they appeared in the last 14 entries): ${recentActors}`;
   } else if (existing.length > 0) {
@@ -814,7 +904,7 @@ ${verifyList}`;
     const capped = beforeCap - fresh.length;
     if (capped > 0) console.log(`⚠ Actor cap removed ${capped} entries.`);
 
-    // Movie cap: max 2 entries per movie across existing + new
+    // Movie cap: max 3 entries per movie across existing + new
     const movieCounts = {};
     for (const e of existing) {
       movieCounts[e.movie] = (movieCounts[e.movie] || 0) + 1;
@@ -822,7 +912,7 @@ ${verifyList}`;
     const beforeMovieCap = fresh.length;
     fresh = fresh.filter((e) => {
       const current = movieCounts[e.movie] || 0;
-      if (current >= 2) {
+      if (current >= MAX_MOVIE_ENTRIES) {
         console.warn(`  ✗ Movie cap: "${e.movie}" already has ${current} entries — skipping ${e.actor} / ${e.character}`);
         return false;
       }
@@ -832,27 +922,20 @@ ${verifyList}`;
     const movieCapped = beforeMovieCap - fresh.length;
     if (movieCapped > 0) console.log(`⚠ Movie cap removed ${movieCapped} entries.`);
 
-    // Quality gate: reject entries where the combined popularity is too low.
-    // A well-known actor (high pop) can offset a lesser-known character name.
+    // Quality gate: reject pairings that are likely to feel unfair/unfun.
     const beforeQuality = fresh.length;
     fresh = fresh.filter((e) => {
-      const cp = e.characterPopularity ?? 5;
-      const p = e.popularity ?? 5;
-      const combined = cp + p;
-      // Both scores rock-bottom — truly unknown
-      if (cp <= 1 && p <= 4) {
-        console.warn(`  ✗ Too obscure: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}) — nobody will know this`);
-        return false;
-      }
-      // Low combined score — obscure actor + obscure character
-      if (combined <= 7 && cp <= 3) {
-        console.warn(`  ✗ Too niche: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}, combined ${combined})`);
+      const reason = getNotFunReason(e);
+      if (reason) {
+        const p = e.popularity ?? "?";
+        const cp = e.characterPopularity ?? "?";
+        console.warn(`  ✗ Not fun: ${e.actor} / ${e.character} (pop ${p}, charPop ${cp}) — ${reason}`);
         return false;
       }
       return true;
     });
     const qualityRejected = beforeQuality - fresh.length;
-    if (qualityRejected > 0) console.log(`⚠ Quality gate removed ${qualityRejected} too-obscure entries.`);
+    if (qualityRejected > 0) console.log(`⚠ Quality gate removed ${qualityRejected} not-fun entries.`);
   }
 
   // Validate entries (runs after scoring so popularity-based difficulty tagging works)
