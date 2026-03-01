@@ -5,8 +5,6 @@ import Link from "next/link";
 import { readPlaytestSession } from "@/lib/playtest";
 import { ThumbsPlaytestResult, DegreesPlaytestResult } from "@/lib/playtest";
 
-const PLAYTEST_KEY = "asdlkfjalhoeirwioeu32u49289slkh";
-
 const GAMES = [
   { key: "roles", label: "Roles", href: "/playtest/roles", description: "Guess the actor from the character name, letter by letter" },
   { key: "thumbs", label: "Thumb Wars", href: "/playtest/thumbs", description: "Did Siskel & Ebert give it a thumbs up or down?" },
@@ -14,17 +12,9 @@ const GAMES = [
 ] as const;
 
 export default function PlaytestHubPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
   const [stats, setStats] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    const host = window.location.hostname;
-    const params = new URLSearchParams(window.location.search);
-    setAllowed(host === "localhost" || host === "127.0.0.1" || params.get("key") === PLAYTEST_KEY);
-  }, []);
-
-  useEffect(() => {
-    if (!allowed) return;
     const rolesSession = readPlaytestSession();
     const thumbsSession = readPlaytestSession<ThumbsPlaytestResult>("thumbs");
     const degreesSession = readPlaytestSession<DegreesPlaytestResult>("degrees");
@@ -33,21 +23,7 @@ export default function PlaytestHubPage() {
       thumbs: thumbsSession.results.length,
       degrees: degreesSession.results.length,
     });
-  }, [allowed]);
-
-  if (allowed === null) return null;
-
-  if (!allowed) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Development Only</h1>
-          <p className="text-zinc-500">This page is only available on localhost.</p>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center px-4"

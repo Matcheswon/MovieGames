@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { getNyDateKey } from "@/lib/dailyUtils";
+import { trackAnonymousGameResult } from "@/app/actions/trackGamePlay";
+import { getOrCreateAnonId } from "@/lib/anonId";
 
 type ThumbsResult = {
   game: "thumbs";
@@ -32,23 +34,42 @@ type GameResult = ThumbsResult | RolesResult | DegreesResult;
 export async function saveGameResult(result: GameResult) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return; // not logged in, skip silently
 
-  const row: Record<string, unknown> = {
-    user_id: user.id,
-    game: result.game,
-    date_key: result.dateKey,
-    time_secs: result.timeSecs,
-    score: result.game === "thumbs" ? result.score : null,
-    out_of: result.game === "thumbs" ? result.outOf : null,
-    solved: result.game === "roles" ? result.solved : result.game === "degrees" ? result.solved : null,
-    strikes: result.game === "roles" ? result.strikes : result.game === "degrees" ? result.mistakes : null,
-    rounds_used: result.game === "roles" ? result.roundsUsed : null,
-  };
+  const score = result.game === "thumbs" ? result.score : null;
+  const outOf = result.game === "thumbs" ? result.outOf : null;
+  const solved = result.game === "roles" ? result.solved : result.game === "degrees" ? result.solved : null;
+  const strikes = result.game === "roles" ? result.strikes : result.game === "degrees" ? result.mistakes : null;
+  const roundsUsed = result.game === "roles" ? result.roundsUsed : null;
 
-  await supabase.from("game_results").upsert(row, {
-    onConflict: "user_id,game,date_key",
-  });
+  if (user) {
+    await supabase.from("game_results").upsert(
+      {
+        user_id: user.id,
+        game: result.game,
+        date_key: result.dateKey,
+        time_secs: result.timeSecs,
+        score,
+        out_of: outOf,
+        solved,
+        strikes,
+        rounds_used: roundsUsed,
+      },
+      { onConflict: "user_id,game,date_key" }
+    );
+  } else {
+    const anonId = getOrCreateAnonId();
+    await trackAnonymousGameResult({
+      anonId,
+      game: result.game,
+      dateKey: result.dateKey,
+      timeSecs: result.timeSecs,
+      score,
+      outOf,
+      solved,
+      strikes,
+      roundsUsed,
+    });
+  }
 }
 
 export async function getTodayResult(game: string, dateKey: string) {

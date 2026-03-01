@@ -16,6 +16,7 @@ export default function FeedbackWidget() {
   const [email, setEmail] = useState("");
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [message, setMessage] = useState("");
+  const [website, setWebsite] = useState("");
 
   const { gameContext } = useFeedbackContext();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -34,6 +35,7 @@ export default function FeedbackWidget() {
 
   function reset() {
     setMessage("");
+    setWebsite("");
     setError(null);
     setSent(false);
   }
@@ -53,6 +55,7 @@ export default function FeedbackWidget() {
           email: email || undefined,
           category,
           message,
+          website,
           pageUrl: window.location.pathname,
           gameContext,
         }),
@@ -86,7 +89,7 @@ export default function FeedbackWidget() {
   if (isPlaying && !open) return null;
 
   return (
-    <div ref={panelRef} className={`fixed z-30 ${open ? "inset-0 sm:inset-auto sm:bottom-5 sm:right-5 flex flex-col sm:items-end sm:gap-3" : "bottom-5 right-5 flex flex-col items-end gap-3"}`}>
+    <div ref={panelRef} className={`fixed z-[60] ${open ? "inset-0 sm:inset-auto sm:bottom-5 sm:right-5 flex flex-col sm:items-end sm:gap-3" : "bottom-5 right-5 flex flex-col items-end gap-3"}`}>
       {/* Panel */}
       {open && (
         <div
@@ -155,6 +158,17 @@ export default function FeedbackWidget() {
                 className="w-full resize-none rounded-lg border border-zinc-800/60 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-amber-500/40 transition-colors flex-1 sm:flex-none"
               />
 
+              {/* Honeypot input (should stay blank) */}
+              <input
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                className="hidden"
+                name="website"
+                aria-hidden="true"
+              />
+
               {error && (
                 <p className="text-xs text-red-400">{error}</p>
               )}
@@ -183,9 +197,9 @@ export default function FeedbackWidget() {
       {!open && (
         <button
           onClick={() => { setOpen(true); reset(); }}
-          className="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-800/60 bg-zinc-900 text-zinc-400 shadow-lg shadow-black/40 transition-all hover:border-amber-500/40 hover:text-amber-400 hover:shadow-amber-500/10"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 shadow-lg shadow-emerald-500/15 transition-all hover:bg-emerald-500/25 hover:shadow-emerald-500/30 hover:scale-105 active:scale-95"
         >
-          <MessageSquare className="w-5 h-5" />
+          <MessageSquare className="w-6 h-6" />
         </button>
       )}
     </div>

@@ -23,6 +23,24 @@ import {
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
 const BONUS_PLAYED_KEY = "moviegames:roles:bonus-played";
+const BONUS_RESULT_KEY = "moviegames:roles:bonus-result";
+
+type BonusResult = {
+  solved: boolean;
+  strikes: number;
+  timeSecs: number;
+  roundsUsed: number;
+  maxRounds: number;
+  solvedRound: number | null;
+  strikeRounds: number[];
+  lostRounds: number[];
+  puzzleNumber: number;
+  actor: string;
+  character: string;
+  movie: string;
+  year: number;
+  easterEgg?: string;
+};
 
 type RolesHistoryEntry = {
   dateKey: string;
@@ -198,6 +216,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [freeLetterActive, setFreeLetterActive] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
   const [bonusPlayedToday, setBonusPlayedToday] = useState(false);
+  const [bonusResult, setBonusResult] = useState<BonusResult | null>(null);
   const [lostRounds, setLostRounds] = useState(new Set<number>());
   const lostRoundsRef = useRef(new Set<number>());
   const addLostRound = (r: number) => {
@@ -452,9 +471,19 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   useEffect(() => {
     if (playtestMode || bonusMode) return;
     // Check if bonus round was already played today
+    let hasBonusResult = false;
     if (typeof window !== "undefined") {
       const bonusDate = window.localStorage.getItem(BONUS_PLAYED_KEY);
       if (bonusDate === dateKey) setBonusPlayedToday(true);
+      // Check for bonus results to show in modal (from redirect after bonus game)
+      const bonusRaw = window.sessionStorage.getItem(BONUS_RESULT_KEY);
+      if (bonusRaw) {
+        try {
+          setBonusResult(JSON.parse(bonusRaw) as BonusResult);
+          hasBonusResult = true;
+        } catch { /* ignore parse errors */ }
+        window.sessionStorage.removeItem(BONUS_RESULT_KEY);
+      }
     }
     const today = dateKey;
     const data = readDailyStreak();
@@ -463,8 +492,22 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (localStreak > 0) setDailyStreak(localStreak);
     const todayEntry = data.history.find(h => h.dateKey === today);
     if (todayEntry) {
-      setAlreadyPlayed(todayEntry);
       setPlayedToday(true);
+      // If returning from bonus game, skip to results view with bonus modal on top
+      if (hasBonusResult) {
+        const usedRound = todayEntry.roundsUsed ? todayEntry.roundsUsed - 1 : 0;
+        setRevealed(new Set(allLetters));
+        setStrikes(todayEntry.strikes);
+        setTotalTime(todayEntry.timeSecs);
+        setRound(usedRound);
+        if (todayEntry.solved) setSolvedRound(usedRound);
+        if (todayEntry.strikeRounds) setStrikeRounds(new Set(todayEntry.strikeRounds));
+        if (todayEntry.lostRounds) { setLostRounds(new Set(todayEntry.lostRounds)); lostRoundsRef.current = new Set(todayEntry.lostRounds); }
+        dailyRecorded.current = true;
+        setScreen(todayEntry.solved ? "solved" : "failed");
+      } else {
+        setAlreadyPlayed(todayEntry);
+      }
       // Fetch authoritative streak from Supabase to fix localStorage drift
       getGameStreak("roles").then(streak => {
         if (streak > 0) setDailyStreak(streak);
@@ -556,10 +599,28 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     experimental.onGameEnd(screen === "solved");
     const roundsUsed = Math.min(MAX_ROUNDS, round + 1);
 
-    // In bonus mode, mark as played today but skip streak/Supabase saves
+    // In bonus mode, save results to sessionStorage and redirect to daily page
     if (bonusMode) {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(BONUS_PLAYED_KEY, getNyDateKey(new Date()));
+        const today = getNyDateKey(new Date());
+        window.localStorage.setItem(BONUS_PLAYED_KEY, today);
+        window.sessionStorage.setItem(BONUS_RESULT_KEY, JSON.stringify({
+          solved: screen === "solved",
+          strikes,
+          timeSecs: totalTime,
+          roundsUsed,
+          maxRounds: MAX_ROUNDS,
+          solvedRound,
+          strikeRounds: [...strikeRounds],
+          lostRounds: [...lostRoundsRef.current],
+          puzzleNumber,
+          actor: puzzle.actor,
+          character: puzzle.character,
+          movie: puzzle.movie,
+          year: puzzle.year,
+          easterEgg: puzzle.easter_egg,
+        }));
+        router.push("/play/roles/daily");
       }
       return;
     }
@@ -1817,6 +1878,108 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             )}
           </div>
         </div>
+
+        {/* Bonus result modal overlay */}
+        {bonusResult && (() => {
+          const br = bonusResult;
+          const brWon = br.solved;
+          const brStrikeSet = new Set(br.strikeRounds);
+          const brLostSet = new Set(br.lostRounds);
+          const brLastRound = br.roundsUsed - 1;
+          const tileCls = brWon
+            ? "bg-emerald-500/15 text-emerald-200 border border-emerald-500/30"
+            : "bg-red-500/10 text-red-300/80 border border-red-500/20";
+          const renderBonusTiles = (word: string) => {
+            const segments: string[][] = [];
+            let current: string[] = [];
+            for (const ch of word) {
+              if (ch === " ") { if (current.length) segments.push(current); current = []; }
+              else current.push(ch);
+            }
+            if (current.length) segments.push(current);
+            return (
+              <div className="flex flex-wrap gap-y-1.5 gap-x-2.5 items-center">
+                {segments.map((seg, si) => (
+                  <div key={si} className="flex gap-0.5">
+                    {seg.map((ch, ci) => (
+                      <span key={ci} className={`w-7 h-8 rounded flex items-center justify-center text-sm font-bold ${
+                        isGuessableChar(ch) ? tileCls : ""
+                      }`} style={{ fontFamily: "'DM Mono', monospace" }}>
+                        {ch}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            );
+          };
+          return (
+            <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+              <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={() => setBonusResult(null)} />
+              <div className="relative w-full max-w-sm animate-slideUp"
+                style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
+                <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
+                  <div className="p-6 relative">
+                    <button onClick={() => setBonusResult(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
+                      <X className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2.5">
+                        <Drama className="w-5 h-5 text-amber-400" />
+                        <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h2>
+                        <span className="text-xs text-zinc-500">Bonus · #{br.puzzleNumber}</span>
+                      </div>
+                      <span className={`text-lg font-extrabold ${brWon ? "text-emerald-300" : "text-zinc-400"}`}
+                        style={{ fontFamily: "'Playfair Display', serif" }}>{brWon ? "Solved" : "Not this time"}</span>
+                    </div>
+                    {/* Round bars */}
+                    <div className="flex gap-1 mb-3 opacity-70">
+                      {Array.from({ length: br.maxRounds }).map((_, i) => (
+                        <div key={i} className={`h-2 flex-1 rounded-full ${
+                          br.solvedRound === i ? "bg-emerald-400" :
+                          brStrikeSet.has(i) ? "bg-red-500/70" :
+                          brLostSet.has(i) ? "bg-zinc-600" :
+                          i <= brLastRound ? "bg-amber-400" :
+                          "bg-zinc-800"}`} />
+                      ))}
+                    </div>
+                    {/* Tiles */}
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-4 text-left space-y-2">
+                      <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500">Actor</p>
+                      {renderBonusTiles(br.actor)}
+                      <div className="border-t border-zinc-800/30 my-1" />
+                      <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500">Character</p>
+                      {renderBonusTiles(br.character)}
+                      <div className="pt-2 border-t border-zinc-800/40">
+                        <p className="text-xs text-zinc-500"><span className="text-zinc-300 font-medium">{br.movie}</span> ({br.year})</p>
+                        {brWon && br.easterEgg && (
+                          <p className="text-sm font-bold text-red-500 italic mt-2 drop-shadow-lg">{br.easterEgg}</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2 mb-5 text-center">
+                      {[
+                        { v: fmt(br.timeSecs), l: "Time" },
+                        { v: `${br.roundsUsed}/${br.maxRounds}`, l: "Rounds" },
+                        { v: `${br.strikes}/${MAX_STRIKES}`, l: "Strikes" },
+                      ].map((s, i) => (
+                        <div key={i} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl py-2.5">
+                          <p className="text-lg font-bold text-zinc-100">{s.v}</p>
+                          <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">{s.l}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setBonusResult(null)}
+                      className="w-full py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </Shell>
     );
   }

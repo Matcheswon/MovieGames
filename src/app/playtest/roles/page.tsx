@@ -134,20 +134,11 @@ function PuzzleSelector({
 /* ─── Main Playtest Page ────────────────────────────────────────────────────── */
 
 export default function PlaytestRolesPage() {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
   const [view, setView] = useState<"playing" | "dashboard">("playing");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [results, setResults] = useState<PlaytestResult[]>([]);
   const [autoAdvance, setAutoAdvance] = useState(true);
   const [buildVariant, setBuildVariant] = useState<"standard" | "experimental">("standard");
-
-  // Access gate: localhost OR secret key in URL
-  const PLAYTEST_KEY = "asdlkfjalhoeirwioeu32u49289slkh";
-  useEffect(() => {
-    const host = window.location.hostname;
-    const params = new URLSearchParams(window.location.search);
-    setAllowed(host === "localhost" || host === "127.0.0.1" || params.get("key") === PLAYTEST_KEY);
-  }, []);
 
   // Restore session from localStorage (clamp index to valid range)
   useEffect(() => {
@@ -206,20 +197,6 @@ export default function PlaytestRolesPage() {
     setView("playing");
     persist(results, clamped);
   };
-
-  if (allowed === null) return null;
-
-  if (!allowed) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Development Only</h1>
-          <p className="text-zinc-500">This page is only available on localhost.</p>
-        </div>
-      </div>
-    );
-  }
 
   if (view === "dashboard") {
     return <PlaytestDashboard results={results} totalPuzzles={puzzles.length} onBack={() => setView("playing")} />;
