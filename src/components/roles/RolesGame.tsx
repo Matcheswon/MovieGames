@@ -441,7 +441,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             setStrikes(prev => {
               const ns = prev + 1;
               if (ns >= MAX_STRIKES) {
-                triggerGameOver("3 Strikes — Game Over!");
+                triggerGameOver("3 Strikes\nGame Over!");
               } else {
                 setPhase("round-ending");
                 setTimeout(() => advance(), 0);
@@ -1316,7 +1316,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           setFanfareCount(count);
           setTimeout(() => { setFanfareLetter(null); setFanfareCount(0); }, 2400);
           if (newStrikes >= MAX_STRIKES) {
-            triggerGameOver("3 Strikes — Game Over!");
+            triggerGameOver("3 Strikes\nGame Over!");
             return;
           }
           consumeGuess();
@@ -1336,7 +1336,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       setPressedKey(null);
 
       if (newStrikes >= MAX_STRIKES) {
-        triggerGameOver("3 Strikes — Game Over!");
+        triggerGameOver("3 Strikes\nGame Over!");
         return;
       }
       setTimeout(() => {
@@ -1451,7 +1451,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       addStrikeRound(roundRef.current);
       setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
       setSolveInputs({}); setSolveCursor(0);
-      if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes — Game Over!"); }
+      if (nextStrikes >= MAX_STRIKES) { triggerGameOver("3 Strikes\nGame Over!"); }
       else if (!finalSolveMode) { setSolveMode(false); }
     }
   };
@@ -2144,30 +2144,30 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 <div className="w-full max-w-[320px] flex flex-col items-center">
                   {showWheel && (
                     <div className={`w-full transition-opacity duration-300 ${wheelDimmed ? "opacity-35" : "opacity-100"}`}>
-                      <div className={`rounded-xl border overflow-hidden mx-auto max-w-[260px] sm:max-w-[280px] ${isSpinning ? "border-zinc-600/70 bg-zinc-900/70" : "border-zinc-700/50 bg-zinc-900/40"}`}>
-                        <div className={`px-4 py-1.5 flex items-center justify-between ${isSpinning ? "opacity-80" : "opacity-55"}`}>
-                          <span className={`text-[11px] font-semibold tracking-widest uppercase ${isSpinning ? "text-zinc-300" : "text-zinc-500"}`} style={{ fontFamily: "'DM Mono', monospace" }}>{topEff ? topEff.label : "\u2014"}</span>
-                          <span className={`text-xs ${isSpinning ? "opacity-85" : "opacity-60"}`}>{topEff?.icon ?? ""}</span>
+                      <div className={`rounded-xl border overflow-hidden mx-auto max-w-[300px] sm:max-w-[320px] ${isSpinning ? "border-zinc-600/70 bg-zinc-900/70" : "border-zinc-700/50 bg-zinc-900/40"}`}>
+                        <div className={`px-5 py-2 flex items-center justify-between ${isSpinning ? "opacity-80" : "opacity-55"}`}>
+                          <span className={`text-xs font-semibold tracking-widest uppercase ${isSpinning ? "text-zinc-300" : "text-zinc-500"}`} style={{ fontFamily: "'DM Mono', monospace" }}>{topEff ? topEff.label : "\u2014"}</span>
+                          <span className={`text-sm ${isSpinning ? "opacity-85" : "opacity-60"}`}>{topEff?.icon ?? ""}</span>
                         </div>
                         <div className="h-px bg-zinc-800/50" />
                         <div
                           key={isSpinning ? spinIdx : "settled"}
-                          className={`px-4 py-2.5 flex items-center justify-between border-y border-transparent transition-colors duration-300 ${centerBg} ${isSpinning ? (windUpRef.current ? "wheel-tick-up" : "wheel-tick") : ""}`}
+                          className={`px-5 py-3.5 flex items-center justify-between border-y border-transparent transition-colors duration-300 ${centerBg} ${isSpinning ? (windUpRef.current ? "wheel-tick-up" : "wheel-tick") : ""}`}
                         >
                           <div>
-                            <p className={`text-base font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`} style={{ fontFamily: "'DM Mono', monospace" }}>
+                            <p className={`text-lg font-bold tracking-widest uppercase transition-colors duration-200 ${centerColor}`} style={{ fontFamily: "'DM Mono', monospace" }}>
                               {centerEff ? centerEff.label : "\u00B7  \u00B7  \u00B7"}
                             </p>
                             <p className={`text-sm mt-0.5 transition-opacity duration-300 ${settled ? "opacity-100" : "opacity-0"} ${rollResult?.good ? "text-emerald-400" : "text-red-400"}`}>
                               {rollResult?.desc ?? "\u00A0"}
                             </p>
                           </div>
-                          <span className={`text-base transition-opacity duration-200 ${isSpinning ? "opacity-95 text-amber-200" : settled ? "opacity-90" : "opacity-35"}`}>{centerEff?.icon ?? ""}</span>
+                          <span className={`text-lg transition-opacity duration-200 ${isSpinning ? "opacity-95 text-amber-200" : settled ? "opacity-90" : "opacity-35"}`}>{centerEff?.icon ?? ""}</span>
                         </div>
                         <div className="h-px bg-zinc-800/50" />
-                        <div className={`px-4 py-1.5 flex items-center justify-between ${isSpinning ? "opacity-80" : "opacity-55"}`}>
-                          <span className={`text-[11px] font-semibold tracking-widest uppercase ${isSpinning ? "text-zinc-300" : "text-zinc-500"}`} style={{ fontFamily: "'DM Mono', monospace" }}>{bottomEff ? bottomEff.label : "\u2014"}</span>
-                          <span className={`text-xs ${isSpinning ? "opacity-85" : "opacity-60"}`}>{bottomEff?.icon ?? ""}</span>
+                        <div className={`px-5 py-2 flex items-center justify-between ${isSpinning ? "opacity-80" : "opacity-55"}`}>
+                          <span className={`text-xs font-semibold tracking-widest uppercase ${isSpinning ? "text-zinc-300" : "text-zinc-500"}`} style={{ fontFamily: "'DM Mono', monospace" }}>{bottomEff ? bottomEff.label : "\u2014"}</span>
+                          <span className={`text-sm ${isSpinning ? "opacity-85" : "opacity-60"}`}>{bottomEff?.icon ?? ""}</span>
                         </div>
                       </div>
                     </div>
@@ -2186,11 +2186,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                           <div className="flex flex-col items-center gap-2.5">
                             <p className="text-xs text-zinc-400 whitespace-nowrap">Keyboard locked</p>
                             {roundKbLock && (
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-4">
                                 <button
                                   onClick={handlePreRollSolve}
                                   disabled={solveAttempts <= 0}
-                                  className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
+                                  className={`px-7 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
                                     solveAttempts <= 0
                                       ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
                                       : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
@@ -2200,7 +2200,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                                 </button>
                                 <button
                                   onClick={() => { if (guessRef.current) clearInterval(guessRef.current); setPhase("round-ending"); setTimeout(() => advance(), 400); }}
-                                  className="px-6 py-3.5 rounded-xl font-bold text-base tracking-wide bg-zinc-700/50 border border-zinc-600/50 text-zinc-300 hover:bg-zinc-600/50 active:scale-[0.97] cursor-pointer transition-all"
+                                  className="px-7 py-3.5 rounded-xl font-bold text-base tracking-wide bg-zinc-700/50 border border-zinc-600/50 text-zinc-300 hover:bg-zinc-600/50 active:scale-[0.97] cursor-pointer transition-all"
                                 >
                                   Skip
                                 </button>
@@ -2241,17 +2241,17 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
                   {isPreRoll && preRollReady && (
                     <div className="mt-3 flex flex-col items-center gap-2.5 animate-fadeIn pointer-events-auto">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <button
                           onClick={handleSpin}
-                          className={`px-6 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
+                          className={`px-7 py-3.5 rounded-xl bg-amber-500 text-zinc-950 font-bold text-base tracking-wide transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-[0.97] cursor-pointer ${preRollChoice === "spin" ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-zinc-950" : ""}`}
                         >
                           Spin
                         </button>
                         <button
                           onClick={handlePreRollSolve}
                           disabled={solveAttempts <= 0}
-                          className={`px-6 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
+                          className={`px-7 py-3.5 rounded-xl font-bold text-base tracking-wide transition-all ${
                             solveAttempts <= 0
                               ? "bg-zinc-800/30 border border-zinc-800/30 text-zinc-700 opacity-45 cursor-not-allowed"
                               : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 active:scale-[0.97] cursor-pointer"
@@ -2489,27 +2489,32 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       {/* Turn warning popup */}
       {turnWarning && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-          <div className={`pop-warning bg-zinc-900/95 border rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50 ${turnWarning.toLowerCase().includes("locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
-            <p className={`font-extrabold text-xl tracking-wide ${turnWarning.toLowerCase().includes("locked") ? "text-red-400" : "text-amber-400"}`}>{turnWarning}</p>
-            <p className="text-zinc-500 text-xs mt-1">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : round === 0 ? "let's go!" : "keep going!"}</p>
+          <div className={`pop-warning bg-zinc-900/95 border rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50 ${turnWarning.toLowerCase().includes("locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
+            <p className={`font-extrabold text-2xl tracking-wide ${turnWarning.toLowerCase().includes("locked") ? "text-red-400" : "text-amber-400"}`}>{turnWarning}</p>
+            <p className="text-zinc-500 text-sm mt-1.5">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : round === 0 ? "let's go!" : "keep going!"}</p>
           </div>
         </div>
       )}
 
       {gameOverPopup && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-          <div className="pop-warning-3s bg-zinc-900/95 border border-red-500/40 rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50">
-            <p className="font-extrabold text-xl tracking-wide text-red-400">{gameOverPopup}</p>
-            <p className="text-zinc-500 text-xs mt-1">Better luck next time</p>
+          <div className="pop-warning-3s bg-zinc-900/95 border border-red-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50">
+            {gameOverPopup.includes("\n") ? (<>
+              <p className="text-sm font-semibold tracking-wide text-zinc-400 mb-1">{gameOverPopup.split("\n")[0]}</p>
+              <p className="font-extrabold text-2xl tracking-wide text-red-400">{gameOverPopup.split("\n")[1]}</p>
+            </>) : (
+              <p className="font-extrabold text-2xl tracking-wide text-red-400">{gameOverPopup}</p>
+            )}
+            <p className="text-zinc-500 text-sm mt-1.5">Better luck next time</p>
           </div>
         </div>
       )}
 
       {gameWinPopup && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-          <div className="pop-warning-3s bg-zinc-900/95 border border-emerald-500/40 rounded-2xl px-8 py-4 text-center shadow-2xl shadow-black/50">
-            <p className="font-extrabold text-xl tracking-wide text-emerald-400">Solved!</p>
-            <p className="text-zinc-500 text-xs mt-1">Nice work</p>
+          <div className="pop-warning-3s bg-zinc-900/95 border border-emerald-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50">
+            <p className="font-extrabold text-2xl tracking-wide text-emerald-400">Solved!</p>
+            <p className="text-zinc-500 text-sm mt-1.5">Nice work</p>
           </div>
         </div>
       )}
