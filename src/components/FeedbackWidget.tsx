@@ -197,7 +197,7 @@ export default function FeedbackWidget() {
       {!open && (
         <button
           onClick={() => { setOpen(true); reset(); }}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 shadow-lg shadow-emerald-500/15 transition-all hover:bg-emerald-500/25 hover:shadow-emerald-500/30 hover:scale-105 active:scale-95"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-900 text-emerald-100 shadow-lg shadow-emerald-900/40 transition-all hover:bg-emerald-700 hover:shadow-emerald-800/50 hover:scale-105 active:scale-95"
         >
           <MessageSquare className="w-6 h-6" />
         </button>

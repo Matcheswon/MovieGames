@@ -702,6 +702,30 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
+  const buildShareText = (opts: {
+    solved: boolean; roundsUsed: number; timeSecs: number; strikes: number;
+    solvedRound?: number | null; strikeRounds?: Iterable<number>; lostRounds?: Iterable<number>;
+    roundPlayed?: number; scoreText?: string; badgeEmojis?: string;
+  }) => {
+    const sr = new Set(opts.strikeRounds ?? []);
+    const lr = new Set(opts.lostRounds ?? []);
+    const rp = opts.roundPlayed ?? (opts.roundsUsed - 1);
+    const roundBlocks = Array.from({ length: MAX_ROUNDS }, (_, i) =>
+      opts.solvedRound === i ? "\u{1F7E9}" :
+      sr.has(i) ? "\u{1F7E5}" :
+      lr.has(i) ? "\u2B1C" :
+      i <= rp ? "\u{1F7E8}" :
+      "\u2B1B"
+    ).join("");
+    let text = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}\n${roundBlocks}`;
+    text += `\n${opts.solved ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${opts.roundsUsed}/${MAX_ROUNDS}`;
+    text += `\n\u23F1 ${fmt(opts.timeSecs)} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes`;
+    if (!bonusMode && dailyStreak > 1) text += ` \u00B7 \u{1F525}${dailyStreak}`;
+    if (opts.scoreText) text += opts.scoreText;
+    if (opts.badgeEmojis) text += `\n${opts.badgeEmojis}`;
+    return text;
+  };
+
   const flash = (letters: string[]) => {
     setJustRevealed(new Set(letters));
     setTimeout(() => setJustRevealed(new Set()), 900);
@@ -1452,12 +1476,13 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   // Pick the largest tile tier where both names fit in ≤2 rows on a ~340px mobile screen.
   const tileSize = (() => {
     const tiers = [
+      { w: "w-12", h: "h-14", text: "text-xl", gap: "gap-1.5", wordGap: "gap-x-5", tilePx: 52 },
       { w: "w-10", h: "h-12", text: "text-lg", gap: "gap-1", wordGap: "gap-x-4", tilePx: 44 },
-      { w: "w-8", h: "h-10", text: "text-base", gap: "gap-0.5", wordGap: "gap-x-3", tilePx: 34 },
-      { w: "w-7", h: "h-9", text: "text-sm", gap: "gap-0.5", wordGap: "gap-x-2.5", tilePx: 30 },
-      { w: "w-6", h: "h-8", text: "text-xs", gap: "gap-0.5", wordGap: "gap-x-2", tilePx: 26 },
-      { w: "w-5", h: "h-7", text: "text-[11px]", gap: "gap-0.5", wordGap: "gap-x-1.5", tilePx: 22 },
-      { w: "w-4", h: "h-6", text: "text-[9px]", gap: "gap-px", wordGap: "gap-x-1", tilePx: 17 },
+      { w: "w-9", h: "h-11", text: "text-base", gap: "gap-1", wordGap: "gap-x-3.5", tilePx: 40 },
+      { w: "w-8", h: "h-10", text: "text-sm", gap: "gap-0.5", wordGap: "gap-x-3", tilePx: 34 },
+      { w: "w-7", h: "h-9", text: "text-xs", gap: "gap-0.5", wordGap: "gap-x-2.5", tilePx: 30 },
+      { w: "w-6", h: "h-8", text: "text-[11px]", gap: "gap-0.5", wordGap: "gap-x-2", tilePx: 26 },
+      { w: "w-5", h: "h-7", text: "text-[10px]", gap: "gap-px", wordGap: "gap-x-1.5", tilePx: 22 },
     ];
     const MOBILE = 340;
     function rowCount(phrase: string, perRow: number): number {
@@ -1493,7 +1518,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     if (current.length) segments.push(current);
 
     return (
-      <div className={`flex flex-wrap gap-y-1.5 ${tileSize.wordGap} items-center`}>
+      <div className={`flex flex-wrap gap-y-2 ${tileSize.wordGap} items-center`}>
         {segments.map((seg, si) => (
           <React.Fragment key={si}>
             <div className={`flex ${tileSize.gap}`}>
@@ -1523,10 +1548,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 else if (isNew) cls = "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 scale-110";
                 else if (show) cls = screen === "solved" ? "bg-emerald-500/15 text-emerald-200 border border-emerald-500/30"
                   : screen === "failed" ? "bg-red-500/10 text-red-300/80 border border-red-500/20"
-                  : "bg-zinc-800 text-zinc-100 border border-zinc-600/40";
+                  : "bg-zinc-700/80 text-zinc-100 border border-zinc-500/50";
                 else if (isCursor) cls = "bg-amber-500/10 border-2 border-amber-400/60";
-                else if (isSolveTyped) cls = "bg-zinc-800/50 text-zinc-200 border border-zinc-500/40";
-                else cls = "bg-zinc-800/50 border border-zinc-600/30";
+                else if (isSolveTyped) cls = "bg-zinc-700/50 text-zinc-200 border border-zinc-500/40";
+                else cls = "bg-zinc-700/40 border border-zinc-500/30";
 
                 const heatStyle: React.CSSProperties = isPop && heatLevel > 0 ? {
                   background: `rgba(251,191,36,${0.2 + heatLevel * 0.35})`,
@@ -1559,7 +1584,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
   // ─── START ───
   const apShareText = alreadyPlayed
-    ? `\u{1F3AD} ROLES #${puzzleNumber}\n${alreadyPlayed.solved ? "\u2705 Solved" : "\u274C"}${alreadyPlayed.roundsUsed ? ` \u00B7 Round ${alreadyPlayed.roundsUsed}/${MAX_ROUNDS}` : ""}\n\u23F1 ${fmt(alreadyPlayed.timeSecs)} \u00B7 ${alreadyPlayed.strikes}/${MAX_STRIKES} strikes${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`
+    ? buildShareText({
+        solved: alreadyPlayed.solved, roundsUsed: alreadyPlayed.roundsUsed ?? 1,
+        timeSecs: alreadyPlayed.timeSecs, strikes: alreadyPlayed.strikes,
+        solvedRound: alreadyPlayed.solved ? (alreadyPlayed.roundsUsed ?? 1) - 1 : null,
+        strikeRounds: alreadyPlayed.strikeRounds, lostRounds: alreadyPlayed.lostRounds,
+      })
     : "";
   if (screen === "start") {
     return (
@@ -1707,14 +1737,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         ].filter(Boolean).join(" ")
       : "";
     const scoreText = isExperimental ? `\n\u{1F3AF} ${experimental.score}/${experimental.maxPossibleScore} pts` : "";
-    const roundBlocks = Array.from({ length: MAX_ROUNDS }, (_, i) =>
-      solvedRound === i ? "\u{1F7E9}" :
-      strikeRounds.has(i) ? "\u{1F7E5}" :
-      lostRounds.has(i) ? "\u2B1C" :
-      i <= round ? "\u{1F7E8}" :
-      "\u2B1B"
-    ).join("");
-    const shareText = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}\n${roundBlocks}\n${won ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${roundsUsed}/${MAX_ROUNDS}\n\u23F1 ${fmt(totalTime)} \u00B7 ${strikes}/${MAX_STRIKES} strikes${!bonusMode && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}${scoreText}${badgeEmojis ? `\n${badgeEmojis}` : ""}`;
+    const shareText = buildShareText({
+      solved: won, roundsUsed, timeSecs: totalTime, strikes,
+      solvedRound, strikeRounds, lostRounds, roundPlayed: round,
+      scoreText, badgeEmojis,
+    });
 
     const showStreak = !playtestMode && !bonusMode;
     const resultStatCols = isExperimental
@@ -1753,11 +1780,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               ))}
             </div>
 
-            <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 mb-4 text-left space-y-2">
-              <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500">Actor</p>
+            <div className="bg-zinc-800/50 border border-zinc-600/50 rounded-xl p-4 mb-4 text-left space-y-2.5">
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Actor</p>
               {renderTiles(puzzle.actor, "actor")}
-              <div className="border-t border-zinc-800/30 my-1" />
-              <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-500">Character</p>
+              <div className="border-t border-zinc-600/30 my-1" />
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Character</p>
               {renderTiles(puzzle.character, "character")}
               <div className="pt-2 border-t border-zinc-800/40">
                 <p className="text-xs text-zinc-500"><span className="text-zinc-300 font-medium">{puzzle.movie}</span> ({puzzle.year})</p>
@@ -1994,12 +2021,23 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     <Shell compact={playtestMode}>
       <div className="relative flex flex-col max-w-md mx-auto w-full flex-1 min-h-0 overflow-hidden">
         {/* Header */}
-        <div className="shrink-0 px-4 pt-3 pb-1">
+        <div className="shrink-0 px-4 pt-3 pb-3">
           <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="text-lg">{"\u{1F3AD}"}</span>
-              <h1 className="text-lg font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h1>
               <span className="text-xs text-zinc-500">{bonusMode ? `Bonus · #${puzzleNumber}` : `#${puzzleNumber}`}</span>
+              {(() => {
+                const turnsLeft = MAX_ROUNDS - round - 1;
+                const roundCls = turnsLeft <= 0 ? "text-red-400 font-bold" : turnsLeft <= 2 ? "text-amber-400 font-semibold" : "text-zinc-400 font-semibold";
+                return <span className={`text-sm ${roundCls}`}>Round {round + 1}/{MAX_ROUNDS}</span>;
+              })()}
+              {isHard && <span className="text-xs text-red-400/70 font-medium">Hard</span>}
+              {isExperimental && (
+                <div className="flex items-center gap-1.5 ml-1">
+                  <span className="text-sm font-bold text-amber-400 tabular-nums">{experimental.score}</span>
+                  <span className="text-[10px] text-zinc-600">pts</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               {isExperimental && experimental.hotStreak > 0 && (
@@ -2012,15 +2050,15 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
                 </div>
               )}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {Array.from({ length: MAX_STRIKES }).map((_, i) => {
                   const isActive = i < strikes;
                   const isLatest = i === strikes - 1;
                   return (
-                    <span key={`${i}-${strikes}`} className={`text-base transition-all ${
+                    <span key={`${i}-${strikes}`} className={`text-lg transition-all ${
                       isActive
                         ? `text-red-400${isLatest ? " animate-strike-pop" : ""}`
-                        : "text-zinc-800"
+                        : "text-zinc-700"
                     }`}>{"\u2715"}</span>
                   );
                 })}
@@ -2030,7 +2068,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               )}
             </div>
           </div>
-          <div className="flex gap-1 mt-0.5">
+          <div className="flex gap-1">
             {Array.from({ length: MAX_ROUNDS }).map((_, i) => {
               const turnsLeft = MAX_ROUNDS - round;
               const isUrgent = turnsLeft <= 3;
@@ -2056,30 +2094,16 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               );
             })}
           </div>
-          <div className="flex items-center justify-between mt-1.5">
-            {(() => {
-              const turnsLeft = MAX_ROUNDS - round - 1;
-              if (turnsLeft <= 0) return <p className="text-sm text-red-400 font-bold">Last round!</p>;
-              if (turnsLeft <= 2) return <p className="text-sm text-amber-500/80 font-semibold">{turnsLeft + 1} rounds left</p>;
-              return <p className="text-sm text-zinc-500">Round {round + 1} of {MAX_ROUNDS} {isHard ? <span className="text-red-400/70 font-medium">· Hard</span> : <span className="text-zinc-600">· Normal</span>}</p>;
-            })()}
-            {isExperimental && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-amber-400 tabular-nums">{experimental.score}</span>
-                <span className="text-[10px] text-zinc-600">/ {experimental.maxPossibleScore} pts</span>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Board */}
         <div className={`shrink-0 px-4 py-2 relative transition-all duration-200 ${shakeBoard ? "animate-shake" : ""} ${fanfareLetter ? "animate-boardPulse" : ""}`}>
-          <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-3.5 space-y-2 relative">
-            <span className="absolute top-3 right-3.5 text-xs text-zinc-500 font-medium tracking-wide">{Math.floor(puzzle.year / 10) * 10}s</span>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400">Actor</p>
+          <div className="bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4 space-y-2.5 relative">
+            <span className="absolute top-3 right-3.5 text-xs text-zinc-400 font-medium tracking-wide">{Math.floor(puzzle.year / 10) * 10}s</span>
+            <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Actor</p>
             {renderTiles(puzzle.actor, "actor")}
-            <div className="border-t border-zinc-700/30" />
-            <p className="text-[11px] uppercase tracking-[0.25em] text-zinc-400">Character</p>
+            <div className="border-t border-zinc-600/30" />
+            <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Character</p>
             {renderTiles(puzzle.character, "character")}
           </div>
           {/* (fanfare toast moved to keyboard area) */}
@@ -2388,6 +2412,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
             {kbRows.map((row, ri) => (
               <div key={ri} className="flex justify-center gap-[clamp(3px,0.7vh,6px)] mb-[clamp(3px,0.7vh,6px)]">
+                {ri === 1 && <div className="flex-[0.5]" />}
                 {ri === 2 && (
                   <button onClick={() => {
                       if (phase === "pick-letters" && pickedLetters.length >= 3) revealPicked(pickedLetters);
@@ -2395,14 +2420,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                       else if (solveMode) handleSolveSubmit();
                     }}
                     disabled={(solveMode && !allSolveFilled) || (phase === "pick-letters" && pickedLetters.length < 3) || (phase === "pick-double" && pickedLetters.length < 2)}
-                    className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(9px,1.6vh,10px)] font-bold tracking-wide flex items-center justify-center ${
+                    className={`border rounded-md flex-[1.5] h-[clamp(44px,7vh,58px)] text-[clamp(10px,1.8vh,12px)] font-bold tracking-wide flex items-center justify-center ${
                       (phase === "pick-letters" && pickedLetters.length >= 3) || (phase === "pick-double" && pickedLetters.length >= 2)
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30 animate-enterFlash"
+                        ? "bg-emerald-500/25 text-emerald-300 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/35 animate-enterFlash"
                         : solveMode && allSolveFilled
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-pointer hover:bg-emerald-500/30 animate-enterFlash"
+                          ? "bg-emerald-500/25 text-emerald-300 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/35 animate-enterFlash"
                           : solveMode
-                            ? "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
-                            : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                            ? "bg-zinc-700/40 text-zinc-500 border-zinc-700/40"
+                            : "bg-zinc-700/40 text-zinc-500 border-zinc-700/40"
                     }`}>ENTER</button>
                 )}
                 {row.map(letter => {
@@ -2420,38 +2445,39 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                     canTap = !isRev && !isWrong;
                   }
 
-                  let cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                  let cls = "bg-zinc-700/50 text-zinc-500 border-zinc-600/30";
                   if (isPicking) {
-                    if (isPicked) cls = "bg-amber-500/20 text-amber-300 border-amber-500/30";
-                    else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
-                    else cls = "bg-zinc-800/40 text-zinc-600 border-zinc-800/30";
+                    if (isPicked) cls = "bg-amber-500/25 text-amber-300 border-amber-500/40";
+                    else if (canTap) cls = "bg-zinc-600/60 text-zinc-100 border-zinc-500/50 hover:bg-zinc-500/60";
+                    else cls = "bg-zinc-700/50 text-zinc-500 border-zinc-600/30";
                   }
                   else if (buyingVowel && isVowelKey && canTap) cls = "bg-zinc-300/80 text-zinc-800 border-zinc-400/60 hover:bg-zinc-200 active:bg-zinc-100";
-                  else if (buyingVowel && !isVowelKey) cls = "bg-zinc-800/20 text-zinc-700 border-zinc-800/20";
-                  else if (solveMode && isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
-                  else if (solveMode && isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
-                  else if (solveMode) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60";
+                  else if (buyingVowel && !isVowelKey) cls = "bg-zinc-700/30 text-zinc-600 border-zinc-700/25";
+                  else if (solveMode && isRev) cls = "bg-emerald-500/20 text-emerald-400/80 border-emerald-500/25";
+                  else if (solveMode && isWrong) cls = "bg-red-500/15 text-red-400/40 border-red-500/20";
+                  else if (solveMode) cls = "bg-zinc-600/60 text-zinc-100 border-zinc-500/50 hover:bg-zinc-500/60";
                   else if (pressedKey === letter) cls = "bg-amber-500/30 text-amber-200 border-amber-400/50 shadow-[0_0_8px_rgba(245,158,11,0.25)]";
-                  else if (isJustElim) cls = "bg-red-500/20 text-red-300 border-red-500/30";
-                  else if (isRev) cls = "bg-emerald-500/15 text-emerald-400/80 border-emerald-500/20";
-                  else if (isWrong) cls = "bg-red-500/10 text-red-400/40 border-red-500/15";
-                  else if (canTap) cls = "bg-zinc-700/60 text-zinc-100 border-zinc-600/40 hover:bg-zinc-600/60 active:bg-amber-500/20";
+                  else if (isJustElim) cls = "bg-red-500/25 text-red-300 border-red-500/35";
+                  else if (isRev) cls = "bg-emerald-500/20 text-emerald-400/80 border-emerald-500/25";
+                  else if (isWrong) cls = "bg-red-500/15 text-red-400/40 border-red-500/20";
+                  else if (canTap) cls = "bg-zinc-600/60 text-zinc-100 border-zinc-500/50 hover:bg-zinc-500/60 active:bg-amber-500/20";
 
                   return (
                     <button key={letter}
                       onClick={() => canTap && (isPicking ? handlePickLetter(letter) : buyingVowel ? handleVowelPick(letter) : handleLetter(letter))}
                       disabled={!canTap}
-                      className={`${cls} border rounded-lg flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(13px,2.1vh,15px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
+                      className={`${cls} border rounded-md flex-1 h-[clamp(44px,7vh,58px)] text-[clamp(15px,2.4vh,18px)] font-bold transition-colors duration-150 disabled:cursor-default cursor-pointer flex items-center justify-center`}>
                       {letter}
                     </button>
                   );
                 })}
+                {ri === 1 && <div className="flex-[0.5]" />}
                 {ri === 2 && (
                   <button onClick={() => solveMode ? handleSolveBackspace() : (phase === "pick-letters" || phase === "pick-double") ? handlePickBackspace() : undefined}
-                    className={`border rounded-lg flex-[1.5] h-[clamp(44px,7vh,58px)] text-sm font-bold flex items-center justify-center ${
+                    className={`border rounded-md flex-[1.5] h-[clamp(44px,7vh,58px)] text-sm font-bold flex items-center justify-center ${
                       solveMode || ((phase === "pick-letters" || phase === "pick-double") && pickedLetters.length > 0)
-                        ? "bg-zinc-700/60 text-zinc-300 border-zinc-600/40 cursor-pointer hover:bg-zinc-600/60"
-                        : "bg-zinc-800/30 text-zinc-600 border-zinc-800/30"
+                        ? "bg-zinc-600/60 text-zinc-300 border-zinc-500/50 cursor-pointer hover:bg-zinc-500/60"
+                        : "bg-zinc-700/40 text-zinc-500 border-zinc-700/40"
                     }`}><Delete className="w-5 h-5 sm:w-6 sm:h-6" /></button>
                 )}
               </div>
