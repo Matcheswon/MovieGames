@@ -70,7 +70,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
-      <body className="min-h-screen bg-zinc-950 font-body text-zinc-100 antialiased">
+      <body className="min-h-screen min-h-dvh bg-zinc-950 font-body text-zinc-100 antialiased">
         {GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />

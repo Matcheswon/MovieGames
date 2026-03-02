@@ -286,6 +286,33 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   }, [puzzleNumber, dateKey, puzzle, screen, setGameContext]);
 
   useEffect(() => {
+    if (playtestMode || typeof document === "undefined") return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflowY: html.style.overflowY,
+      htmlOverscrollBehaviorY: html.style.overscrollBehaviorY,
+      bodyOverflowY: body.style.overflowY,
+      bodyOverscrollBehaviorY: body.style.overscrollBehaviorY,
+      bodyHeight: body.style.height,
+    };
+
+    html.style.overflowY = "hidden";
+    html.style.overscrollBehaviorY = "none";
+    body.style.overflowY = "hidden";
+    body.style.overscrollBehaviorY = "none";
+    body.style.height = "100svh";
+
+    return () => {
+      html.style.overflowY = prev.htmlOverflowY;
+      html.style.overscrollBehaviorY = prev.htmlOverscrollBehaviorY;
+      body.style.overflowY = prev.bodyOverflowY;
+      body.style.overscrollBehaviorY = prev.bodyOverscrollBehaviorY;
+      body.style.height = prev.bodyHeight;
+    };
+  }, [playtestMode]);
+
+  useEffect(() => {
     guessesRemainingRef.current = guessesRemaining;
   }, [guessesRemaining]);
 
@@ -1591,36 +1618,51 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         strikeRounds: alreadyPlayed.strikeRounds, lostRounds: alreadyPlayed.lostRounds,
       })
     : "";
+  const showStartStreakBadge = !bonusMode && dailyStreak > 0;
   if (screen === "start") {
     return (
-      <div className="h-dvh bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto">
-        <div className="text-center animate-slideUp max-w-sm my-auto">
-          <div className="flex items-center justify-center gap-2 mb-3">
+      <div className="relative h-[100svh] bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto overscroll-y-contain">
+        <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-3 sm:left-5 z-20">
+          <Link href="/" className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors">
+            &larr; Dashboard
+          </Link>
+        </div>
+        <div className="text-center animate-slideUp max-w-sm w-full mx-auto pt-[calc(3rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-amber-500" />
             <div className="w-2 h-2 rounded-full bg-amber-500/60" />
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-1">
             <span className="text-amber-400/70">Movie</span>Night
           </p>
-          <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-1 text-zinc-100">
+          <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-zinc-100">
             ROLES
           </h1>
-          <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-600 mb-2">
-            {bonusMode ? "Bonus Round" : <>Daily Puzzle &middot; #{puzzleNumber}</>}
+          <p className="text-[10px] uppercase tracking-[0.35em] leading-[1.4] text-zinc-600 mb-3 flex items-center justify-center">
+            {bonusMode ? (
+              "Bonus Round"
+            ) : (
+              <>
+                <span>Daily Puzzle &middot; #{puzzleNumber}</span>
+                {showStartStreakBadge ? (
+                  <>
+                    <span className="mx-1 tracking-normal text-zinc-500">&middot;</span>
+                    <span className="inline-flex items-center gap-0.5 tracking-normal normal-case text-amber-400 font-semibold leading-none">
+                      <span>{dailyStreak}</span>
+                      <Flame className="w-3 h-3" />
+                    </span>
+                  </>
+                ) : null}
+              </>
+            )}
           </p>
-          {!bonusMode && dailyStreak > 0 && (
-            <p className="text-sm text-amber-400 font-bold mb-6 animate-fadeIn inline-flex items-center gap-1.5 justify-center w-full">
-              <Flame className="w-4 h-4" /> {dailyStreak} day streak
-            </p>
-          )}
-          {(bonusMode || dailyStreak === 0) && <div className="mb-6" />}
 
-          <div className="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-5 mb-7 text-left">
-            <p className="text-sm text-zinc-300 leading-relaxed mb-4">
+          <div className="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-4 mb-5 text-left">
+            <p className="text-sm text-zinc-300 leading-relaxed mb-3">
               Uncover the <span className="text-amber-400 font-semibold">Actor</span> and <span className="text-amber-400 font-semibold">Character</span> they played.
             </p>
-            <div className="space-y-2.5 text-sm mb-4">
+            <div className="space-y-2 text-sm mb-3">
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center"><Clapperboard className="w-3.5 h-3.5 text-amber-400" /></span>
                 <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500"> spin the wheel for an effect</span></div>
@@ -1630,8 +1672,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 <div><span className="text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-500"> before time runs out</span></div>
               </div>
             </div>
-            <div className="bg-zinc-800/30 rounded-lg p-3 mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Role Call effects</p>
+            <div className="bg-zinc-800/30 rounded-lg p-2.5 mb-3">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1.5">Role Call effects</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Type className="w-3 h-3" /> Letter Spin</span>
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Ticket className="w-3 h-3" /> Free Letter</span>
@@ -1644,26 +1686,24 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 <span className="text-red-400/80 flex items-center gap-1.5"><Hourglass className="w-3 h-3" /> Half Time</span>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 pt-3 border-t border-zinc-800/40">
+            <p className="text-xs text-zinc-500 pt-2.5 border-t border-zinc-800/40">
               <span className="text-zinc-400 font-bold">{MAX_ROUNDS} rounds</span> &middot; <span className="text-zinc-400">{BASE_TIME}s to guess</span> &middot; <span className="text-zinc-400">{MAX_STRIKES} wrong = game over</span>
             </p>
           </div>
 
           <a href="https://getpasstime.app" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-2 mb-6 hover:border-indigo-400/40 transition-all group">
-            <span className="text-sm font-bold text-indigo-400">Passtime</span>
-            <span className="text-[11px] text-indigo-300/50">All your events in one place · for iOS</span>
+            className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-3.5 py-1.5 mb-4 hover:border-indigo-400/40 transition-all group">
+            <span className="text-xs font-bold text-indigo-400">Passtime</span>
+            <span className="text-[10px] text-indigo-300/50">All your events in one place · for iOS</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-indigo-400/40" />
           </a>
 
           <button onClick={startGame}
-            className="w-full max-w-xs py-4 rounded-2xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-widest uppercase hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
-            {playedToday ? "Replay Today\u2019s Puzzle" : "Start Puzzle"}
+            className="w-full max-w-xs py-3.5 rounded-2xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-widest uppercase hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
+            <span className="inline-flex items-center">
+              {playedToday ? "Replay Today\u2019s Puzzle" : "Start Puzzle"}
+            </span>
           </button>
-
-          <Link href="/" className="inline-flex items-center gap-1.5 mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
-            <ArrowLeft className="w-3 h-3" /> Back to Dashboard
-          </Link>
         </div>
 
         {/* Already-played popup */}
@@ -2021,7 +2061,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     <Shell compact={playtestMode}>
       <div className="relative flex flex-col max-w-md mx-auto w-full flex-1 min-h-0 overflow-hidden">
         {/* Header */}
-        <div className="shrink-0 px-4 pt-3 pb-3">
+        <div className="shrink-0 px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
               <span className="text-lg">{"\u{1F3AD}"}</span>
@@ -2097,10 +2137,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         </div>
 
         {/* Board */}
-        <div className={`shrink-0 px-4 py-2 relative transition-all duration-200 ${shakeBoard ? "animate-shake" : ""} ${fanfareLetter ? "animate-boardPulse" : ""}`}>
-          <div className="bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4 space-y-2.5 relative">
-            <span className="absolute top-3 right-3.5 text-xs text-zinc-400 font-medium tracking-wide">{Math.floor(puzzle.year / 10) * 10}s</span>
-            <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Actor</p>
+        <div className={`shrink-0 px-4 pt-1 pb-1.5 relative transition-all duration-200 ${shakeBoard ? "animate-shake" : ""} ${fanfareLetter ? "animate-boardPulse" : ""}`}>
+          <div className="bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-3 space-y-2 relative">
+            <div className="flex items-center justify-between gap-2.5">
+              <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Actor</p>
+              <span className="text-xs text-zinc-400 font-medium tracking-wide whitespace-nowrap">{Math.floor(puzzle.year / 10) * 10}s</span>
+            </div>
             {renderTiles(puzzle.actor, "actor")}
             <div className="border-t border-zinc-600/30" />
             <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">Character</p>
@@ -2404,12 +2446,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           )}
 
           {/* Keyboard — always visible, dimmed when inactive */}
-          <div className={`shrink-0 px-1.5 pt-1.5 pb-4 transition-opacity duration-300 ${
+          <div className={`shrink-0 px-1.5 pt-1.5 pb-2 transition-opacity duration-300 ${
             phase === "rolling" || phase === "reveal-flash" || phase === "pre-roll" || phase === "round-ending" || lostTurn ? "opacity-20 pointer-events-none" :
             guessResolving ? "opacity-30 pointer-events-none" :
             fanfareLetter && phase !== "guessing" ? "opacity-30 pointer-events-none" :
             kbLocked && !solveMode ? "opacity-30 pointer-events-none" : "opacity-100"}`}
-            style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+            style={{ paddingBottom: "calc(0.375rem + env(safe-area-inset-bottom))" }}>
             {kbRows.map((row, ri) => (
               <div key={ri} className="flex justify-center gap-[clamp(3px,0.7vh,6px)] mb-[clamp(3px,0.7vh,6px)]">
                 {ri === 1 && <div className="flex-[0.5]" />}
@@ -2524,8 +2566,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
 function Shell({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div className={`relative ${compact ? "h-full" : "h-dvh"} bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden`}
-      style={{ ...(!compact && { minHeight: "100svh" }), fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
+    <div className={`relative ${compact ? "h-full" : "h-[100svh]"} bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden`}
+      style={{ fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
       <RolesStyles />
       <div className="film-grain" />
       {children}
