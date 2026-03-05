@@ -2503,5 +2503,245 @@
     "popularity": 4,
     "characterPopularity": 8,
     "difficulty": "hard"
+  },
+  {
+    "actor": "EMILY BLUNT",
+    "character": "MARY POPPINS",
+    "movie": "Mary Poppins Returns",
+    "year": 2018,
+    "popularity": 8,
+    "characterPopularity": 10,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "TOM HOLLAND",
+    "character": "NATHAN DRAKE",
+    "movie": "Uncharted",
+    "year": 2022,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "MATTHEW BRODERICK",
+    "character": "SIMBA",
+    "movie": "The Lion King",
+    "year": 1994,
+    "popularity": 8,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "TARON EGERTON",
+    "character": "ELTON JOHN",
+    "movie": "Rocketman",
+    "year": 2019,
+    "popularity": 7,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "DANIEL RADCLIFFE",
+    "character": "ALLEN GINSBERG",
+    "movie": "Kill Your Darlings",
+    "year": 2013,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "BILL HADER",
+    "character": "RICHIE TOZIER",
+    "movie": "It Chapter Two",
+    "year": 2019,
+    "popularity": 6,
+    "characterPopularity": 4
+  },
+  {
+    "actor": "BELA LUGOSI",
+    "character": "DRACULA",
+    "movie": "Dracula",
+    "year": 1931,
+    "popularity": 2,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "CUBA GOODING JR",
+    "character": "ROD TIDWELL",
+    "movie": "Jerry Maguire",
+    "year": 1996,
+    "popularity": 5,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "LINDSAY LOHAN",
+    "character": "CADY HERON",
+    "movie": "Mean Girls",
+    "year": 2004,
+    "popularity": 8,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "FREDDIE HIGHMORE",
+    "character": "CHARLIE BUCKET",
+    "movie": "Charlie and the Chocolate Factory",
+    "year": 2005,
+    "popularity": 5,
+    "characterPopularity": 8,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "HARRISON FORD",
+    "character": "HAN SOLO",
+    "movie": "Star Wars",
+    "year": 1977,
+    "popularity": 10,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "JACK BLACK",
+    "character": "PO",
+    "movie": "Kung Fu Panda",
+    "year": 2008,
+    "popularity": 9,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "FLORENCE PUGH",
+    "character": "YELENA BELOVA",
+    "movie": "Black Widow",
+    "year": 2021,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "JENNIFER LOPEZ",
+    "character": "SELENA QUINTANILLA",
+    "movie": "Selena",
+    "year": 1997,
+    "popularity": 6,
+    "characterPopularity": 8,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ROBIN WRIGHT",
+    "character": "BUTTERCUP",
+    "movie": "The Princess Bride",
+    "year": 1987,
+    "popularity": 6,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "RALPH FIENNES",
+    "character": "VOLDEMORT",
+    "movie": "Harry Potter and the Goblet of Fire",
+    "year": 2005,
+    "popularity": 8,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "BILLY CRYSTAL",
+    "character": "HARRY BURNS",
+    "movie": "When Harry Met Sally...",
+    "year": 1989,
+    "popularity": 6,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "JENNIFER CONNELLY",
+    "character": "SARAH WILLIAMS",
+    "movie": "Labyrinth",
+    "year": 1986,
+    "popularity": 5,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "BEN AFFLECK",
+    "character": "BATMAN",
+    "movie": "Batman v Superman: Dawn of Justice",
+    "year": 2016,
+    "popularity": 9,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "RYAN REYNOLDS",
+    "character": "VAN WILDER",
+    "movie": "Van Wilder",
+    "year": 2002,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "ANNE BANCROFT",
+    "character": "MRS ROBINSON",
+    "movie": "The Graduate",
+    "year": 1967,
+    "popularity": 4,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "CHRISTIAN SLATER",
+    "character": "JASON DEAN",
+    "movie": "Heathers",
+    "year": 1988,
+    "popularity": 5,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "ADAM SANDLER",
+    "character": "HAPPY GILMORE",
+    "movie": "Happy Gilmore",
+    "year": 1996,
+    "popularity": 9,
+    "characterPopularity": 9
+  },
+  {
+    "actor": "DIANE KEATON",
+    "character": "KAY ADAMS",
+    "movie": "The Godfather",
+    "year": 1972,
+    "popularity": 5,
+    "characterPopularity": 4
+  },
+  {
+    "actor": "JOHN CUSACK",
+    "character": "LLOYD DOBLER",
+    "movie": "Say Anything...",
+    "year": 1989,
+    "popularity": 5,
+    "characterPopularity": 5
+  },
+  {
+    "actor": "STEVE MARTIN",
+    "character": "GEORGE BANKS",
+    "movie": "Father of the Bride",
+    "year": 1991,
+    "popularity": 6,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "HELENA BONHAM CARTER",
+    "character": "MARLA SINGER",
+    "movie": "Fight Club",
+    "year": 1999,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "WESLEY SNIPES",
+    "character": "BLADE",
+    "movie": "Blade",
+    "year": 1998,
+    "popularity": 6,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "ROBERT DOWNEY JR",
+    "character": "SHERLOCK HOLMES",
+    "movie": "Sherlock Holmes",
+    "year": 2009,
+    "popularity": 9,
+    "characterPopularity": 10,
+    "difficulty": "hard"
   }
 ]

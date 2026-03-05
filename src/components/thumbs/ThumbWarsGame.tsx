@@ -755,7 +755,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   );
 
   return (
-    <div className="h-dvh bg-cinematic text-zinc-100 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-cinematic text-zinc-100 flex flex-col overflow-hidden">
 
       {/* ── MOBILE LAYOUT ── */}
       <div className="flex flex-col h-full md:hidden">

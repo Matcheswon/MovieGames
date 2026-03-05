@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Drama, Film, Share2, Star, Check } from "lucide-react";
 import { DegreesPuzzle, DegreesChainPiece, getNyDateKey } from "@/lib/dailyUtils";
-import { saveGameResult, getGameStreak } from "@/lib/saveResult";
+import { saveGameResult, getGameStreak, getTodayResult } from "@/lib/saveResult";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { DegreesPlaytestResult } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
@@ -162,14 +162,37 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
     return () => setGameContext(null);
   }, [puzzleNumber, dateKey, degrees, screen, setGameContext]);
 
-  // Check if already played today
+  // Check if already played today (localStorage first, then Supabase for cross-device)
   useEffect(() => {
     if (playtestMode) return;
     const streak = readDailyStreak();
     if (streak.history.some(h => h.dateKey === dateKey)) {
       setAlreadyPlayed(true);
+    } else {
+      // Cross-device: check Supabase for today's result
+      getTodayResult("degrees", dateKey).then(result => {
+        if (!result) return;
+        setAlreadyPlayed(true);
+        // Backfill to localStorage
+        const streakData = readDailyStreak();
+        if (!streakData.history.some(h => h.dateKey === dateKey)) {
+          const entry: DegreesHistoryEntry = {
+            dateKey,
+            puzzleNumber,
+            solved: result.solved ?? false,
+            attempts: result.strikes ?? 0,
+            timeSecs: result.time_secs,
+          };
+          writeDailyStreak({
+            lastPlayedDate: dateKey,
+            dailyStreak: streakData.dailyStreak,
+            bestDailyStreak: streakData.bestDailyStreak,
+            history: [...streakData.history, entry],
+          });
+        }
+      });
     }
-  }, [dateKey, playtestMode]);
+  }, [dateKey, playtestMode, puzzleNumber]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -488,7 +511,7 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
   const emptyCount = slots.filter(s => s === null).length;
 
   return (
-    <div className={`${playtestMode ? "h-full" : "h-screen"} bg-cinematic flex flex-col overflow-hidden relative`}>
+    <div className={`${playtestMode ? "h-full relative" : "fixed inset-0"} bg-cinematic flex flex-col overflow-hidden`}>
       {/* Toast */}
       {toast && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-5 py-2 bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm rounded-lg animate-fadeIn shadow-lg">

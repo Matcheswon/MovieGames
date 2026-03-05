@@ -74,17 +74,39 @@ export async function saveGameResult(result: GameResult) {
 
 export async function getTodayResult(game: string, dateKey: string) {
   const supabase = createClient();
+
+  // Try getUser() first — may fail if auth session is still loading from cookies
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (user) {
+    const { data } = await supabase
+      .from("game_results")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("game", game)
+      .eq("date_key", dateKey)
+      .single();
+    return data;
+  }
+
+  // Auth wasn't ready — wait for INITIAL_SESSION event from onAuthStateChange
+  const sessionUser = await new Promise<{ id: string } | null>((resolve) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      subscription.unsubscribe();
+      resolve(session?.user ?? null);
+    });
+    // Safety timeout so we don't hang forever
+    setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 3000);
+  });
+
+  if (!sessionUser) return null;
 
   const { data } = await supabase
     .from("game_results")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", sessionUser.id)
     .eq("game", game)
     .eq("date_key", dateKey)
     .single();
-
   return data;
 }
 

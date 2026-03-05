@@ -301,7 +301,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     html.style.overscrollBehaviorY = "none";
     body.style.overflowY = "hidden";
     body.style.overscrollBehaviorY = "none";
-    body.style.height = "100svh";
+    body.style.height = "100dvh";
 
     return () => {
       html.style.overflowY = prev.htmlOverflowY;
@@ -1621,7 +1621,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const showStartStreakBadge = !bonusMode && dailyStreak > 0;
   if (screen === "start") {
     return (
-      <div className="relative h-[100svh] bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto overscroll-y-contain">
+      <div className="fixed inset-0 bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto overscroll-contain">
         <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-3 sm:left-5 z-20">
           <Link href="/" className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors">
             &larr; Dashboard
@@ -2566,7 +2566,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
 function Shell({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div className={`relative ${compact ? "h-full" : "h-[100svh]"} bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden`}
+    <div className={`${compact ? "relative h-full" : "fixed inset-0"} bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden`}
       style={{ fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
       <RolesStyles />
       <div className="film-grain" />
