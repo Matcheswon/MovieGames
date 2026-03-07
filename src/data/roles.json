@@ -2743,5 +2743,80 @@
     "popularity": 9,
     "characterPopularity": 10,
     "difficulty": "hard"
+  },
+  {
+    "actor": "NICOLAS CAGE",
+    "character": "CAMERON POE",
+    "movie": "Con Air",
+    "year": 1997,
+    "popularity": 8,
+    "characterPopularity": 3
+  },
+  {
+    "actor": "TOM HARDY",
+    "character": "EDDIE BROCK",
+    "movie": "Venom",
+    "year": 2018,
+    "popularity": 9,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "MICHAEL CERA",
+    "character": "SCOTT PILGRIM",
+    "movie": "Scott Pilgrim vs. the World",
+    "year": 2010,
+    "popularity": 6,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "SHARON STONE",
+    "character": "GINGER MCKENNA",
+    "movie": "Casino",
+    "year": 1995,
+    "popularity": 6,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "VIVIEN LEIGH",
+    "character": "BLANCHE DUBOIS",
+    "movie": "A Streetcar Named Desire",
+    "year": 1951,
+    "popularity": 3,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "ROBERT PATTINSON",
+    "character": "BRUCE WAYNE",
+    "movie": "The Batman",
+    "year": 2022,
+    "popularity": 9,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "DREW BARRYMORE",
+    "character": "CASEY BECKER",
+    "movie": "Scream",
+    "year": 1996,
+    "popularity": 7,
+    "characterPopularity": 4
+  },
+  {
+    "actor": "RUSSELL CROWE",
+    "character": "BUD WHITE",
+    "movie": "L.A. Confidential",
+    "year": 1997,
+    "popularity": 7,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "LINDSAY LOHAN",
+    "character": "HALLIE PARKER",
+    "movie": "The Parent Trap",
+    "year": 1998,
+    "popularity": 7,
+    "characterPopularity": 4,
+    "difficulty": "hard"
   }
 ]

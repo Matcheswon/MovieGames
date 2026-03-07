@@ -17,13 +17,14 @@ import { useExperimentalFeatures } from "./useExperimentalFeatures";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
   ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
-  SkipForward, Sparkles, Target, ThumbsUp, Ticket, Type, X,
+  SkipForward, Sparkles, Target, ThumbsUp, Ticket, Type, Volume2, VolumeOff, X,
 } from "lucide-react";
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:roles:daily";
 const BONUS_PLAYED_KEY = "moviegames:roles:bonus-played";
 const BONUS_RESULT_KEY = "moviegames:roles:bonus-result";
+const SFX_ENABLED_KEY = "moviegames:sfx-enabled";
 
 type BonusResult = {
   solved: boolean;
@@ -245,6 +246,20 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [buyingVowel, setBuyingVowel] = useState(false);
   const [vowelNudge, setVowelNudge] = useState(false);
   const [effectBannerVisible, setEffectBannerVisible] = useState(false);
+  const [sfxEnabled, setSfxEnabled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(SFX_ENABLED_KEY) === "1";
+  });
+  const sfxRef = useRef(sfxEnabled);
+  sfxRef.current = sfxEnabled;
+
+  const toggleSfx = () => {
+    setSfxEnabled(prev => {
+      const next = !prev;
+      localStorage.setItem(SFX_ENABLED_KEY, next ? "1" : "0");
+      return next;
+    });
+  };
 
   const rand = useRef(rng(puzzleNumber));
   const rollSeqRef = useRef<typeof CALL_SHEET[number][]>([]);
@@ -253,6 +268,39 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const guessTimerRef = useRef(BASE_TIME);
   const guessesRemainingRef = useRef(1);
   const dailyRecorded = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioBuffers = useRef<Record<string, AudioBuffer>>({});
+  const audioLoaded = useRef(false);
+
+  useEffect(() => {
+    if (audioLoaded.current) return;
+    audioLoaded.current = true;
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
+    const files = ["ding", "win", "wheel", "wheel-win", "wheel-lose", "wheel-lose2"];
+    files.forEach(name => {
+      fetch(`/audio/soundfx/${name}.wav`)
+        .then(r => r.arrayBuffer())
+        .then(buf => ctx.decodeAudioData(buf))
+        .then(decoded => { audioBuffers.current[name] = decoded; })
+        .catch(() => {});
+    });
+  }, []);
+
+  const playSfx = useCallback((name: string, volume = 0.15): (() => void) | undefined => {
+    if (!sfxRef.current) return;
+    const ctx = audioCtxRef.current;
+    const buffer = audioBuffers.current[name];
+    if (!ctx || !buffer) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = volume;
+    source.connect(gain).connect(ctx.destination);
+    source.start();
+    return () => { try { source.stop(); } catch {} };
+  }, []);
   const roundRef = useRef(0);
   const screenRef = useRef<"start" | "playing" | "solved" | "failed">("start");
 
@@ -465,6 +513,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             setTimeout(() => advance(), 0);
           } else {
             addStrikeRound(roundRef.current);
+            playSfx("wheel-lose2");
             setStrikes(prev => {
               const ns = prev + 1;
               if (ns >= MAX_STRIKES) {
@@ -788,6 +837,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       const pos = positions[lightIdx];
       const key = `${pos.word}-${pos.index}`;
       setTileBlinking(key);
+      playSfx("ding");
       lightIdx++;
       setTimeout(() => {
         setTileBlinking(null);
@@ -918,6 +968,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setSolvedRound(roundRef.current);
     setSolveMode(false);
     setGameWinPopup(true);
+    playSfx("win", 0.1);
     setTimeout(() => { setGameWinPopup(false); setScreen("solved"); }, 3000);
   };
 
@@ -998,6 +1049,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       }
 
       setTileBlinking(key);
+      playSfx("ding");
       lightIdx++;
       setTimeout(() => {
         setTileBlinking(null);
@@ -1088,6 +1140,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       }
 
       setTileBlinking(key);
+      playSfx("ding");
       lightIdx++;
       setTimeout(() => {
         setTileBlinking(null);
@@ -1161,9 +1214,11 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   };
 
   // ─── ROLE CALL (auto-triggered each round) ───
+  const stopWheelSfx = useRef<(() => void) | undefined>();
   // Price-is-Right style: pull up, then spin fast & decelerate to a stop
   const autoRoll = (roundIdx: number) => {
     setPhase("rolling"); setLastGuess(null); setRollResult(null);
+    stopWheelSfx.current = playSfx("wheel");
     const eff = rollSeqRef.current[roundIdx];
     const n = CALL_SHEET.length;
     const total = 24 + Math.floor(rand.current() * 8);
@@ -1193,8 +1248,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
           step++;
           if (step >= total) {
             // Landed on the result — hold it briefly, then reveal
+            stopWheelSfx.current?.();
             setTimeout(() => {
               setRollResult(eff); setPhase("reveal-flash");
+              playSfx(eff.good ? "wheel-win" : "wheel-lose");
               if (isExperimental) {
                 setEffectBannerVisible(true);
                 if (effectBannerTimerRef.current) clearTimeout(effectBannerTimerRef.current);
@@ -1358,6 +1415,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     experimental.onWrongGuess();
     if (!isCorrect && !isFreePass) addStrikeRound(roundRef.current);
     setTimeout(() => {
+      playSfx("wheel-lose2");
       setStrikes(newStrikes); setWrongGuesses(p => [...p, u]);
       setLastGuess({ letter: u, correct: false, freePass: isFreePass });
       setPressedKey(null);
@@ -1474,6 +1532,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       triggerWin();
     } else {
       const nextStrikes = strikes + 1;
+      playSfx("wheel-lose2");
       setStrikes(nextStrikes);
       addStrikeRound(roundRef.current);
       setShakeBoard(true); setTimeout(() => setShakeBoard(false), 500);
@@ -2090,6 +2149,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
                 </div>
               )}
+              <button onClick={toggleSfx} className="cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Toggle sound effects">
+                {sfxEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeOff className="w-4 h-4" />}
+              </button>
               <div className="flex items-center gap-2">
                 {Array.from({ length: MAX_STRIKES }).map((_, i) => {
                   const isActive = i < strikes;

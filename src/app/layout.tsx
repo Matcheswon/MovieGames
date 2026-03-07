@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import { FeedbackProvider } from "@/components/FeedbackContext";
@@ -17,10 +17,11 @@ const playfair = Playfair_Display({
   variable: "--font-playfair"
 });
 
-export const viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover" as const,
+  viewportFit: "cover",
+  themeColor: "#09090b",
 };
 
 export const metadata: Metadata = {
@@ -64,7 +65,6 @@ export const metadata: Metadata = {
     follow: true,
   },
   referrer: "origin-when-cross-origin",
-  themeColor: "#09090b",
 };
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
