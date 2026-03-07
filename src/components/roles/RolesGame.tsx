@@ -257,6 +257,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     setSfxEnabled(prev => {
       const next = !prev;
       localStorage.setItem(SFX_ENABLED_KEY, next ? "1" : "0");
+      if (next && audioCtxRef.current?.state === "suspended") {
+        audioCtxRef.current.resume();
+      }
       return next;
     });
   };
@@ -292,7 +295,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     const ctx = audioCtxRef.current;
     const buffer = audioBuffers.current[name];
     if (!ctx || !buffer) return;
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state !== "running") return;
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     const gain = ctx.createGain();
@@ -407,6 +410,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   });
 
   const startGame = useCallback(() => {
+    if (audioCtxRef.current?.state === "suspended") audioCtxRef.current.resume();
     rand.current = rng(puzzleNumber + Date.now());
     const seq: typeof CALL_SHEET = [];
     for (let i = 0; i < MAX_ROUNDS; i++) {
@@ -788,15 +792,15 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     const rp = opts.roundPlayed ?? (opts.roundsUsed - 1);
     const roundBlocks = Array.from({ length: MAX_ROUNDS }, (_, i) =>
       opts.solvedRound === i ? "\u{1F7E9}" :
+      lr.has(i) ? "\u{1F7E5}" :
       sr.has(i) ? "\u{1F7E5}" :
-      lr.has(i) ? "\u2B1C" :
       i <= rp ? "\u{1F7E8}" :
       "\u2B1B"
     ).join("");
-    let text = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}\n${roundBlocks}`;
-    text += `\n${opts.solved ? "\u2705 Solved" : "\u274C"} \u00B7 Round ${opts.roundsUsed}/${MAX_ROUNDS}`;
-    text += `\n\u23F1 ${fmt(opts.timeSecs)} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes`;
+    let text = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}`;
     if (!bonusMode && dailyStreak > 1) text += ` \u00B7 \u{1F525}${dailyStreak}`;
+    text += `\n${roundBlocks}`;
+    text += `\n\u23F1 ${fmt(opts.timeSecs)} \u00B7 Round ${opts.roundsUsed}/${MAX_ROUNDS} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes`;
     if (opts.scoreText) text += opts.scoreText;
     if (opts.badgeEmojis) text += `\n${opts.badgeEmojis}`;
     return text;
@@ -1251,7 +1255,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             stopWheelSfx.current?.();
             setTimeout(() => {
               setRollResult(eff); setPhase("reveal-flash");
-              playSfx(eff.good ? "wheel-win" : "wheel-lose");
+              playSfx(eff.good ? "wheel-win" : "wheel-lose", eff.good ? 0.05 : 0.15);
               if (isExperimental) {
                 setEffectBannerVisible(true);
                 if (effectBannerTimerRef.current) clearTimeout(effectBannerTimerRef.current);
@@ -2149,8 +2153,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
                 </div>
               )}
-              <button onClick={toggleSfx} className="cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Toggle sound effects">
-                {sfxEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeOff className="w-4 h-4" />}
+              <button onClick={toggleSfx} className="p-2 -m-2 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Toggle sound effects">
+                {sfxEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeOff className="w-5 h-5" />}
               </button>
               <div className="flex items-center gap-2">
                 {Array.from({ length: MAX_STRIKES }).map((_, i) => {
