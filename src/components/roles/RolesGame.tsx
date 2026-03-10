@@ -14,6 +14,8 @@ import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { PlaytestResult, countGuessableLetters } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
 import { useExperimentalFeatures } from "./useExperimentalFeatures";
+import NextPuzzleCountdown from "@/components/NextPuzzleCountdown";
+import { getDailyAggregateStats, DailyAggregateStats } from "@/app/actions/dailyStats";
 import {
   ALargeSmall, ArrowLeft, ArrowUpRight, ChevronRight, Clapperboard,
   ClockPlus, Delete, Drama, Flame, Hourglass, Keyboard, Lock,
@@ -91,7 +93,7 @@ function prevDateKey(dateKey: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+/** Compute current streak from a list of dateKey strings. Allows one gap (streak freeze). */
 function computeStreakFromDates(dateKeys: string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
@@ -99,8 +101,13 @@ function computeStreakFromDates(dateKeys: string[]): number {
   const yesterday = prevDateKey(today);
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
   let streak = 1;
+  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+    const expected = prevDateKey(sorted[i - 1]);
+    if (sorted[i] === expected) {
+      streak++;
+    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
+      freezeAvailable = false;
       streak++;
     } else {
       break;
@@ -216,6 +223,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const [guessResolving, setGuessResolving] = useState(false);
   const [freeLetterActive, setFreeLetterActive] = useState(false);
   const [dailyStreak, setDailyStreak] = useState(0);
+  const [aggStats, setAggStats] = useState<DailyAggregateStats | null>(null);
   const [bonusPlayedToday, setBonusPlayedToday] = useState(false);
   const [bonusResult, setBonusResult] = useState<BonusResult | null>(null);
   const [lostRounds, setLostRounds] = useState(new Set<number>());
@@ -778,7 +786,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       revealedCount: revealed.size,
     });
     trackEvent("game_completed", { game: "roles", solved: won, strikes, time_secs: totalTime });
-  }, [screen, strikes, totalTime, puzzleNumber, round, dateKey, playtestMode, onPlaytestComplete, puzzle, pickedLetters, wrongGuesses, guessedLetters, revealed]);
+
+    // Fetch aggregate stats for social proof
+    if (dateKey && !bonusMode) {
+      getDailyAggregateStats("roles", dateKey).then(stats => {
+        if (stats.totalPlayers > 0) setAggStats(stats);
+      });
+    }
+  }, [screen, strikes, totalTime, puzzleNumber, round, dateKey, playtestMode, onPlaytestComplete, puzzle, pickedLetters, wrongGuesses, guessedLetters, revealed, bonusMode]);
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -800,7 +815,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
     let text = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}`;
     if (!bonusMode && dailyStreak > 1) text += ` \u00B7 \u{1F525}${dailyStreak}`;
     text += `\n${roundBlocks}`;
-    text += `\n\u23F1 ${fmt(opts.timeSecs)} \u00B7 Round ${opts.roundsUsed}/${MAX_ROUNDS} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes`;
+    text += `\nR ${opts.roundsUsed}/${MAX_ROUNDS} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes \u00B7 ${fmt(opts.timeSecs)}`;
     if (opts.scoreText) text += opts.scoreText;
     if (opts.badgeEmojis) text += `\n${opts.badgeEmojis}`;
     return text;
@@ -1636,12 +1651,12 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   ? "text-amber-100 border-2 border-amber-400/60 animate-tilePop"
                   : "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 animate-tilePop";
                 else if (isNew) cls = "bg-amber-500/30 text-amber-100 border-2 border-amber-400/60 scale-110";
-                else if (show) cls = screen === "solved" ? "bg-emerald-500/15 text-emerald-200 border border-emerald-500/30"
-                  : screen === "failed" ? "bg-red-500/10 text-red-300/80 border border-red-500/20"
-                  : "bg-zinc-700/80 text-zinc-100 border border-zinc-500/50";
+                else if (show) cls = screen === "solved" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 border border-emerald-500/40"
+                  : screen === "failed" ? "bg-red-500/10 text-red-600 dark:text-red-300/80 border border-red-500/20"
+                  : "bg-zinc-200 dark:bg-zinc-700/80 text-zinc-900 dark:text-zinc-100 border border-zinc-400 dark:border-zinc-500/50";
                 else if (isCursor) cls = "bg-amber-500/10 border-2 border-amber-400/60";
-                else if (isSolveTyped) cls = "bg-zinc-700/50 text-zinc-200 border border-zinc-500/40";
-                else cls = "bg-zinc-700/40 border border-zinc-500/30";
+                else if (isSolveTyped) cls = "bg-zinc-200 dark:bg-zinc-700/50 text-zinc-800 dark:text-zinc-200 border border-zinc-400 dark:border-zinc-500/40";
+                else cls = "bg-zinc-100 dark:bg-zinc-700/40 border border-zinc-300 dark:border-zinc-500/30";
 
                 const heatStyle: React.CSSProperties = isPop && heatLevel > 0 ? {
                   background: `rgba(251,191,36,${0.2 + heatLevel * 0.35})`,
@@ -1684,9 +1699,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
   const showStartStreakBadge = !bonusMode && dailyStreak > 0;
   if (screen === "start") {
     return (
-      <div className="fixed inset-0 bg-cinematic text-zinc-100 flex flex-col items-center px-6 overflow-y-auto overscroll-contain">
+      <div className="fixed inset-0 bg-cinematic text-zinc-900 dark:text-zinc-100 flex flex-col items-center px-6 overflow-y-auto overscroll-contain">
         <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-3 sm:left-5 z-20">
-          <Link href="/" className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Link href="/" className="text-xs font-medium text-zinc-600 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors">
             &larr; Dashboard
           </Link>
         </div>
@@ -1696,10 +1711,10 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             <div className="w-2 h-2 rounded-full bg-amber-500/60" />
             <div className="w-2 h-2 rounded-full bg-amber-500/30" />
           </div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-600 dark:text-zinc-500 mb-1">
             <span className="text-amber-400/70">Movie</span>Night
           </p>
-          <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-zinc-100">
+          <h1 className="font-display text-5xl md:text-6xl font-extrabold tracking-tight mb-3 text-zinc-900 dark:text-zinc-100">
             ROLES
           </h1>
           <p className="text-[10px] uppercase tracking-[0.35em] leading-[1.4] text-zinc-600 mb-3 flex items-center justify-center">
@@ -1721,22 +1736,22 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
             )}
           </p>
 
-          <div className="bg-zinc-900/50 border border-zinc-800/60 rounded-2xl p-4 mb-5 text-left">
-            <p className="text-sm text-zinc-300 leading-relaxed mb-3">
+          <div className="bg-white dark:bg-zinc-900/50 border border-zinc-300 dark:border-zinc-800/60 rounded-2xl p-4 mb-5 text-left shadow-sm">
+            <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-3">
               Uncover the <span className="text-amber-400 font-semibold">Actor</span> and <span className="text-amber-400 font-semibold">Character</span> they played.
             </p>
             <div className="space-y-2 text-sm mb-3">
               <div className="flex gap-3 items-center">
                 <span className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center"><Clapperboard className="w-3.5 h-3.5 text-amber-400" /></span>
-                <div><span className="text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-500"> spin the wheel for an effect</span></div>
+                <div><span className="text-zinc-800 dark:text-zinc-200 font-medium">Role Call</span> <span className="text-zinc-600 dark:text-zinc-500"> spin the wheel for an effect</span></div>
               </div>
               <div className="flex gap-3 items-center">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700/40 flex items-center justify-center"><Keyboard className="w-3.5 h-3.5 text-zinc-400" /></span>
-                <div><span className="text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-500"> before time runs out</span></div>
+                <span className="w-7 h-7 rounded-lg bg-zinc-200 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-700/40 flex items-center justify-center"><Keyboard className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-400" /></span>
+                <div><span className="text-zinc-800 dark:text-zinc-200 font-medium">Guess or Solve</span> <span className="text-zinc-600 dark:text-zinc-500"> before time runs out</span></div>
               </div>
             </div>
-            <div className="bg-zinc-800/30 rounded-lg p-2.5 mb-3">
-              <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1.5">Role Call effects</p>
+            <div className="bg-zinc-100 dark:bg-zinc-800/30 rounded-lg p-2.5 mb-3">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-600 dark:text-zinc-500 mb-1.5">Role Call effects</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Type className="w-3 h-3" /> Letter Spin</span>
                 <span className="text-emerald-400/80 flex items-center gap-1.5"><Ticket className="w-3 h-3" /> Free Letter</span>
@@ -1749,8 +1764,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 <span className="text-red-400/80 flex items-center gap-1.5"><Hourglass className="w-3 h-3" /> Half Time</span>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 pt-2.5 border-t border-zinc-800/40">
-              <span className="text-zinc-400 font-bold">{MAX_ROUNDS} rounds</span> &middot; <span className="text-zinc-400">{BASE_TIME}s to guess</span> &middot; <span className="text-zinc-400">{MAX_STRIKES} wrong = game over</span>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500 pt-2.5 border-t border-zinc-300 dark:border-zinc-800/40">
+              <span className="text-zinc-700 dark:text-zinc-400 font-bold">{MAX_ROUNDS} rounds</span> &middot; <span className="text-zinc-700 dark:text-zinc-400">{BASE_TIME}s to guess</span> &middot; <span className="text-zinc-700 dark:text-zinc-400">{MAX_STRIKES} wrong = game over</span>
             </p>
           </div>
 
@@ -1772,18 +1787,18 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
         {/* Already-played popup */}
         {alreadyPlayed && (
           <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
-            <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={() => setAlreadyPlayed(null)} />
+            <div className="absolute inset-0 bg-zinc-100/90 dark:bg-zinc-950/80 backdrop-blur-sm" onClick={() => setAlreadyPlayed(null)} />
             <div className="relative w-full max-w-sm animate-slideUp"
               style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
-              <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
+              <div className="rounded-2xl border border-zinc-300 dark:border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/30 dark:shadow-black/60 bg-white dark:bg-zinc-900">
                 <div className="p-6 text-center relative">
-                  <button onClick={() => setAlreadyPlayed(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
+                  <button onClick={() => setAlreadyPlayed(null)} className="absolute top-4 right-4 text-zinc-600 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors cursor-pointer">
                     <X className="w-5 h-5" />
                   </button>
                   <div className="flex items-center justify-center gap-2.5 mb-3">
                     <Drama className="w-5 h-5 text-amber-400" />
                     <h2 className="text-xl font-extrabold tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }}>ROLES</h2>
-                    <span className="text-xs text-zinc-600">#{puzzleNumber}</span>
+                    <span className="text-xs text-zinc-600 dark:text-zinc-600">#{puzzleNumber}</span>
                   </div>
                   <p className={`text-sm font-bold mb-4 ${alreadyPlayed.solved ? "text-emerald-400" : "text-red-400/80"}`}>
                     {alreadyPlayed.solved ? "Solved" : "Not this time"} &middot; Today&apos;s puzzle complete
@@ -1978,21 +1993,31 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <div className="text-center text-xs text-zinc-600">Game recorded. Advancing automatically&hellip;</div>
             ) : (
               <>
-                {bonusMode || bonusPlayedToday ? (
-                  <p className="text-sm text-zinc-400 text-center mb-3">Come back tomorrow for a new puzzle.</p>
-                ) : (
-                  <Link href="/play/roles/bonus"
-                    className="text-sm text-amber-400 hover:text-amber-300 transition-colors text-center mb-3 block">
-                    Play a bonus round &rarr;
-                  </Link>
+                {!bonusMode && (
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    {aggStats?.solveRate !== null && (
+                      <p className="text-xs text-zinc-500">
+                        <span className="text-zinc-300 font-semibold">{aggStats!.solveRate}%</span> solved today
+                      </p>
+                    )}
+                    {!bonusPlayedToday && (
+                      <>
+                        {aggStats?.solveRate !== null && <span className="text-zinc-700">·</span>}
+                        <Link href="/play/roles/bonus"
+                          className="text-xs text-amber-400 hover:text-amber-300 transition-colors whitespace-nowrap">
+                          Bonus round &rarr;
+                        </Link>
+                      </>
+                    )}
+                  </div>
                 )}
 
-                <div className="flex gap-3 mb-5">
+                <div className="flex gap-3">
                   <ShareButton text={shareText} />
                 </div>
 
                 <Link href="/play/thumbs/daily"
-                  className="flex items-center gap-3 bg-sky-500/10 border border-sky-400/30 rounded-xl px-5 py-4 hover:border-sky-400/50 hover:bg-sky-500/15 transition-all group text-left">
+                  className="flex items-center gap-3 mt-4 bg-sky-500/10 border border-sky-400/30 rounded-xl px-5 py-4 hover:border-sky-400/50 hover:bg-sky-500/15 transition-all group text-left">
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] uppercase tracking-[0.25em] text-sky-400/50 mb-1.5">Try another game</p>
                     <div className="flex items-center gap-2">
@@ -2004,6 +2029,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <ChevronRight className="w-5 h-5 text-sky-400/40 group-hover:text-sky-300/70 transition-colors" />
                 </Link>
 
+                {!bonusMode && <NextPuzzleCountdown />}
               </>
             )}
           </div>
@@ -2048,7 +2074,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={() => setBonusResult(null)} />
               <div className="relative w-full max-w-sm animate-slideUp"
                 style={{ background: "radial-gradient(ellipse at 50% 0%, #1c1917 0%, #0a0a0b 60%)" }}>
-                <div className="rounded-2xl border border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/60">
+                <div className="rounded-2xl border border-zinc-300 dark:border-zinc-800/60 overflow-hidden shadow-2xl shadow-black/30 dark:shadow-black/60 bg-white dark:bg-zinc-900">
                   <div className="p-6 relative">
                     <button onClick={() => setBonusResult(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">
                       <X className="w-5 h-5" />
@@ -2153,7 +2179,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                   <span className="text-sm font-bold tabular-nums">{experimental.hotStreak}</span>
                 </div>
               )}
-              <button onClick={toggleSfx} className="p-2 -m-2 cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Toggle sound effects">
+              <button onClick={toggleSfx} className="p-2 -m-2 cursor-pointer text-zinc-600 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 transition-colors" aria-label="Toggle sound effects">
                 {sfxEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeOff className="w-5 h-5" />}
               </button>
               <div className="flex items-center gap-2">
@@ -2170,7 +2196,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
                 })}
               </div>
               {phase !== "pick-letters" && phase !== "revealing-picks" && (
-                <span className="text-sm text-zinc-400 font-mono tabular-nums">{fmt(totalTime)}</span>
+                <span className="text-sm text-zinc-700 dark:text-zinc-400 font-mono tabular-nums">{fmt(totalTime)}</span>
               )}
             </div>
           </div>
@@ -2597,32 +2623,32 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       {/* Turn warning popup */}
       {turnWarning && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-          <div className={`pop-warning bg-zinc-900/95 border rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50 ${turnWarning.toLowerCase().includes("locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
-            <p className={`font-extrabold text-2xl tracking-wide ${turnWarning.toLowerCase().includes("locked") ? "text-red-400" : "text-amber-400"}`}>{turnWarning}</p>
-            <p className="text-zinc-500 text-sm mt-1.5">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : round === 0 ? "let's go!" : "keep going!"}</p>
+          <div className={`pop-warning bg-white/95 dark:bg-zinc-900/95 border rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/20 dark:shadow-black/50 ${turnWarning.toLowerCase().includes("locked") ? "border-red-500/40" : "border-amber-500/40"}`}>
+            <p className={`font-extrabold text-2xl tracking-wide ${turnWarning.toLowerCase().includes("locked") ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}>{turnWarning}</p>
+            <p className="text-zinc-600 dark:text-zinc-500 text-sm mt-1.5">{turnWarning.toLowerCase().includes("locked") ? "moving on..." : round === 0 ? "let's go!" : "keep going!"}</p>
           </div>
         </div>
       )}
 
       {gameOverPopup && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-          <div className="pop-warning-3s bg-zinc-900/95 border border-red-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50">
+          <div className="pop-warning-3s bg-white/95 dark:bg-zinc-900/95 border border-red-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/20 dark:shadow-black/50">
             {gameOverPopup.includes("\n") ? (<>
-              <p className="text-sm font-semibold tracking-wide text-zinc-400 mb-1">{gameOverPopup.split("\n")[0]}</p>
-              <p className="font-extrabold text-2xl tracking-wide text-red-400">{gameOverPopup.split("\n")[1]}</p>
+              <p className="text-sm font-semibold tracking-wide text-zinc-700 dark:text-zinc-400 mb-1">{gameOverPopup.split("\n")[0]}</p>
+              <p className="font-extrabold text-2xl tracking-wide text-red-600 dark:text-red-400">{gameOverPopup.split("\n")[1]}</p>
             </>) : (
-              <p className="font-extrabold text-2xl tracking-wide text-red-400">{gameOverPopup}</p>
+              <p className="font-extrabold text-2xl tracking-wide text-red-600 dark:text-red-400">{gameOverPopup}</p>
             )}
-            <p className="text-zinc-500 text-sm mt-1.5">Better luck next time</p>
+            <p className="text-zinc-600 dark:text-zinc-500 text-sm mt-1.5">Better luck next time</p>
           </div>
         </div>
       )}
 
       {gameWinPopup && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
-          <div className="pop-warning-3s bg-zinc-900/95 border border-emerald-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/50">
-            <p className="font-extrabold text-2xl tracking-wide text-emerald-400">Solved!</p>
-            <p className="text-zinc-500 text-sm mt-1.5">Nice work</p>
+          <div className="pop-warning-3s bg-white/95 dark:bg-zinc-900/95 border border-emerald-500/40 rounded-2xl px-10 py-5 text-center shadow-2xl shadow-black/20 dark:shadow-black/50">
+            <p className="font-extrabold text-2xl tracking-wide text-emerald-600 dark:text-emerald-400">Solved!</p>
+            <p className="text-zinc-600 dark:text-zinc-500 text-sm mt-1.5">Nice work</p>
           </div>
         </div>
       )}
@@ -2632,10 +2658,9 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
 function Shell({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div className={`${compact ? "relative h-full" : "fixed inset-0"} bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden`}
-      style={{ fontFamily: "'DM Sans', sans-serif", background: "radial-gradient(ellipse at 50% 0%, #1c1a17 0%, #0f0f11 60%)" }}>
+    <div className={`${compact ? "relative h-full" : "fixed inset-0"} bg-cinematic text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden`}>
       <RolesStyles />
-      <div className="film-grain" />
+      <div className="film-grain dark-only" />
       {children}
     </div>
   );

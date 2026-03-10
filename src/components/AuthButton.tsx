@@ -11,7 +11,7 @@ export default async function AuthButton() {
     return (
       <Link
         href="/auth"
-        className="rounded-lg border border-zinc-800/60 bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:border-amber-500/30 hover:text-amber-400"
+        className="rounded-lg border border-zinc-400 dark:border-zinc-800/60 bg-zinc-100 dark:bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-400 transition-colors hover:border-amber-500/70 dark:hover:border-amber-500/30 hover:text-amber-700 dark:hover:text-amber-400"
       >
         Sign In
       </Link>
@@ -23,21 +23,21 @@ export default async function AuthButton() {
       {isAdmin(user.email) && (
         <Link
           href="/admin"
-          className="rounded-lg border border-amber-500/30 bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-400/70 transition-colors hover:border-amber-500/50 hover:text-amber-400"
+          className="rounded-lg border border-amber-500/50 dark:border-amber-500/30 bg-amber-50 dark:bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400/70 transition-colors hover:border-amber-500/70 dark:hover:border-amber-500/50 hover:text-amber-800 dark:hover:text-amber-400"
         >
           Admin
         </Link>
       )}
       <Link
         href="/stats"
-        className="rounded-lg border border-zinc-800/60 bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:border-amber-500/30 hover:text-amber-400"
+        className="rounded-lg border border-zinc-400 dark:border-zinc-800/60 bg-zinc-100 dark:bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-400 transition-colors hover:border-amber-500/70 dark:hover:border-amber-500/30 hover:text-amber-700 dark:hover:text-amber-400"
       >
         Stats
       </Link>
       <form action={signOut}>
         <button
           type="submit"
-          className="rounded-lg border border-zinc-800/60 bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-300"
+          className="rounded-lg border border-zinc-400 dark:border-zinc-800/60 bg-zinc-100 dark:bg-zinc-900/50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-400 transition-colors hover:border-zinc-500 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-300"
         >
           Sign Out
         </button>

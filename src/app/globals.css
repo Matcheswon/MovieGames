@@ -85,3 +85,7 @@ a {
 .bg-cinematic {
   background: radial-gradient(ellipse at 50% 0%, #1a1510 0%, #09090b 60%);
 }
+
+.film-grain.dark-only {
+  opacity: 0.03;
+}

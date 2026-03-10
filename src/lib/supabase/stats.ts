@@ -24,10 +24,16 @@ type DegreesStats = GameStats & {
   averageMistakes: number;
 };
 
+export type PlayHistoryEntry = {
+  dateKey: string;
+  games: string[];
+};
+
 export type UserStats = {
   thumbs: ThumbsStats | null;
   roles: RolesStats | null;
   degrees: DegreesStats | null;
+  playHistory: PlayHistoryEntry[];
 };
 
 function prevDateKey(dateKey: string): string {
@@ -51,12 +57,16 @@ function computeStreak(dateKeys: string[]): { current: number; best: number } {
   let best = 0;
   let streak = 1;
 
-  // Current streak: count consecutive days from most recent
+  // Current streak: count consecutive days from most recent (allows one gap = streak freeze)
   if (mostRecent === today || mostRecent === yesterday) {
     current = 1;
+    let freezeAvailable = true;
     for (let i = 1; i < sorted.length; i++) {
       const expected = prevDateKey(sorted[i - 1]);
       if (sorted[i] === expected) {
+        current++;
+      } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
+        freezeAvailable = false;
         current++;
       } else {
         break;
@@ -90,7 +100,7 @@ export async function getUserStats(): Promise<UserStats | null> {
     .eq("user_id", user.id)
     .order("date_key", { ascending: true });
 
-  if (!results || results.length === 0) return { thumbs: null, roles: null, degrees: null };
+  if (!results || results.length === 0) return { thumbs: null, roles: null, degrees: null, playHistory: [] };
 
   const thumbsResults = results.filter(r => r.game === "thumbs");
   const rolesResults = results.filter(r => r.game === "roles");
@@ -141,5 +151,17 @@ export async function getUserStats(): Promise<UserStats | null> {
     };
   }
 
-  return { thumbs, roles, degrees };
+  // Build play history for calendar
+  const dateMap = new Map<string, string[]>();
+  for (const r of results) {
+    const existing = dateMap.get(r.date_key) ?? [];
+    existing.push(r.game);
+    dateMap.set(r.date_key, existing);
+  }
+  const playHistory: PlayHistoryEntry[] = [];
+  for (const [dateKey, games] of dateMap) {
+    playHistory.push({ dateKey, games });
+  }
+
+  return { thumbs, roles, degrees, playHistory };
 }

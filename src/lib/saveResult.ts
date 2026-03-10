@@ -138,8 +138,14 @@ export async function getGameStreak(game: string): Promise<number> {
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
 
   let streak = 1;
+  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+    const expected = prevDateKey(sorted[i - 1]);
+    if (sorted[i] === expected) {
+      streak++;
+    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
+      // One-day gap forgiven (streak freeze)
+      freezeAvailable = false;
       streak++;
     } else {
       break;

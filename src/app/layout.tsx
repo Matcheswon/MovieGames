@@ -75,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${playfair.variable} dark`} suppressHydrationWarning>
       <body className="min-h-screen min-h-dvh bg-zinc-950 font-body text-zinc-100 antialiased">
         {GA_ID && (
           <>
@@ -88,7 +88,7 @@ export default function RootLayout({
             `}</Script>
           </>
         )}
-        <div className="film-grain" />
+        <div className="film-grain dark-only" />
         <FeedbackProvider>
           {children}
           <FeedbackWidget />

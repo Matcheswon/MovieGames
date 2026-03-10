@@ -8,6 +8,8 @@ import { saveGameResult, getGameStreak, getTodayResult } from "@/lib/saveResult"
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { DegreesPlaytestResult } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
+import NextPuzzleCountdown from "@/components/NextPuzzleCountdown";
+import { getDailyAggregateStats, DailyAggregateStats } from "@/app/actions/dailyStats";
 
 // ─── Daily streak persistence ───
 const DAILY_STORAGE_KEY = "moviegames:degrees:daily";
@@ -57,7 +59,7 @@ function prevDateKey(dateKey: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+/** Compute current streak from a list of dateKey strings. Allows one gap (streak freeze). */
 function computeStreakFromDates(dateKeys: string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
@@ -65,8 +67,13 @@ function computeStreakFromDates(dateKeys: string[]): number {
   const yesterday = prevDateKey(today);
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
   let streak = 1;
+  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+    const expected = prevDateKey(sorted[i - 1]);
+    if (sorted[i] === expected) {
+      streak++;
+    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
+      freezeAvailable = false;
       streak++;
     } else {
       break;
@@ -147,6 +154,7 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
   const [justPlaced, setJustPlaced] = useState(-1);
   const [toast, setToast] = useState<string | null>(null);
   const [alreadyPlayed, setAlreadyPlayed] = useState(false);
+  const [aggStats, setAggStats] = useState<DailyAggregateStats | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalSlots = puzzle.chain.length;
@@ -273,6 +281,11 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
         const current = readDailyStreak();
         writeDailyStreak({ ...current, dailyStreak: streak, bestDailyStreak: Math.max(streak, current.bestDailyStreak) });
       }
+    });
+
+    // Fetch aggregate stats for social proof
+    getDailyAggregateStats("degrees", dateKey).then(stats => {
+      if (stats.totalPlayers > 0) setAggStats(stats);
     });
 
     // Anonymous analytics (all users, no auth required)
@@ -478,28 +491,39 @@ export default function DegreesGame({ puzzle, puzzleNumber, dateKey, playtestMod
                 Game recorded. Advancing automatically&hellip;
               </p>
             ) : (
-              <div className="mt-8 flex gap-3">
-                <Link
-                  href="/"
-                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-center border-2 border-amber-500/40 text-amber-400 hover:border-amber-500/60 transition-all"
-                >
-                  Home
-                </Link>
-                <button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({ text: share }).catch(() => {});
-                    } else {
-                      navigator.clipboard?.writeText(share);
-                      showToast("Copied to clipboard");
-                    }
-                  }}
-                  className="flex-1 py-3 rounded-xl font-semibold text-sm text-zinc-950 bg-amber-500 hover:bg-amber-400 transition-all active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Share
-                </button>
-              </div>
+              <>
+                <div className="mt-8 flex gap-3">
+                  <Link
+                    href="/"
+                    className="flex-1 py-3 rounded-xl font-semibold text-sm text-center border-2 border-amber-500/40 text-amber-400 hover:border-amber-500/60 transition-all"
+                  >
+                    Home
+                  </Link>
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({ text: share }).catch(() => {});
+                      } else {
+                        navigator.clipboard?.writeText(share);
+                        showToast("Copied to clipboard");
+                      }
+                    }}
+                    className="flex-1 py-3 rounded-xl font-semibold text-sm text-zinc-950 bg-amber-500 hover:bg-amber-400 transition-all active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </button>
+                </div>
+
+                <NextPuzzleCountdown />
+                {aggStats && aggStats.totalPlayers > 1 && (
+                  <p className="text-xs text-zinc-600 text-center -mt-3">
+                    {aggStats.solveRate !== null
+                      ? <>{aggStats.solveRate}% of {aggStats.totalPlayers} players solved today</>
+                      : <>{aggStats.totalPlayers} players today</>}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

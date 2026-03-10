@@ -6,10 +6,12 @@ import Link from "next/link";
 import { ThumbWarsMovie } from "@/lib/types";
 import { getNyDateKey } from "@/lib/dailyUtils";
 import { saveGameResult, getTodayResult, getGameStreak } from "@/lib/saveResult";
-import { Share2, X } from "lucide-react";
+import { ArrowLeft, Clapperboard, Share2, X } from "lucide-react";
 import { logGameEvent, trackEvent } from "@/lib/analytics";
 import { ThumbsPlaytestResult } from "@/lib/playtest";
 import { useFeedbackContext } from "@/components/FeedbackContext";
+import NextPuzzleCountdown from "@/components/NextPuzzleCountdown";
+import { getDailyAggregateStats, DailyAggregateStats } from "@/app/actions/dailyStats";
 
 type Screen = "start" | "playing" | "results";
 type ScoreEntry = { siskelOk: number; ebertOk: number };
@@ -73,7 +75,7 @@ function prevDateKey(dateKey: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Compute current streak from a list of dateKey strings (same logic as stats page). */
+/** Compute current streak from a list of dateKey strings. Allows one gap (streak freeze). */
 function computeStreakFromDates(dateKeys: string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
@@ -81,8 +83,14 @@ function computeStreakFromDates(dateKeys: string[]): number {
   const yesterday = prevDateKey(today);
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
   let streak = 1;
+  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i] === prevDateKey(sorted[i - 1])) {
+    const expected = prevDateKey(sorted[i - 1]);
+    if (sorted[i] === expected) {
+      streak++;
+    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
+      // One-day gap forgiven (streak freeze)
+      freezeAvailable = false;
       streak++;
     } else {
       break;
@@ -219,6 +227,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
   const [alreadyPlayed, setAlreadyPlayed] = useState<ThumbsHistoryEntry | null>(null);
   const [resultShared, setResultShared] = useState(false);
   const [showOverview, setShowOverview] = useState(false);
+  const [aggStats, setAggStats] = useState<DailyAggregateStats | null>(null);
   const dailyRecorded = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const nextTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -389,6 +398,13 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
           writeDailyStreak({ ...updated, dailyStreak: streak, bestDailyStreak: Math.max(streak, updated.bestDailyStreak) });
           setBestDailyStreak(Math.max(streak, updated.bestDailyStreak));
         }
+      });
+    }
+
+    // Fetch aggregate stats for social proof
+    if (dateKey) {
+      getDailyAggregateStats("thumbs", dateKey).then(stats => {
+        if (stats.totalPlayers > 0) setAggStats(stats);
       });
     }
 
@@ -569,9 +585,31 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
                     ))}
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => { setAlreadyPlayed(null); startGame(); }}
-                      className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
-                      Play Again
+                    <button onClick={() => {
+                      const ap = alreadyPlayed!;
+                      // Reconstruct scores from squares emoji string
+                      const reconstructed: ScoreEntry[] = ap.squares
+                        ? [...ap.squares].map(sq => {
+                            if (sq === "\u{1F7E9}") return { siskelOk: 1, ebertOk: 1 };
+                            if (sq === "\u{1F7E8}") return { siskelOk: 1, ebertOk: 0 };
+                            return { siskelOk: 0, ebertOk: 0 };
+                          })
+                        : movies.map(() => ({ siskelOk: 0, ebertOk: 0 }));
+                      setShuffledMovies(movies);
+                      setScores(reconstructed);
+                      setTimer(ap.timeSecs);
+                      dailyRecorded.current = true; // prevent re-saving
+                      setAlreadyPlayed(null);
+                      setScreen("results");
+                      // Fetch aggregate stats for the results view
+                      if (dateKey) {
+                        getDailyAggregateStats("thumbs", dateKey).then(stats => {
+                          if (stats.totalPlayers > 0) setAggStats(stats);
+                        });
+                      }
+                    }}
+                      className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer inline-flex items-center justify-center gap-2">
+                      <Clapperboard className="w-4 h-4" /> Admire Puzzle
                     </button>
                     <button onClick={handleShareResult}
                       className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5">
@@ -599,6 +637,12 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">
         <div className="text-center animate-slideUp w-full max-w-md">
+          <div className="text-left">
+            <Link href="/"
+              className="inline-flex items-center gap-2 mb-5 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-all -ml-3">
+              <ArrowLeft className="w-4 h-4" /> Dashboard
+            </Link>
+          </div>
           <p className="text-[10px] uppercase tracking-[0.35em] text-zinc-600 mb-2">Round Complete</p>
           <div className={`text-6xl md:text-7xl font-extrabold ${gradeColor} mb-1 font-display`}>{grade}</div>
           <p className="text-sm text-zinc-400 mb-6 italic">{flavorText}</p>
@@ -655,16 +699,18 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
             </p>
           ) : (
             <>
+              {mode === "daily" && aggStats && aggStats.avgScore !== null && (
+                <p className="text-xs text-zinc-500 text-center mb-4">
+                  avg score today: <span className="text-zinc-300 font-semibold">{aggStats.avgScore}%</span>
+                </p>
+              )}
+
               <div className="flex gap-3">
-                <button onClick={startGame}
-                  className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer">
-                  Play Again
-                </button>
                 <ShareButton text={shareText} />
               </div>
 
               <Link href="/play/roles/daily"
-                className="flex items-center gap-3 mt-5 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
+                className="flex items-center gap-3 mt-4 bg-teal-500/10 border border-teal-400/30 rounded-xl px-5 py-4 hover:border-teal-400/50 hover:bg-teal-500/15 transition-all group text-left">
             <div className="flex-1 min-w-0">
               <p className="text-[9px] uppercase tracking-[0.25em] text-teal-400/50 mb-1.5">Try another game</p>
               <div className="flex items-center gap-2">
@@ -676,9 +722,8 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
             <span className="text-teal-400/40 group-hover:text-teal-300/70 transition-colors text-2xl">&rsaquo;</span>
           </Link>
 
-              <Link href="/" className="block mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
-                &larr; Back to Dashboard
-              </Link>
+              {mode === "daily" && <NextPuzzleCountdown />}
+
             </>
           )}
         </div>

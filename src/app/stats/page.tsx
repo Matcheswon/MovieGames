@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserStats } from "@/lib/supabase/stats";
 import MigrateLocalStats from "@/components/MigrateLocalStats";
+import PlayHistoryCalendar from "@/components/PlayHistoryCalendar";
+import { getNyDateKey } from "@/lib/dailyUtils";
 import { buildNoIndexMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildNoIndexMetadata(
@@ -42,7 +44,6 @@ function StreakBox({ current, best }: { current: number; best: number }) {
 const gameHrefs: Record<string, string> = {
   thumbs: "/play/thumbs/daily",
   roles: "/play/roles/daily",
-  degrees: "/play/degrees/daily",
 };
 
 function EmptyState({ game }: { game: string }) {
@@ -82,6 +83,19 @@ export default async function StatsPage() {
             </h1>
             <p className="text-sm text-zinc-500 mt-1">{user.email}</p>
           </div>
+
+          {/* Play History Calendar */}
+          {stats?.playHistory && stats.playHistory.length > 0 && (
+            <div className="mb-10">
+              <h2 className="font-display text-lg font-bold text-zinc-100 mb-4">Activity</h2>
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 overflow-x-auto">
+                <PlayHistoryCalendar
+                  history={stats.playHistory}
+                  todayKey={getNyDateKey(new Date())}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Thumbs Stats */}
           <div className="mb-8">
@@ -135,32 +149,6 @@ export default async function StatsPage() {
             )}
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-zinc-800/50 mb-8" />
-
-          {/* Degrees Stats */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">{"\u{1F517}"}</span>
-              <h2 className="font-display text-xl font-bold text-zinc-100">DEGREES</h2>
-            </div>
-
-            {stats?.degrees ? (
-              <>
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <StatBox value={stats.degrees.gamesPlayed} label="Played" />
-                  <StatBox value={`${stats.degrees.solveRate}%`} label="Solve Rate" />
-                  <StreakBox current={stats.degrees.currentStreak} best={stats.degrees.bestStreak} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <StatBox value={formatTime(stats.degrees.averageTimeSecs)} label="Avg Time" />
-                  <StatBox value={stats.degrees.averageMistakes} label="Avg Mistakes" />
-                </div>
-              </>
-            ) : (
-              <EmptyState game="degrees" />
-            )}
-          </div>
         </div>
       </div>
     </div>
