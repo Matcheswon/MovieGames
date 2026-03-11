@@ -1995,14 +1995,14 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
               <>
                 {!bonusMode && (
                   <div className="flex items-center justify-center gap-3 mb-4">
-                    {aggStats?.solveRate !== null && (
+                    {aggStats && aggStats.solveRate !== null && (
                       <p className="text-xs text-zinc-500">
-                        <span className="text-zinc-300 font-semibold">{aggStats!.solveRate}%</span> solved today
+                        <span className="text-zinc-300 font-semibold">{aggStats.solveRate}%</span> solved today
                       </p>
                     )}
                     {!bonusPlayedToday && (
                       <>
-                        {aggStats?.solveRate !== null && <span className="text-zinc-700">·</span>}
+                        {aggStats && aggStats.solveRate !== null && <span className="text-zinc-700">·</span>}
                         <Link href="/play/roles/bonus"
                           className="text-xs text-amber-400 hover:text-amber-300 transition-colors whitespace-nowrap">
                           Bonus round &rarr;
