@@ -9,6 +9,7 @@ type ThumbsResult = {
   score: number;
   outOf: number;
   timeSecs: number;
+  squares?: string;
 };
 
 type RolesResult = {
@@ -40,6 +41,7 @@ export async function saveGameResult(result: GameResult) {
   const solved = result.game === "roles" ? result.solved : result.game === "degrees" ? result.solved : null;
   const strikes = result.game === "roles" ? result.strikes : result.game === "degrees" ? result.mistakes : null;
   const roundsUsed = result.game === "roles" ? result.roundsUsed : null;
+  const squares = result.game === "thumbs" ? (result.squares ?? null) : null;
 
   if (user) {
     await supabase.from("game_results").upsert(
@@ -53,6 +55,7 @@ export async function saveGameResult(result: GameResult) {
         solved,
         strikes,
         rounds_used: roundsUsed,
+        squares,
       },
       { onConflict: "user_id,game,date_key" }
     );

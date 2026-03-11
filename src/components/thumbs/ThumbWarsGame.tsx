@@ -302,6 +302,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
             score: result.score ?? 0,
             outOf: result.out_of ?? 0,
             timeSecs: result.time_secs,
+            squares: result.squares ?? undefined,
           };
           setAlreadyPlayed(entry);
           // Backfill to localStorage
@@ -391,6 +392,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
         score: total,
         outOf: scores.length * 2,
         timeSecs: timer,
+        squares: sqr,
       }).then(() => getGameStreak("thumbs")).then(streak => {
         if (streak > 0) {
           setDailyStreak(streak);
@@ -585,32 +587,30 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
                     ))}
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => {
-                      const ap = alreadyPlayed!;
-                      // Reconstruct scores from squares emoji string
-                      const reconstructed: ScoreEntry[] = ap.squares
-                        ? [...ap.squares].map(sq => {
-                            if (sq === "\u{1F7E9}") return { siskelOk: 1, ebertOk: 1 };
-                            if (sq === "\u{1F7E8}") return { siskelOk: 1, ebertOk: 0 };
-                            return { siskelOk: 0, ebertOk: 0 };
-                          })
-                        : movies.map(() => ({ siskelOk: 0, ebertOk: 0 }));
-                      setShuffledMovies(movies);
-                      setScores(reconstructed);
-                      setTimer(ap.timeSecs);
-                      dailyRecorded.current = true; // prevent re-saving
-                      setAlreadyPlayed(null);
-                      setScreen("results");
-                      // Fetch aggregate stats for the results view
-                      if (dateKey) {
-                        getDailyAggregateStats("thumbs", dateKey).then(stats => {
-                          if (stats.totalPlayers > 0) setAggStats(stats);
+                    {alreadyPlayed.squares && (
+                      <button onClick={() => {
+                        const ap = alreadyPlayed!;
+                        const reconstructed: ScoreEntry[] = [...ap.squares!].map(sq => {
+                          if (sq === "\u{1F7E9}") return { siskelOk: 1, ebertOk: 1 };
+                          if (sq === "\u{1F7E8}") return { siskelOk: 1, ebertOk: 0 };
+                          return { siskelOk: 0, ebertOk: 0 };
                         });
-                      }
-                    }}
-                      className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer inline-flex items-center justify-center gap-2">
-                      <Clapperboard className="w-4 h-4" /> Admire Puzzle
-                    </button>
+                        setShuffledMovies(movies);
+                        setScores(reconstructed);
+                        setTimer(ap.timeSecs);
+                        dailyRecorded.current = true; // prevent re-saving
+                        setAlreadyPlayed(null);
+                        setScreen("results");
+                        if (dateKey) {
+                          getDailyAggregateStats("thumbs", dateKey).then(stats => {
+                            if (stats.totalPlayers > 0) setAggStats(stats);
+                          });
+                        }
+                      }}
+                        className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 font-bold text-sm tracking-wide hover:bg-amber-400 transition-all active:scale-[0.97] shadow-lg shadow-amber-500/20 cursor-pointer inline-flex items-center justify-center gap-2">
+                        <Clapperboard className="w-4 h-4" /> Admire Puzzle
+                      </button>
+                    )}
                     <button onClick={handleShareResult}
                       className="flex-1 py-3 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 text-sm font-medium tracking-wide hover:bg-zinc-700/60 transition-all active:scale-[0.97] cursor-pointer inline-flex items-center justify-center gap-1.5">
                       <Share2 className="w-3.5 h-3.5" />

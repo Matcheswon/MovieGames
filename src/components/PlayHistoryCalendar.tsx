@@ -5,14 +5,9 @@ type PlayHistoryEntry = {
   games: string[];
 };
 
-const GAME_COLORS: Record<string, string> = {
-  thumbs: "bg-sky-400",
-  roles: "bg-amber-400",
-};
-
-function prevDate(dateKey: string): string {
+function addDays(dateKey: string, n: number): string {
   const d = new Date(dateKey + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 1);
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
 
@@ -43,36 +38,21 @@ export default function PlayHistoryCalendar({
     dateMap.set(entry.dateKey, entry.games);
   }
 
-  // Generate last 56 days (8 weeks) ending today
-  const days: string[] = [];
-  let cursor = todayKey;
-  for (let i = 0; i < 56; i++) {
-    days.unshift(cursor);
-    cursor = prevDate(cursor);
-  }
+  // Find the Saturday that ends today's week, then go back 8 full weeks
+  const todayDow = getDayOfWeek(todayKey);
+  const endDate = addDays(todayKey, 6 - todayDow); // Saturday of this week
+  const startDate = addDays(endDate, -55); // 8 weeks = 56 days total
 
-  // Organize into weeks (columns) x weekdays (rows)
-  // Each week is Sun-Sat. We'll build columns.
-  const weeks: (string | null)[][] = [];
-  let currentWeek: (string | null)[] = [];
-
-  for (const day of days) {
-    const dow = getDayOfWeek(day);
-    if (dow === 0 && currentWeek.length > 0) {
-      // Pad remaining slots
-      while (currentWeek.length < 7) currentWeek.push(null);
-      weeks.push(currentWeek);
-      currentWeek = [];
+  // Generate all 56 days (always 8 full Sun-Sat weeks)
+  const weeks: string[][] = [];
+  let cursor = startDate;
+  for (let w = 0; w < 8; w++) {
+    const week: string[] = [];
+    for (let d = 0; d < 7; d++) {
+      week.push(cursor);
+      cursor = addDays(cursor, 1);
     }
-    // Pad start of first week
-    if (weeks.length === 0 && currentWeek.length === 0) {
-      for (let i = 0; i < dow; i++) currentWeek.push(null);
-    }
-    currentWeek.push(day);
-  }
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) currentWeek.push(null);
-    weeks.push(currentWeek);
+    weeks.push(week);
   }
 
   // Month labels for the top row
@@ -99,7 +79,7 @@ export default function PlayHistoryCalendar({
           <div
             key={i}
             className="text-[9px] text-zinc-500 uppercase tracking-wider"
-            style={{ width: `${m.colSpan * 16}px` }}
+            style={{ width: `${m.colSpan * 14}px` }}
           >
             {m.label}
           </div>
@@ -124,7 +104,8 @@ export default function PlayHistoryCalendar({
           {weeks.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-[2px]">
               {week.map((day, di) => {
-                if (!day) {
+                const isFuture = day > todayKey;
+                if (isFuture) {
                   return (
                     <div key={di} className="w-3 h-3 rounded-[2px]" />
                   );
@@ -173,14 +154,6 @@ export default function PlayHistoryCalendar({
         <div className="w-3 h-3 rounded-[2px] bg-emerald-500/60" />
         <div className="w-3 h-3 rounded-[2px] bg-emerald-400" />
         <span className="text-[9px] text-zinc-600">More</span>
-        <div className="flex items-center gap-1.5 ml-3">
-          {Object.entries(GAME_COLORS).map(([game, color]) => (
-            <span key={game} className="flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
-              <span className="text-[9px] text-zinc-600 capitalize">{game}</span>
-            </span>
-          ))}
-        </div>
       </div>
     </div>
   );

@@ -1868,8 +1868,8 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
 
     return (
       <Shell compact={playtestMode}>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
-          <div className="animate-slideUp w-full max-w-sm py-8">
+        <div className="flex-1 flex flex-col items-center px-6 overflow-y-auto">
+          <div className="animate-slideUp w-full max-w-sm py-8 mt-auto mb-auto">
             {!playtestMode && (
               <Link href="/" className="inline-flex items-center gap-1.5 mb-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
                 <ArrowLeft className="w-3 h-3" /> Back to Dashboard
