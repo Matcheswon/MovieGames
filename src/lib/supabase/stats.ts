@@ -51,22 +51,20 @@ function computeStreak(dateKeys: string[]): { current: number; best: number } {
   // Use the same date formatter as the game screens
   const today = getNyDateKey(new Date());
   const yesterday = prevDateKey(today);
+  const twoDaysAgo = prevDateKey(yesterday);
   const mostRecent = sorted[0];
 
   let current = 0;
   let best = 0;
   let streak = 1;
 
-  // Current streak: count consecutive days from most recent (allows one gap = streak freeze)
-  if (mostRecent === today || mostRecent === yesterday) {
+  // Current streak: a single missed day is always forgiven (perpetual streak
+  // freeze); the streak breaks only on two or more consecutive missed days.
+  if (mostRecent === today || mostRecent === yesterday || mostRecent === twoDaysAgo) {
     current = 1;
-    let freezeAvailable = true;
     for (let i = 1; i < sorted.length; i++) {
       const expected = prevDateKey(sorted[i - 1]);
-      if (sorted[i] === expected) {
-        current++;
-      } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
-        freezeAvailable = false;
+      if (sorted[i] === expected || sorted[i] === prevDateKey(expected)) {
         current++;
       } else {
         break;
@@ -74,10 +72,10 @@ function computeStreak(dateKeys: string[]): { current: number; best: number } {
     }
   }
 
-  // Best streak: find longest consecutive run
+  // Best streak: longest run, applying the same single-missed-day forgiveness.
   for (let i = 1; i < sorted.length; i++) {
     const expected = prevDateKey(sorted[i - 1]);
-    if (sorted[i] === expected) {
+    if (sorted[i] === expected || sorted[i] === prevDateKey(expected)) {
       streak++;
     } else {
       best = Math.max(best, streak);

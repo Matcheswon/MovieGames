@@ -75,22 +75,21 @@ function prevDateKey(dateKey: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Compute current streak from a list of dateKey strings. Allows one gap (streak freeze). */
+/** Compute current streak. A single missed day is always forgiven; the streak
+ *  breaks only on two or more consecutive missed days (perpetual streak freeze). */
 function computeStreakFromDates(dateKeys: string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
   const today = getNyDateKey(new Date());
   const yesterday = prevDateKey(today);
-  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  const twoDaysAgo = prevDateKey(yesterday);
+  // One missed day is fine, so the most recent play can be up to two days back.
+  if (sorted[0] !== today && sorted[0] !== yesterday && sorted[0] !== twoDaysAgo) return 0;
   let streak = 1;
-  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
     const expected = prevDateKey(sorted[i - 1]);
-    if (sorted[i] === expected) {
-      streak++;
-    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
-      // One-day gap forgiven (streak freeze)
-      freezeAvailable = false;
+    if (sorted[i] === expected || sorted[i] === prevDateKey(expected)) {
+      // A consecutive day, or a single missed day that the freeze forgives.
       streak++;
     } else {
       break;
@@ -478,7 +477,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
 
   // ─── START SCREEN ───
   const apShareText = alreadyPlayed
-    ? `\u{1F3AC} MovieNight THUMBS #${puzzleNumber}${alreadyPlayed.squares ? `\n${alreadyPlayed.squares}` : ""}\n${alreadyPlayed.score}/${alreadyPlayed.outOf} \u00B7 ${formatTime(alreadyPlayed.timeSecs)}${alreadyPlayed.perfectRounds ? ` \u00B7 ${alreadyPlayed.perfectRounds} perfect rounds` : ""}${dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`
+    ? `\u{1F3AC} MovieNight THUMBS #${puzzleNumber}${alreadyPlayed.squares ? `\n${alreadyPlayed.squares}` : ""}\n${alreadyPlayed.score}/${alreadyPlayed.outOf} \u00B7 ${formatTime(alreadyPlayed.timeSecs)}${alreadyPlayed.perfectRounds ? ` \u00B7 ${alreadyPlayed.perfectRounds} perfect rounds` : ""}${dailyStreak > 0 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`
     : "";
   const handleShareResult = async () => {
     if (navigator.share) {
@@ -632,7 +631,7 @@ export function ThumbWarsGame({ movies, mode = "random", dateKey, puzzleNumber, 
     const grade = pct >= 90 ? "S" : pct >= 75 ? "A" : pct >= 60 ? "B" : pct >= 40 ? "C" : "D";
     const gradeColor = pct >= 90 ? "text-amber-300" : pct >= 75 ? "text-emerald-300" : pct >= 60 ? "text-blue-300" : pct >= 40 ? "text-zinc-300" : "text-red-300";
     const flavorText = pct >= 90 ? "You belong in the balcony." : pct >= 75 ? "Two thumbs up for you." : pct >= 60 ? "Not bad \u2014 you know your critics." : pct >= 40 ? "Ebert would be gentle. Siskel\u2026 less so." : "Maybe stick to reading the reviews.";
-    const shareText = `\u{1F3AC} MovieNight THUMBS${mode === "daily" ? ` #${puzzleNumber}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 1 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
+    const shareText = `\u{1F3AC} MovieNight THUMBS${mode === "daily" ? ` #${puzzleNumber}` : ""}\n${scores.map(s => s.siskelOk && s.ebertOk ? "\u{1F7E9}" : s.siskelOk || s.ebertOk ? "\u{1F7E8}" : "\u{1F7E5}").join("")}\n${totalCorrect}/${totalPossible} \u00B7 ${formatTime(timer)} \u00B7 ${perfectRounds} perfect rounds${mode === "daily" && dailyStreak > 0 ? ` \u00B7 \u{1F525}${dailyStreak}` : ""}`;
 
     return (
       <div className="min-h-screen bg-cinematic text-zinc-100 flex flex-col items-center justify-center px-6">

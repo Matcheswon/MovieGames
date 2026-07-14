@@ -2818,5 +2818,95 @@
     "popularity": 7,
     "characterPopularity": 4,
     "difficulty": "hard"
+  },
+  {
+    "actor": "MARK WAHLBERG",
+    "character": "DIRK DIGGLER",
+    "movie": "Boogie Nights",
+    "year": 1997,
+    "popularity": 8,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "OWEN WILSON",
+    "character": "LIGHTNING MCQUEEN",
+    "movie": "Cars",
+    "year": 2006,
+    "popularity": 9,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "DONALD GLOVER",
+    "character": "SIMBA",
+    "movie": "The Lion King",
+    "year": 2019,
+    "popularity": 9,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "CHRISTIAN SLATER",
+    "character": "CLARENCE WORLEY",
+    "movie": "True Romance",
+    "year": 1993,
+    "popularity": 5,
+    "characterPopularity": 4,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "TARON EGERTON",
+    "character": "EGGSY UNWIN",
+    "movie": "Kingsman: The Secret Service",
+    "year": 2014,
+    "popularity": 7,
+    "characterPopularity": 6
+  },
+  {
+    "actor": "BEN KINGSLEY",
+    "character": "GANDHI",
+    "movie": "Gandhi",
+    "year": 1982,
+    "popularity": 4,
+    "characterPopularity": 10
+  },
+  {
+    "actor": "STEVE BUSCEMI",
+    "character": "MR PINK",
+    "movie": "Reservoir Dogs",
+    "year": 1992,
+    "popularity": 7,
+    "characterPopularity": 7
+  },
+  {
+    "actor": "TOM HOLLAND",
+    "character": "CHERRY",
+    "movie": "Cherry",
+    "year": 2021,
+    "popularity": 8,
+    "characterPopularity": 1
+  },
+  {
+    "actor": "LUPITA NYONG'O",
+    "character": "ADELAIDE WILSON",
+    "movie": "Us",
+    "year": 2019,
+    "popularity": 7,
+    "characterPopularity": 3,
+    "difficulty": "hard"
+  },
+  {
+    "actor": "KEIRA KNIGHTLEY",
+    "character": "ELIZABETH BENNET",
+    "movie": "Pride & Prejudice",
+    "year": 2005,
+    "popularity": 7,
+    "characterPopularity": 8
+  },
+  {
+    "actor": "JOHN GOODMAN",
+    "character": "SULLEY",
+    "movie": "Monsters, Inc.",
+    "year": 2001,
+    "popularity": 9,
+    "characterPopularity": 9
   }
 ]

@@ -137,18 +137,16 @@ export async function getGameStreak(game: string): Promise<number> {
   const sorted = [...new Set(data.map(r => r.date_key))].sort((a, b) => b.localeCompare(a));
   const today = getNyDateKey(new Date());
   const yesterday = prevDateKey(today);
+  const twoDaysAgo = prevDateKey(yesterday);
 
-  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  // One missed day is fine, so the most recent play can be up to two days back.
+  if (sorted[0] !== today && sorted[0] !== yesterday && sorted[0] !== twoDaysAgo) return 0;
 
   let streak = 1;
-  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
     const expected = prevDateKey(sorted[i - 1]);
-    if (sorted[i] === expected) {
-      streak++;
-    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
-      // One-day gap forgiven (streak freeze)
-      freezeAvailable = false;
+    if (sorted[i] === expected || sorted[i] === prevDateKey(expected)) {
+      // A consecutive day, or a single missed day (perpetual streak freeze).
       streak++;
     } else {
       break;

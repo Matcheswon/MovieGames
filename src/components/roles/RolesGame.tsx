@@ -93,21 +93,21 @@ function prevDateKey(dateKey: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Compute current streak from a list of dateKey strings. Allows one gap (streak freeze). */
+/** Compute current streak. A single missed day is always forgiven; the streak
+ *  breaks only on two or more consecutive missed days (perpetual streak freeze). */
 function computeStreakFromDates(dateKeys: string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...new Set(dateKeys)].sort((a, b) => b.localeCompare(a));
   const today = getNyDateKey(new Date());
   const yesterday = prevDateKey(today);
-  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  const twoDaysAgo = prevDateKey(yesterday);
+  // One missed day is fine, so the most recent play can be up to two days back.
+  if (sorted[0] !== today && sorted[0] !== yesterday && sorted[0] !== twoDaysAgo) return 0;
   let streak = 1;
-  let freezeAvailable = true;
   for (let i = 1; i < sorted.length; i++) {
     const expected = prevDateKey(sorted[i - 1]);
-    if (sorted[i] === expected) {
-      streak++;
-    } else if (freezeAvailable && sorted[i] === prevDateKey(expected)) {
-      freezeAvailable = false;
+    if (sorted[i] === expected || sorted[i] === prevDateKey(expected)) {
+      // A consecutive day, or a single missed day that the freeze forgives.
       streak++;
     } else {
       break;
@@ -813,7 +813,7 @@ export default function RolesGame({ puzzle, puzzleNumber, dateKey, playtestMode,
       "\u2B1B"
     ).join("");
     let text = `\u{1F3AD} ROLES ${bonusMode ? "BONUS" : `#${puzzleNumber}`}`;
-    if (!bonusMode && dailyStreak > 1) text += ` \u00B7 \u{1F525}${dailyStreak}`;
+    if (!bonusMode && dailyStreak > 0) text += ` \u00B7 \u{1F525}${dailyStreak}`;
     text += `\n${roundBlocks}`;
     text += `\nR ${opts.roundsUsed}/${MAX_ROUNDS} \u00B7 ${opts.strikes}/${MAX_STRIKES} strikes \u00B7 ${fmt(opts.timeSecs)}`;
     if (opts.scoreText) text += opts.scoreText;
